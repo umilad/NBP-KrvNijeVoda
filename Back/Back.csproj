@@ -2,14 +2,22 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
-    <Nullable>disable</Nullable>
+    <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.7" />
-    <PackageReference Include="Neo4j.Driver" Version="5.17.0" />
+    <PackageReference Include="Neo4jClient" Version="5.1.20" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+<!--
+  <ItemGroup>
+    <PackageReference Include="Neo4j.Driver" Version="5.27.0" Alias="Neo4jOfficial" />
+    <PackageReference Include="Neo4jClient" Version="5.1.20" Alias="Neo4jClientAlias" />
+</ItemGroup>-->
+
+
   </ItemGroup>
 
 </Project>
