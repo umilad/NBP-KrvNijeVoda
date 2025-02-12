@@ -17,14 +17,26 @@ public class GodinaController : ControllerBase
     }
 
 
-    // [HttpPost("CreateGodina")]
-    // public async Task<IActionResult> CreateGodina([FromBody] Dinastija dinastija)
-    // {    
-    //     await _client.Cypher.Create("(d:Dinastija $din)")
-    //                             .WithParam("din", dinastija)
-    //                             .ExecuteWithoutResultsAsync();
-    //     return Ok();
-    // }
+    [HttpPost("CreateGodina")]
+    public async Task<IActionResult> CreateGodina([FromBody] Godina godina)
+    {    
+        var god = (await _client.Cypher.Match("(g:Godina)")
+                                      .Where((Godina g) => g.God == godina.God) // Match by the start year
+                                      .Return(g => g.As<Godina>())
+                                      .ResultsAsync)
+                                      .FirstOrDefault();
+        if(god != null)
+        {
+            return BadRequest($"Godina {god.God}. vec postoji u bazi!");
+        }
+        await _client.Cypher.Create("(g:Godina {ID: $id, God: $god})")
+                                .WithParam("god", godina.God)
+                                .WithParam("id", Guid.NewGuid())
+                                .ExecuteWithoutResultsAsync();
+        return Ok($"Godina {godina.God}. je uspesno dodata u bazu!");
+    }
+
+    
 
     // [HttpGet("GetGodina/{id}")]
     // public async Task<IActionResult> GetGodina(Guid id)
