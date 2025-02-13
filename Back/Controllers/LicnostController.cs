@@ -5,26 +5,70 @@ using System.Threading.Tasks;
 using KrvNijeVoda.Back.Models;
 using System.Reflection.Metadata;
 using KrvNijeVoda.Back;
+using KrvNijeVoda.Models;
 [Route("api")]
 [ApiController]
 public class LicnostController : ControllerBase
 {
     private readonly IGraphClient _client;
+    private readonly GodinaService _godinaService;
+    private readonly MestoService _mestoService;
 
-    public LicnostController(Neo4jService neo4jService)
+    public LicnostController(Neo4jService neo4jService, GodinaService godinaService, MestoService mestoService)
     {
-        _client = neo4jService.GetClient();  
+        _client = neo4jService.GetClient();
+        _godinaService = godinaService;
+        _mestoService = mestoService;
     }
 
 
-    // [HttpPost("CreateLicnost")]
-    // public async Task<IActionResult> CreateLicnost([FromBody] Dinastija dinastija)
-    // {    
-    //     await _client.Cypher.Create("(d:Dinastija $din)")
-    //                             .WithParam("din", dinastija)
-    //                             .ExecuteWithoutResultsAsync();
-    //     return Ok();
-    // }
+    [HttpPost("CreateLicnost")]
+    public async Task<IActionResult> CreateLicnost([FromBody] Licnost licnost)
+    {   
+        var licnostID = Guid.NewGuid();
+        await _client.Cypher.Create("(l:Licnost {ID: $id, Titula: $titula, Ime: $ime, Prezime: $prezime, Pol: $pol, Slika: $slika})")
+                            .WithParam("id", licnostID)
+                            .WithParam("titula", licnost.Titula)
+                            .WithParam("ime", licnost.Ime)
+                            .WithParam("prezime", licnost.Prezime)
+                            .WithParam("pol", licnost.Pol)
+                            .WithParam("slika", licnost.Slika)
+                            .ExecuteWithoutResultsAsync();
+
+        if(licnost.GodinaRodjenja!=null)
+        {
+            await _godinaService.DodajGodinu(licnost.GodinaRodjenja!.God);
+            await _client.Cypher.Match("(l:Licnost)", "(gr:Godina)")
+                                .Where("l.ID = $id AND gr.God = $rodj")
+                                .Create("(l)-[:RODJEN]->(gr)")
+                                .WithParam("id", licnostID)
+                                .WithParam("rodj", licnost.GodinaRodjenja.God)
+                                .ExecuteWithoutResultsAsync();
+        }
+        if(licnost.GodinaSmrti!=null)
+        {
+            await _godinaService.DodajGodinu(licnost.GodinaSmrti!.God);
+            await _client.Cypher.Match("(l:Licnost)", "(gs:Godina)")
+                                .Where("l.ID = $id AND gs.God = $smrt")
+                                .Create("(l)-[:UMRO]->(gs)")
+                                .WithParam("id", licnostID)
+                                .WithParam("smrt", licnost.GodinaSmrti.God)
+                                .ExecuteWithoutResultsAsync();
+        }
+        if(licnost.MestoRodjenja != null)
+        {
+            var nm = await _mestoService.DodajMesto(licnost.MestoRodjenja);
+            await _client.Cypher.Match("(l:Licnost)", "(lm:Lokacija:Mesto)")
+                                .Where("l.ID = $id AND lm.ID = $mid")
+                                .Create("(l)-[:RODJEN_U]->(lm)")
+                                .WithParam("id", licnostID)
+                                .WithParam("mid", nm.ID)
+                                .ExecuteWithoutResultsAsync();
+
+        }
+
+        return Ok($"USpesno dodata licnost sa id:{licnostID} u bazu");
+    }
 
     // [HttpGet("GetLicnost/{id}")]
     // public async Task<IActionResult> GetLicnost(Guid id)

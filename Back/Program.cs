@@ -3,6 +3,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddSingleton<Neo4jService>(new Neo4jService("neo4j+s://84307b33.databases.neo4j.io", "neo4j", "AEYgjhymGHlfJt2zx5MRhtkd6HZaSWCIQGgMITq0u6E"));
 builder.Services.AddScoped<GodinaService>();
+builder.Services.AddScoped<MestoService>();
+builder.Services.AddScoped<ZemljaService>();
 builder.Services.AddControllers();
 builder.Services.AddControllers();
 

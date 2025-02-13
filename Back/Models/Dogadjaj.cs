@@ -15,7 +15,7 @@ namespace KrvNijeVoda.Back.Models{
         public TipDogadjaja Tip { get; set; }
         public Godina Godina { get; set; }
         public Mesto Lokacija { get; set; }
-        public List<Zemlja> Ucesnici { get; set; } = new List<Zemlja>();
+        //public List<Zemlja> Ucesnici { get; set; } = new List<Zemlja>();
         public string Tekst { get; set; }
 
     }

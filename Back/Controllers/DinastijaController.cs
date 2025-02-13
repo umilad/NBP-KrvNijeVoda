@@ -108,7 +108,7 @@ public class DinastijaController : ControllerBase
             return BadRequest($"Dinastija sa id: {id} ne postoji u bazi!");
         }
 
-        bool promenjenPocetak;
+        bool promenjenPocetak = false;
         bool promenjenKraj = false;
 
         if(dinastija.PocetakVladavine != null)
@@ -120,12 +120,10 @@ public class DinastijaController : ControllerBase
                     await _godinaService.DodajGodinu(dinastija.PocetakVladavine.God);
                     promenjenPocetak = true;
                 }
-                else promenjenPocetak = false;
             }
             else 
             promenjenPocetak = true;
         }
-        else promenjenPocetak = false;
 
         if(dinastija.KrajVladavine != null)
         {

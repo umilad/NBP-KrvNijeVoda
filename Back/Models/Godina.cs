@@ -3,5 +3,6 @@ namespace KrvNijeVoda.Back.Models{
     public class Godina {
         public Guid ID { get; set; }
         public int God { get; set; }
+        //listaj dogadjaje
     }
 }
