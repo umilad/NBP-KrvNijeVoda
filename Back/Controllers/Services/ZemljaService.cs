@@ -23,8 +23,32 @@ public class ZemljaService
             zem.ID = Guid.NewGuid();
             await _client.Cypher.Create("(z:Lokacija:Zemlja $zemlja)")
                             .WithParam("zemlja", zem)
-                            .Return(g => g.As<Godina>())
+                            .Return(z => z.As<Zemlja>())
                             .ResultsAsync;
+        }
+        return nz!;
+    }
+    public async Task<Zemlja> DodajZemljuParametri(string naziv, string? grb, string? trajanje)
+    {    
+        
+        var nz = (await _client.Cypher.Match("(z:Lokacija:Zemlja)")
+                                      .Where((Zemlja z) => z.Naziv == naziv) 
+                                      .Return(z => z.As<Zemlja>())
+                                      .ResultsAsync)
+                                      .FirstOrDefault();
+        if(nz == null)
+        {
+            var zem = new Zemlja {
+                ID = Guid.NewGuid(),
+                Naziv = naziv,
+                Grb = grb,
+                Trajanje = trajanje
+            };
+            nz = (await _client.Cypher.Create("(z:Lokacija:Zemlja $zemlja)")
+                                      .WithParam("zemlja", zem)
+                                      .Return(z => z.As<Zemlja>())
+                                      .ResultsAsync)
+                                      .FirstOrDefault();
         }
         return nz!;
     }

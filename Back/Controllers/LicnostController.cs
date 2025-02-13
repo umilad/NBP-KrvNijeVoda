@@ -13,18 +13,21 @@ public class LicnostController : ControllerBase
     private readonly IGraphClient _client;
     private readonly GodinaService _godinaService;
     private readonly MestoService _mestoService;
+    private readonly ZemljaService _zemljaService;
 
-    public LicnostController(Neo4jService neo4jService, GodinaService godinaService, MestoService mestoService)
+    public LicnostController(Neo4jService neo4jService, GodinaService godinaService, MestoService mestoService, ZemljaService zemljaService)
     {
         _client = neo4jService.GetClient();
         _godinaService = godinaService;
         _mestoService = mestoService;
+        _zemljaService = zemljaService;
     }
 
 
     [HttpPost("CreateLicnost")]
     public async Task<IActionResult> CreateLicnost([FromBody] Licnost licnost)
     {   
+        ///TESTIRAJ LEPO!!!!!!!!!
         var licnostID = Guid.NewGuid();
         await _client.Cypher.Create("(l:Licnost {ID: $id, Titula: $titula, Ime: $ime, Prezime: $prezime, Pol: $pol, Slika: $slika})")
                             .WithParam("id", licnostID)
@@ -38,8 +41,7 @@ public class LicnostController : ControllerBase
         if(licnost.GodinaRodjenja!=null)
         {
             await _godinaService.DodajGodinu(licnost.GodinaRodjenja!.God);
-            await _client.Cypher.Match("(l:Licnost)", "(gr:Godina)")
-                                .Where("l.ID = $id AND gr.God = $rodj")
+            await _client.Cypher.Match("(l:Licnost {ID: $id})", "(gr:Godina {God: $rodj})")
                                 .Create("(l)-[:RODJEN]->(gr)")
                                 .WithParam("id", licnostID)
                                 .WithParam("rodj", licnost.GodinaRodjenja.God)
@@ -48,8 +50,7 @@ public class LicnostController : ControllerBase
         if(licnost.GodinaSmrti!=null)
         {
             await _godinaService.DodajGodinu(licnost.GodinaSmrti!.God);
-            await _client.Cypher.Match("(l:Licnost)", "(gs:Godina)")
-                                .Where("l.ID = $id AND gs.God = $smrt")
+            await _client.Cypher.Match("(l:Licnost {ID: $id})", "(gs:Godina {God: $smrt})")
                                 .Create("(l)-[:UMRO]->(gs)")
                                 .WithParam("id", licnostID)
                                 .WithParam("smrt", licnost.GodinaSmrti.God)
@@ -57,17 +58,22 @@ public class LicnostController : ControllerBase
         }
         if(licnost.MestoRodjenja != null)
         {
-            var nm = await _mestoService.DodajMesto(licnost.MestoRodjenja);
-            await _client.Cypher.Match("(l:Licnost)", "(lm:Lokacija:Mesto)")
-                                .Where("l.ID = $id AND lm.ID = $mid")
-                                .Create("(l)-[:RODJEN_U]->(lm)")
-                                .WithParam("id", licnostID)
-                                .WithParam("mid", nm.ID)
-                                .ExecuteWithoutResultsAsync();
-
+            if(licnost.MestoRodjenja.PripadaZemlji != null)//mora da ima zemlju 
+            {
+                var nz = await _zemljaService.DodajZemljuParametri(licnost.MestoRodjenja.PripadaZemlji.Naziv, licnost.MestoRodjenja.PripadaZemlji.Grb, licnost.MestoRodjenja.PripadaZemlji.Trajanje);
+                var nm = await _mestoService.DodajMesto(licnost.MestoRodjenja.Naziv, nz);
+                await _client.Cypher.Match("(l:Licnost {ID: $id})", "(lm:Lokacija:Mesto {ID: $mid})")
+                                    .Create("(l)-[:RODJEN_U]->(lm)")
+                                    .WithParam("id", licnostID)
+                                    .WithParam("mid", nm.ID)
+                                    .ExecuteWithoutResultsAsync();
+            }
+            else {
+                return Ok($"Uspesno dodata licnost sa id:{licnostID} u bazu, ALI bez mesta jer nije stavljena zemlja kojoj pripada!");
+            }
         }
 
-        return Ok($"USpesno dodata licnost sa id:{licnostID} u bazu");
+        return Ok($"Uspesno dodata licnost sa id:{licnostID} u bazu!");
     }
 
     // [HttpGet("GetLicnost/{id}")]
