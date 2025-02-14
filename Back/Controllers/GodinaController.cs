@@ -19,24 +19,99 @@ public class GodinaController : ControllerBase
 
     [HttpPost("CreateGodina")]
     public async Task<IActionResult> CreateGodina([FromBody] Godina godina)
-    {    
-        var god = (await _client.Cypher.Match("(g:Godina)")
-                                      .Where((Godina g) => g.God == godina.God) // Match by the start year
-                                      .Return(g => g.As<Godina>())
-                                      .ResultsAsync)
-                                      .FirstOrDefault();
-        if(god != null)
+    {   
+        try
         {
-            return BadRequest($"Godina {god.God}. vec postoji u bazi!");
+            var god = (await _client.Cypher.Match("(g:Godina)")
+                                        .Where((Godina g) => g.God == godina.God) // Match by the start year
+                                        .Return(g => g.As<Godina>())
+                                        .ResultsAsync)
+                                        .FirstOrDefault();
+            if(god != null)
+            {
+                return BadRequest($"Godina {god.God}. vec postoji u bazi!");
+            }
+            await _client.Cypher.Create("(g:Godina {ID: $id, God: $god})")
+                                    .WithParam("god", godina.God)
+                                    .WithParam("id", Guid.NewGuid())
+                                    .ExecuteWithoutResultsAsync();
+            return Ok($"Godina {godina.God}. je uspesno dodata u bazu!");
         }
-        await _client.Cypher.Create("(g:Godina {ID: $id, God: $god})")
-                                .WithParam("god", godina.God)
-                                .WithParam("id", Guid.NewGuid())
-                                .ExecuteWithoutResultsAsync();
-        return Ok($"Godina {godina.God}. je uspesno dodata u bazu!");
+        catch (Exception ex)  
+        {
+            return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
+        }
+    }
+    [HttpGet("GetGodina/{god}")]
+    public async Task<IActionResult> GetGodina(int god)
+    {
+        try
+        {
+            var godina = (await _client.Cypher.Match("(g:Godina)")
+                                            .Where((Godina g) => g.God == god)
+                                            .Return(g => g.As<Godina>())
+                                            .ResultsAsync)
+                                            .FirstOrDefault();
+            if (godina == null)
+            {
+                return NotFound($"Godina {god}. ne postoji u bazi!");
+            }
+            return Ok(godina);
+        }
+        catch (Exception ex)  
+        {
+            return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
+        }
     }
 
-    
+    [HttpGet("GetAllGodine")]
+    public async Task<IActionResult> GetAllGodine()
+    {
+        try
+        {
+            var godine = (await _client.Cypher.Match("(g:Godina)")
+                                            .Return(g => g.As<Godina>())
+                                            .ResultsAsync)
+                                            .ToList();
 
+            if (godine == null || !godine.Any())
+            {
+                return NotFound("Nema godina u bazi!");
+            }
 
+            return Ok(godine);
+        }
+        catch (Exception ex)  
+        {
+            return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
+        }
+    }
+
+    [HttpDelete("DeleteGodina/{godina}")]
+    public async Task<IActionResult> DeleteGodina(int godina)
+    {
+        try
+        {
+            var god = (await _client.Cypher.Match("(g:Godina)")
+                                            .Where((Godina g) => g.God == godina)
+                                            .Return(g => g.As<Godina>())
+                                            .ResultsAsync)
+                                            .FirstOrDefault();
+            if (god == null)
+            {
+                return NotFound($"Godina {godina} ne postoji u bazi!");
+            }
+
+            await _client.Cypher.Match("(g:Godina)")
+                                .Where((Godina g) => g.God == godina)
+                                .DetachDelete("g")  // Briše sve veze pre nego što obriše čvor
+                                .ExecuteWithoutResultsAsync();
+
+            return Ok($"Godina {godina} je uspešno obrisana iz baze!");
+        }
+        catch (Exception ex)  
+        {
+            return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
+        }
+}
 }
