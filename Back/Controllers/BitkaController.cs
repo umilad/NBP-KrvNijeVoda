@@ -17,44 +17,5 @@ public class BitkaController : ControllerBase
     }
 
 
-    // [HttpPost("CreateBitka")]
-    // public async Task<IActionResult> CreateBitka([FromBody] Dinastija dinastija)
-    // {    
-    //     await _client.Cypher.Create("(d:Dinastija $din)")
-    //                             .WithParam("din", dinastija)
-    //                             .ExecuteWithoutResultsAsync();
-    //     return Ok();
-    // }
-
-    // [HttpGet("GetBitka/{id}")]
-    // public async Task<IActionResult> GetBitka(Guid id)
-    // {
-    //     var din = await _client.Cypher.Match("(d:Dinastija)")
-    //                                 .Where((Dinastija d) => d.ID == id)
-    //                                 .Return(d => d.As<Dinastija>())
-    //                                 .ResultsAsync;
-    //     return Ok(din.LastOrDefault());
-    // }
-
-    // [HttpPut("UpdateBitka/{id}")]
-    // public async Task<IActionResult> UpdateBitka([FromBody] Dinastija dinastija, Guid id)
-    // {
-    //     await _client.Cypher.Match("(d:Dinastija)")
-    //                                 .Where((Dinastija d) => d.ID == id)
-    //                                 .Set("d = $dinastija")
-    //                                 .WithParam("dinastija", dinastija)
-    //                                 .ExecuteWithoutResultsAsync();
-    //     return Ok();
-    // }
-
-    // [HttpDelete("DeleteBitka/{id}")]
-    // public async Task<IActionResult> DeleteBitka(Guid id)
-    // {
-    //     await _client.Cypher.Match("(d:Dinastija)")
-    //                         .Where((Dinastija d) => d.ID == id)
-    //                         .Delete("d")
-    //                         .ExecuteWithoutResultsAsync();
-    //     return Ok();
-    // }
 
 }

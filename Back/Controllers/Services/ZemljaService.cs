@@ -13,7 +13,7 @@ public class ZemljaService
 
     public async Task<Zemlja> DodajZemlju(Zemlja zem)
     {    
-        var nz = (await _client.Cypher.Match("(z:Lokacija:Zemlja)")
+        var nz = (await _client.Cypher.Match("(z:Zemlja)")
                                       .Where((Zemlja z) => z.Naziv == zem.Naziv) 
                                       .Return(z => z.As<Zemlja>())
                                       .ResultsAsync)
@@ -21,17 +21,18 @@ public class ZemljaService
         if(nz == null)
         {
             zem.ID = Guid.NewGuid();
-            await _client.Cypher.Create("(z:Lokacija:Zemlja $zemlja)")
+            nz = (await _client.Cypher.Create("(z:Zemlja $zemlja)")
                             .WithParam("zemlja", zem)
                             .Return(z => z.As<Zemlja>())
-                            .ResultsAsync;
+                            .ResultsAsync)
+                            .FirstOrDefault();//dodaj mozda kojoj zemlji pripada da vraca 
         }
         return nz!;
     }
     public async Task<Zemlja> DodajZemljuParametri(string naziv, string? grb, string? trajanje)
     {    
         
-        var nz = (await _client.Cypher.Match("(z:Lokacija:Zemlja)")
+        var nz = (await _client.Cypher.Match("(z:Zemlja)")
                                       .Where((Zemlja z) => z.Naziv == naziv) 
                                       .Return(z => z.As<Zemlja>())
                                       .ResultsAsync)
@@ -44,7 +45,7 @@ public class ZemljaService
                 Grb = grb,
                 Trajanje = trajanje
             };
-            nz = (await _client.Cypher.Create("(z:Lokacija:Zemlja $zemlja)")
+            nz = (await _client.Cypher.Create("(z:Zemlja $zemlja)")
                                       .WithParam("zemlja", zem)
                                       .Return(z => z.As<Zemlja>())
                                       .ResultsAsync)
