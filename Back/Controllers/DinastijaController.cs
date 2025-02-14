@@ -46,11 +46,29 @@ public class DinastijaController : ControllerBase
     public async Task<IActionResult> GetDinastija(Guid id)
     {
         var din = (await _client.Cypher.Match("(d:Dinastija)")
-                                    .Where((Dinastija d) => d.ID == id)
-                                    .Return(d => d.As<Dinastija>())
-                                    .ResultsAsync)
-                                    .FirstOrDefault();
-        return Ok(din);
+                                       .Where((Dinastija d) => d.ID == id)
+                                       .OptionalMatch("(d)-[:POCETAK_VLADAVINE]->(pg:Godina)") 
+                                       .OptionalMatch("(d)-[:KRAJ_VLADAVINE]->(kg:Godina)")
+                                       .Return((d, pg, kg) => new {
+                                                 Dinastija = d.As<Dinastija>(),
+                                                 PocetakVladavine = pg.As<Godina>(),
+                                                 KrajVladavine = kg.As<Godina>()
+                                             }) 
+                                       .ResultsAsync)
+                                       .FirstOrDefault();
+        if (din == null)
+        {
+            return BadRequest($"Nije pronadjena nijedna dinastija sa id: {id}");
+        }
+        var result = new Dinastija {
+                    ID = din.Dinastija.ID,
+                    Naziv = din.Dinastija.Naziv,
+                    Slika = din.Dinastija.Slika,
+                    PocetakVladavine = din.PocetakVladavine ?? new Godina(), //godine ce uvek da nadje ako nisu nullable
+                    KrajVladavine = din.KrajVladavine ?? new Godina() 
+                    //Clanovi = item.Clanovi?.ToList() ?? new List<Licnost>()  // If no Licnost found, return empty list
+                };
+        return Ok(result);
     }
     [HttpGet("GetAllDinastije")]
     public async Task<IActionResult> GetAllDinastije()

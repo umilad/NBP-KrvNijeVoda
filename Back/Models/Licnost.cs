@@ -11,7 +11,7 @@ public class Licnost {
     public Godina? GodinaSmrti { get; set; }
     public string Pol { get; set; }
     public string? Slika { get; set; }
-    public Mesto? MestoRodjenja { get; set; }
+    public Lokacija? MestoRodjenja { get; set; }
 }
 
 }

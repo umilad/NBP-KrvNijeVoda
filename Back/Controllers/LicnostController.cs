@@ -12,14 +12,14 @@ public class LicnostController : ControllerBase
 {
     private readonly IGraphClient _client;
     private readonly GodinaService _godinaService;
-    private readonly MestoService _mestoService;
+    private readonly LokacijaService _lokacijaService;
     private readonly ZemljaService _zemljaService;
 
-    public LicnostController(Neo4jService neo4jService, GodinaService godinaService, MestoService mestoService, ZemljaService zemljaService)
+    public LicnostController(Neo4jService neo4jService, GodinaService godinaService, LokacijaService lokacijaService, ZemljaService zemljaService)
     {
         _client = neo4jService.GetClient();
         _godinaService = godinaService;
-        _mestoService = mestoService;
+        _lokacijaService = lokacijaService;
         _zemljaService = zemljaService;
     }
 
@@ -56,16 +56,17 @@ public class LicnostController : ControllerBase
                                 .WithParam("smrt", licnost.GodinaSmrti.God)
                                 .ExecuteWithoutResultsAsync();
         }
+        //MENJAJJJJJJJJJJJJJ
         if(licnost.MestoRodjenja != null)
         {
             if(licnost.MestoRodjenja.PripadaZemlji != null)//mora da ima zemlju 
             {
                 var nz = await _zemljaService.DodajZemljuParametri(licnost.MestoRodjenja.PripadaZemlji.Naziv, licnost.MestoRodjenja.PripadaZemlji.Grb, licnost.MestoRodjenja.PripadaZemlji.Trajanje);
-                var nm = await _mestoService.DodajMesto(licnost.MestoRodjenja.Naziv, nz);
-                await _client.Cypher.Match("(l:Licnost {ID: $id})", "(lm:Lokacija:Mesto {ID: $mid})")
+                var nl = await _lokacijaService.DodajLokaciju(licnost.MestoRodjenja.Naziv, nz);
+                await _client.Cypher.Match("(l:Licnost {ID: $id})", "(lm:Lokacija {ID: $mid})")
                                     .Create("(l)-[:RODJEN_U]->(lm)")
                                     .WithParam("id", licnostID)
-                                    .WithParam("mid", nm.ID)
+                                    .WithParam("mid", nl.ID)
                                     .ExecuteWithoutResultsAsync();
             }
             else {
@@ -76,15 +77,35 @@ public class LicnostController : ControllerBase
         return Ok($"Uspesno dodata licnost sa id:{licnostID} u bazu!");
     }
 
-    // [HttpGet("GetLicnost/{id}")]
-    // public async Task<IActionResult> GetLicnost(Guid id)
-    // {
-    //     var din = await _client.Cypher.Match("(d:Dinastija)")
-    //                                 .Where((Dinastija d) => d.ID == id)
-    //                                 .Return(d => d.As<Dinastija>())
-    //                                 .ResultsAsync;
-    //     return Ok(din.LastOrDefault());
-    // }
+    [HttpGet("GetLicnost/{id}")]
+    public async Task<IActionResult> GetLicnost(Guid id)
+    {
+        //NAPRAVI RESULT KAKO DA VRACA 
+        var lic = (await _client.Cypher.Match("(l:Licnost)")
+                                    .Where((Licnost l) => l.ID == id)
+                                    .OptionalMatch("(l)-[r:RODJEN]->(gr:Godina)")
+                                    .OptionalMatch("(l)-[r2:UMRO]->(gs:Godina)")
+                                    .OptionalMatch("(l)-[r3:RODJEN_U]->(m:Lokacija)-[:PRIPADA_ZEMLJI]->(z:Zemlja)")
+                                    .Return((gr, gs, m) => new {
+                                        Rodjen = gr.As<Godina>(),
+                                        Umro = gs.As<Godina>(),
+                                        Mesto =  m.As<Lokacija>().PripadaZemlji
+
+                                        //Zemlja = z.As<Zemlja>()                                        
+                                    }) 
+                                    .ResultsAsync)
+                                    .FirstOrDefault();
+        
+        if(lic != null)
+        {
+            //lic.Mesto.PripadaZemlji = lic.Zemlja;
+            return Ok(lic);
+        }
+        else 
+            return BadRequest($"Licnost sa id {id} nije pronadjena u bazi!");
+
+        
+    }
 
     // [HttpPut("UpdateLicnost/{id}")]
     // public async Task<IActionResult> UpdateLicnost([FromBody] Dinastija dinastija, Guid id)
@@ -97,15 +118,19 @@ public class LicnostController : ControllerBase
     //     return Ok();
     // }
 
-    // [HttpDelete("DeleteLicnost/{id}")]
-    // public async Task<IActionResult> DeleteLicnost(Guid id)
-    // {
-    //     await _client.Cypher.Match("(d:Dinastija)")
-    //                         .Where((Dinastija d) => d.ID == id)
-    //                         .Delete("d")
-    //                         .ExecuteWithoutResultsAsync();
-    //     return Ok();
-    // }
+    [HttpDelete("DeleteLicnost/{id}")]
+    public async Task<IActionResult> DeleteLicnost(Guid id)
+    {
+        await _client.Cypher.Match("(l:Licnost)")
+                            .Where((Licnost l) => l.ID == id)
+                            .OptionalMatch("(l)-[r:RODJEN]->(gr:Godina)")
+                            .OptionalMatch("(l)-[r2:UMRO]->(gs:Godina)")
+                            .OptionalMatch("(l)-[r3:RODJEN_U]->(m:Lokacija)")
+                            .Delete("r, r2, r3, l")
+                            .ExecuteWithoutResultsAsync();
+
+        return Ok($"Licnost sa id:{id} uspesno obrisana iz baze!");
+    }
 
 }
 
