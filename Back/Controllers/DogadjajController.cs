@@ -33,7 +33,7 @@ public class DogadjajController : ControllerBase
         var dogadjajID = Guid.NewGuid();
         await _client.Cypher
             .Match("(g:Godina {God: $godina})", "(l:Lokacija {ID: $idLokacije})")
-            .Create($"(d:Dogadjaj:{label} {{ID: $id, Ime: $ime, Tip: $tip, Tekst: $tekst}}) -[:DOGADJAJ_U_GODINI]-> (g), (d) -[:DOGADJAJ_NA_LOKACIJI]-> (l)")
+            .Create($"(d:Dogadjaj:{label} {{ID: $id, Ime: $ime, Tip: $tip, Tekst: $tekst}}) -[:DESIO_SE]-> (g), (d) -[:DESIO_SE_U]-> (l)")
             .WithParam("id", dogadjajID)
             .WithParam("ime", dogadjaj.Ime)
             .WithParam("tip", dogadjaj.Tip.ToString())
@@ -50,8 +50,8 @@ public class DogadjajController : ControllerBase
     {
         var dog = (await _client.Cypher.Match("(d:Dogadjaj)")
                                        .Where((Dogadjaj d) => d.ID == id)
-                                       .OptionalMatch("(d)-[:DOGADJAJ_U_GODINI]->(g:Godina)") 
-                                       .OptionalMatch("(d)-[:DOGADJAJ_NA_LOKACIJI]->(l:Lokacija)-[:PRIPADA_ZEMLJI]->(z:Zemlja)")
+                                       .OptionalMatch("(d)-[:DESIO_SE]->(g:Godina)") 
+                                       .OptionalMatch("(d)-[:DESIO_SE_U]->(l:Lokacija)-[:PRIPADA_ZEMLJI]->(z:Zemlja)")
                                        .Return((d, g, l, z) => new {
                                                  Dogadjaj = d.As<Dogadjaj>(),
                                                  DogadjajUGodini = g.As<Godina>(),
@@ -81,8 +81,8 @@ public class DogadjajController : ControllerBase
     {
         await _client.Cypher.Match("(d:Dogadjaj)")
                             .Where((Dogadjaj d) => d.ID == id)
-                            .OptionalMatch("(d)-[r:DOGADJAJ_U_GODINI]->(g:Godina)")
-                            .OptionalMatch("(d)-[r2:DOGADJAJ_NA_LOKACIJI]->(l:Lokacija)")
+                            .OptionalMatch("(d)-[r:DESIO_SE]->(g:Godina)")
+                            .OptionalMatch("(d)-[r2:DESIO_SE_U]->(l:Lokacija)")
                             .Delete("r, r2, d")//r3
                             .ExecuteWithoutResultsAsync();
         return Ok($"Dogadjaj sa id {id} je obrisan!");
@@ -91,8 +91,8 @@ public class DogadjajController : ControllerBase
 public async Task<IActionResult> GetDogadjaje()
 {
     var dogadjaji = (await _client.Cypher.Match("(d:Dogadjaj)")
-                                       .OptionalMatch("(d)-[:DOGADJAJ_U_GODINI]->(g:Godina)") 
-                                       .OptionalMatch("(d)-[:DOGADJAJ_NA_LOKACIJI]->(l:Lokacija)-[:PRIPADA_ZEMLJI]->(z:Zemlja)")
+                                       .OptionalMatch("(d)-[:DESIO_SE]->(g:Godina)") 
+                                       .OptionalMatch("(d)-[:DESIO_SE_U]->(l:Lokacija)-[:PRIPADA_ZEMLJI]->(z:Zemlja)")
                                        .Return((d, g, l, z) => new {
                                                  Dogadjaj = d.As<Dogadjaj>(),
                                                  DogadjajUGodini = g.As<Godina>(),

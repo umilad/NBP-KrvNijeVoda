@@ -42,8 +42,8 @@ public class GodinaController : ControllerBase
             return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
         }
     }
-    [HttpGet("GetGodina/{god}")]
-    public async Task<IActionResult> GetGodina(int god)
+    [HttpGet("GetGodinaByGod/{god}")]
+    public async Task<IActionResult> GetGodinaByGod(int god)
     {
         try
         {
@@ -55,6 +55,27 @@ public class GodinaController : ControllerBase
             if (godina == null)
             {
                 return NotFound($"Godina {god}. ne postoji u bazi!");
+            }
+            return Ok(godina);
+        }
+        catch (Exception ex)  
+        {
+            return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
+        }
+    }
+    [HttpGet("GetGodina/{id}")]
+    public async Task<IActionResult> GetGodina(Guid id)
+    {
+        try
+        {
+            var godina = (await _client.Cypher.Match("(g:Godina)")
+                                            .Where((Godina g) => g.ID == id)
+                                            .Return(g => g.As<Godina>())
+                                            .ResultsAsync)
+                                            .FirstOrDefault();
+            if (godina == null)
+            {
+                return NotFound($"Godina sa id: {id} ne postoji u bazi!");
             }
             return Ok(godina);
         }
