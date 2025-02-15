@@ -5,6 +5,7 @@ builder.Services.AddSingleton<Neo4jService>(new Neo4jService("neo4j+s://84307b33
 builder.Services.AddScoped<GodinaService>();
 builder.Services.AddScoped<LokacijaService>();
 builder.Services.AddScoped<ZemljaService>();
+builder.Services.AddScoped<RatService>();
 builder.Services.AddControllers();
 builder.Services.AddControllers();
 
