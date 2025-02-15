@@ -26,6 +26,19 @@ public class DinastijaController : ControllerBase
     {
         try
         {
+            if(dinastija.PocetakVladavine == null || dinastija.PocetakVladavine.God == 0)
+            {
+                return BadRequest("Morate uneti godinu pocetka vladavine dinastije!");
+            }
+            if(dinastija.KrajVladavine == null || dinastija.KrajVladavine.God == 0)
+            {
+                return BadRequest("Morate uneti godinu kraja vladavine dinastije!");
+            }
+            if(dinastija.PocetakVladavine.God > dinastija.KrajVladavine.God)//moze jednaka mozda vladali samo te godine 
+            {
+                //sredi ako dodas p.n.e.
+                return BadRequest("Godina pocetka vladavine mora biti manja ili jednaka godini kraja vladavine dinastije!");
+            }
             // da li da se dodaju provere sta vraca za svaki slucaj ako ovde puca
             await _godinaService.DodajGodinu(dinastija.PocetakVladavine.God);
             await _godinaService.DodajGodinu(dinastija.KrajVladavine.God);
@@ -40,7 +53,7 @@ public class DinastijaController : ControllerBase
                                 .ExecuteWithoutResultsAsync();
             //mozda ovo znaci da se vezuje samo s tim propertijem i mozda ce morati za ostale da se dodaje al to mi nema smisla
             //kaze chatGPT da se vezuje sa celim cvorom we good
-            return Ok();
+            return Ok($"Dinastija {dinastija.Naziv} je uspesno kreirana!");
         }
         catch (Exception ex)  
         {
@@ -85,44 +98,6 @@ public class DinastijaController : ControllerBase
             return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
         }
     }
-    [HttpGet("GetAllDinastije")]
-    public async Task<IActionResult> GetAllDinastije()
-    {
-        try 
-        {
-            var dinastije = (await _client.Cypher.Match("(d:Dinastija)")  
-                                                 .OptionalMatch("(d)-[:POCETAK_VLADAVINE]->(pg:Godina)") 
-                                                 .OptionalMatch("(d)-[:KRAJ_VLADAVINE]->(kg:Godina)")  
-                                                 .Return((d, pg, kg) => new {
-                                                     Dinastija = d.As<Dinastija>(),
-                                                     PocetakVladavine = pg.As<Godina>(),
-                                                     KrajVladavine = kg.As<Godina>()
-                                                 }) 
-                                                 .ResultsAsync)
-                                                 .ToList(); 
-
-            if (dinastije == null || !dinastije.Any())
-            {
-                return BadRequest("Nije pronadjena nijedna dinastija!");
-            }
-
-            var result = dinastije.Select(item => new Dinastija {
-                                            ID = item.Dinastija.ID,
-                                            Naziv = item.Dinastija.Naziv,
-                                            Slika = item.Dinastija.Slika,
-                                            PocetakVladavine = item.PocetakVladavine ?? new Godina(), //godine ce uvek da nadje ako nisu nullable
-                                            KrajVladavine = item.KrajVladavine ?? new Godina() 
-                                            //Clanovi = item.Clanovi?.ToList() ?? new List<Licnost>()  // If no Licnost found, return empty list
-                                        }).ToList();
-
-            return Ok(result);
-        }
-        catch (Exception ex)  
-        {
-            return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
-        }
-    }
-
 
     [HttpPut("UpdateDinastija/{id}")]//ZA SVE UPDATE TREBA PROVERA DA JE GOD KRAJA VECA OD GODINE POCETKA
     public async Task<IActionResult> UpdateDinastija([FromBody] Dinastija dinastija, Guid id)
@@ -133,6 +108,21 @@ public class DinastijaController : ControllerBase
             //A NE DA MOZES DA UBACUJES KOMPLET NOVU 
             
             //zasto mi ne ucita postojece podatke u swagger NE MOZE GOVNO
+
+            if(dinastija.PocetakVladavine == null || dinastija.PocetakVladavine.God == 0)
+            {
+                return BadRequest("Morate uneti godinu pocetka vladavine dinastije!");
+            }
+            if(dinastija.KrajVladavine == null || dinastija.KrajVladavine.God == 0)
+            {
+                return BadRequest("Morate uneti godinu kraja vladavine dinastije!");
+            }
+            if(dinastija.PocetakVladavine.God > dinastija.KrajVladavine.God)//moze jednaka mozda vladali samo te godine 
+            {
+                //sredi ako dodas p.n.e.
+                return BadRequest("Godina pocetka vladavine mora biti manja ili jednaka godini kraja vladavine dinastije!");
+            }
+
             var din = (await _client.Cypher.Match("(d:Dinastija)")
                                            .Where((Dinastija d) => d.ID == id)
                                            .OptionalMatch("(d)-[r:POCETAK_VLADAVINE]->(pg:Godina)")
@@ -146,7 +136,7 @@ public class DinastijaController : ControllerBase
                                            .ResultsAsync)
                                            .FirstOrDefault();
             
-            if(din.Dinastija == null)
+            if(din == null || din.Dinastija == null)
             {
                 return BadRequest($"Dinastija sa id: {id} ne postoji u bazi!");
             }
@@ -240,9 +230,48 @@ public class DinastijaController : ControllerBase
                                 //.OptionalMatch("(d)-[r3:CLANOVI]->(l:Licnost)")//dodaj nadnadno
                                 .Delete("r, r2, d")//r3
                                 .ExecuteWithoutResultsAsync();
-            return Ok();
+
+            return Ok($"Dinastija sa id: {id} je uspesno obrisana iz baze!");
         }
         
+        catch (Exception ex)  
+        {
+            return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
+        }
+    }
+
+    [HttpGet("GetAllDinastije")]
+    public async Task<IActionResult> GetAllDinastije()
+    {
+        try 
+        {
+            var dinastije = (await _client.Cypher.Match("(d:Dinastija)")  
+                                                 .OptionalMatch("(d)-[:POCETAK_VLADAVINE]->(pg:Godina)") 
+                                                 .OptionalMatch("(d)-[:KRAJ_VLADAVINE]->(kg:Godina)")  
+                                                 .Return((d, pg, kg) => new {
+                                                     Dinastija = d.As<Dinastija>(),
+                                                     PocetakVladavine = pg.As<Godina>(),
+                                                     KrajVladavine = kg.As<Godina>()
+                                                 }) 
+                                                 .ResultsAsync)
+                                                 .ToList(); 
+
+            if (dinastije == null || !dinastije.Any())
+            {
+                return BadRequest("Nije pronadjena nijedna dinastija!");
+            }
+
+            var result = dinastije.Select(item => new Dinastija {
+                                            ID = item.Dinastija.ID,
+                                            Naziv = item.Dinastija.Naziv,
+                                            Slika = item.Dinastija.Slika,
+                                            PocetakVladavine = item.PocetakVladavine ?? new Godina(), //godine ce uvek da nadje ako nisu nullable
+                                            KrajVladavine = item.KrajVladavine ?? new Godina() 
+                                            //Clanovi = item.Clanovi?.ToList() ?? new List<Licnost>()  // If no Licnost found, return empty list
+                                        }).ToList();
+
+            return Ok(result);
+        }
         catch (Exception ex)  
         {
             return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
@@ -257,18 +286,30 @@ public class DinastijaController : ControllerBase
             var din = (await _client.Cypher.Match("(d:Dinastija)")
                                            .Where((Dinastija d) => d.ID == id)
                                            .OptionalMatch("(d)-[r:POCETAK_VLADAVINE]->(pg:Godina)")
-                                           .Return((d, pg) => new 
+                                           .Return((d, pg, kg) => new 
                                            {
                                                 Dinastija = d.As<Dinastija>(),//ne mora da je vraca jer se ne koristi nigde a ovo svakako ne sme da bued null
-                                                Pocetak = pg.As<Godina>()
+                                                Pocetak = pg.As<Godina>(),
+                                                Kraj = kg.As<Godina>()
                                            })
                                            .ResultsAsync)
                                            .FirstOrDefault();
             
-            if(din.Dinastija == null)
+            if(din == null || din.Dinastija == null)
             {
                 return BadRequest($"Dinastija sa id: {id} ne postoji u bazi!");
             }
+
+            if(god == 0)
+            {
+                return BadRequest("Morate uneti godinu pocetka vladavine dinastije!");
+            }
+            if(god > din.Kraj.God)//moze jednaka mozda vladali samo te godine 
+            {
+                //sredi ako dodas p.n.e.
+                return BadRequest("Godina pocetka vladavine mora biti manja ili jednaka godini kraja vladavine dinastije!");
+            }
+
             if(din.Pocetak != null && din.Pocetak.God == god)
             {
                 return BadRequest($"Pocetak vladavine dinastije {din.Dinastija.Naziv} je vec postavljen na {god}. godinu!");
@@ -300,18 +341,30 @@ public class DinastijaController : ControllerBase
             var din = (await _client.Cypher.Match("(d:Dinastija)")
                                            .Where((Dinastija d) => d.ID == id)
                                            .OptionalMatch("(d)-[r:KRAJ_VLADAVINE]->(kg:Godina)")
-                                           .Return((d, kg) => new 
+                                           .Return((d, pg, kg) => new 
                                            {
                                                 Dinastija = d.As<Dinastija>(),//ne mora da je vraca jer se ne koristi nigde a ovo svakako ne sme da bued null
+                                                Pocetak = pg.As<Godina>(),
                                                 Kraj = kg.As<Godina>()
                                            })
                                            .ResultsAsync)
                                            .FirstOrDefault();
             
-            if(din.Dinastija == null)
+            if(din == null || din.Dinastija == null)
             {
                 return BadRequest($"Dinastija sa id: {id} ne postoji u bazi!");
             }
+
+            if(god == 0)
+            {
+                return BadRequest("Morate uneti godinu kraja vladavine dinastije!");
+            }
+            if(god < din.Pocetak.God)//moze jednaka mozda vladali samo te godine 
+            {
+                //sredi ako dodas p.n.e.
+                return BadRequest("Godina kraja vladavine mora biti veca ili jednaka godini pocetka vladavine dinastije!");
+            }
+
             if(din.Kraj != null && din.Kraj.God == god)
             {
                 return BadRequest($"Kraj vladavine dinastije {din.Dinastija.Naziv} je vec postavljen na {god}. godinu!");
