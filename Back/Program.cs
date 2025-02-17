@@ -6,6 +6,7 @@ builder.Services.AddScoped<GodinaService>();
 builder.Services.AddScoped<LokacijaService>();
 builder.Services.AddScoped<ZemljaService>();
 builder.Services.AddScoped<RatService>();
+builder.Services.AddScoped<DinastijaService>();
 builder.Services.AddControllers();
 builder.Services.AddControllers();
 

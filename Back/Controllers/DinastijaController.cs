@@ -26,6 +26,7 @@ public class DinastijaController : ControllerBase
     {
         try
         {
+            //PROVERA JE L VEC POSTOJI????????????
             if(dinastija.PocetakVladavine == null || dinastija.PocetakVladavine.God == 0)
             {
                 return BadRequest("Morate uneti godinu pocetka vladavine dinastije!");

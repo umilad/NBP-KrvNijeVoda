@@ -29,6 +29,18 @@ public class LicnostController : ControllerBase
     {   
         try
         {
+            var postojecaLicnost = (await _client.Cypher.Match("(l:Licnost)")
+                                                        .Where("l.Titula = $titula AND l.Ime = $ime AND l.Prezime = $prezime")
+                                                        .WithParam("titula", licnost.Titula)
+                                                        .WithParam("ime", licnost.Ime)
+                                                        .WithParam("prezime", licnost.Prezime)
+                                                        .Return(l => l.As<Licnost>())
+                                                        .ResultsAsync)
+                                                        .FirstOrDefault();
+            if(postojecaLicnost != null)
+                return BadRequest($"Licnost {licnost.Titula} {licnost.Ime} {licnost.Prezime} vec postoji u bazi sa ID: {postojecaLicnost.ID}!");
+
+
             var licnostID = Guid.NewGuid();
             await _client.Cypher.Create("(l:Licnost {ID: $id, Titula: $titula, Ime: $ime, Prezime: $prezime, Pol: $pol, Slika: $slika})")
                                 .WithParam("id", licnostID)
@@ -39,7 +51,7 @@ public class LicnostController : ControllerBase
                                 .WithParam("slika", licnost.Slika)
                                 .ExecuteWithoutResultsAsync();
 
-            if(licnost.GodinaRodjenja!=null)
+            if(licnost.GodinaRodjenja != null)
             {
                 await _godinaService.DodajGodinu(licnost.GodinaRodjenja!.God);
                 await _client.Cypher.Match("(l:Licnost {ID: $id})", "(gr:Godina {God: $rodj})")
@@ -48,7 +60,7 @@ public class LicnostController : ControllerBase
                                     .WithParam("rodj", licnost.GodinaRodjenja.God)
                                     .ExecuteWithoutResultsAsync();
             }
-            if(licnost.GodinaSmrti!=null)
+            if(licnost.GodinaSmrti != null)
             {
                 await _godinaService.DodajGodinu(licnost.GodinaSmrti!.God);
                 await _client.Cypher.Match("(l:Licnost {ID: $id})", "(gs:Godina {God: $smrt})")
@@ -70,11 +82,11 @@ public class LicnostController : ControllerBase
                                         .ExecuteWithoutResultsAsync();
                 }
                 else {
-                    return Ok($"Uspesno dodata licnost sa id:{licnostID} u bazu, ALI bez mesta jer nije stavljena zemlja kojoj pripada!");
+                    return Ok($"Uspesno dodata licnost sa ID:{licnostID} u bazu, ALI bez mesta jer nije stavljena zemlja kojoj pripada!");
                 }
             }
 
-            return Ok($"Uspesno dodata licnost sa id:{licnostID} u bazu!");
+            return Ok($"Uspesno dodata licnost sa ID:{licnostID} u bazu!");
         }
         catch (Exception ex)  
         {
