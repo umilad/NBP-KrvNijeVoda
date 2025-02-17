@@ -22,14 +22,15 @@ public async Task<IActionResult> GetZemlja(Guid id)
     try
     {
         var zemlja = (await _client.Cypher.Match("(z:Zemlja)")
-                                         .Where((Zemlja z) => z.ID == id)
-                                         .Return(z => z.As<Zemlja>())
-                                         .ResultsAsync)
-                                         .FirstOrDefault();
+                                          .Where((Zemlja z) => z.ID == id)
+                                          .Return(z => z.As<Zemlja>())
+                                          .ResultsAsync)
+                                          .FirstOrDefault();
         if (zemlja == null)
         {
             return NotFound($"Zemlja sa ID-em {id} ne postoji u bazi!");
         }
+
         return Ok(zemlja);
     }
     catch (Exception ex)  
@@ -44,10 +45,10 @@ public async Task<IActionResult> CreateZemlja([FromBody] Zemlja zemlja)
     try
     {
         var zem = (await _client.Cypher.Match("(z:Zemlja)")
-                                        .Where((Zemlja z) => z.ID == zemlja.ID)
-                                        .Return(z => z.As<Zemlja>())
-                                        .ResultsAsync)
-                                        .FirstOrDefault();
+                                       .Where((Zemlja z) => z.ID == zemlja.ID)
+                                       .Return(z => z.As<Zemlja>())
+                                       .ResultsAsync)
+                                       .FirstOrDefault();
         if (zem != null)
         {
             return BadRequest($"Zemlja sa ID-em {zemlja.ID} i nazivom {zemlja.Naziv} već postoji u bazi!");
@@ -59,6 +60,7 @@ public async Task<IActionResult> CreateZemlja([FromBody] Zemlja zemlja)
                             .WithParam("grb", zemlja.Grb)
                             .WithParam("id", Guid.NewGuid())
                             .ExecuteWithoutResultsAsync();
+
         return Ok($"Zemlja {zemlja.Naziv} je uspešno dodata u bazu!");
     }
     catch (Exception ex)  
@@ -73,10 +75,10 @@ public async Task<IActionResult> UpdateZemlja(Guid id, [FromBody] Zemlja updated
     try
     {
         var zemlja = (await _client.Cypher.Match("(z:Zemlja)")
-                                         .Where((Zemlja z) => z.ID == id)
-                                         .Return(z => z.As<Zemlja>())
-                                         .ResultsAsync)
-                                         .FirstOrDefault();
+                                          .Where((Zemlja z) => z.ID == id)
+                                          .Return(z => z.As<Zemlja>())
+                                          .ResultsAsync)
+                                          .FirstOrDefault();
         if (zemlja == null)
         {
             return NotFound($"Zemlja sa ID {id} ne postoji u bazi!");
@@ -89,6 +91,7 @@ public async Task<IActionResult> UpdateZemlja(Guid id, [FromBody] Zemlja updated
                             .WithParam("trajanje", updatedZemlja.Trajanje)
                             .WithParam("grb", updatedZemlja.Grb)
                             .ExecuteWithoutResultsAsync();
+
         return Ok($"Zemlja sa ID-em {id} je uspešno ažurirana.");
     }
     catch (Exception ex) 
@@ -103,10 +106,10 @@ public async Task<IActionResult> DeleteZemlja(Guid id)
     try
     {
         var zemlja = (await _client.Cypher.Match("(z:Zemlja)")
-                                         .Where((Zemlja z) => z.ID == id)
-                                         .Return(z => z.As<Zemlja>())
-                                         .ResultsAsync)
-                                         .FirstOrDefault();
+                                          .Where((Zemlja z) => z.ID == id)
+                                          .Return(z => z.As<Zemlja>())
+                                          .ResultsAsync)
+                                          .FirstOrDefault();
         if (zemlja == null)
         {
             return NotFound($"Zemlja sa ID {id} ne postoji u bazi!");
@@ -116,6 +119,7 @@ public async Task<IActionResult> DeleteZemlja(Guid id)
                             .Where((Zemlja z) => z.ID == id)
                             .Delete("z")
                             .ExecuteWithoutResultsAsync();
+
         return Ok($"Zemlja sa ID-em {id} je uspešno obrisana iz baze!");
     }
     catch (Exception ex) 
@@ -123,14 +127,15 @@ public async Task<IActionResult> DeleteZemlja(Guid id)
         return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
     }
 }
-[HttpGet("GetSveZemlje")]
-public async Task<IActionResult> GetSveZemlje()
+
+[HttpGet("GetAllZemlje")]
+public async Task<IActionResult> GetAllZemlje()
 {
     try
     {
         var zemlje = await _client.Cypher.Match("(z:Zemlja)")
-                                          .Return(z => z.As<Zemlja>())
-                                          .ResultsAsync;
+                                         .Return(z => z.As<Zemlja>())
+                                         .ResultsAsync;
 
         if (zemlje == null || !zemlje.Any())
         {

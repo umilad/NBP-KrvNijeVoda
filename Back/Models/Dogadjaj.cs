@@ -1,7 +1,7 @@
 using KrvNijeVoda.Models;
 
-namespace KrvNijeVoda.Back.Models{ 
-
+namespace KrvNijeVoda.Back.Models
+{ 
     public enum TipDogadjaja {
         Bitka,
         Rat,

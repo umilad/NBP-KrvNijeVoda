@@ -42,6 +42,7 @@ public class GodinaController : ControllerBase
             return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
         }
     }
+    
     [HttpGet("GetGodinaByGod/{god}")]
     public async Task<IActionResult> GetGodinaByGod(int god)
     {
@@ -63,6 +64,7 @@ public class GodinaController : ControllerBase
             return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
         }
     }
+    
     [HttpGet("GetGodina/{id}")]
     public async Task<IActionResult> GetGodina(Guid id)
     {
@@ -134,5 +136,5 @@ public class GodinaController : ControllerBase
         {
             return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
         }
-}
+    }
 }

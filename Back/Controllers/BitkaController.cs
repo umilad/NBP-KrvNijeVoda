@@ -13,7 +13,6 @@ public class BitkaController : ControllerBase
     private readonly IGraphClient _client;
     private readonly GodinaService _godinaService;
     private readonly LokacijaService _lokacijaService;
-
     private readonly ZemljaService _zemljaService;
     private readonly RatService _ratService;
 

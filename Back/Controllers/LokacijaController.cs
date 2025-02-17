@@ -21,69 +21,97 @@ public class LokacijaController : ControllerBase
     [HttpPost("CreateLokacija")]
     public async Task<IActionResult> CreateLokacija([FromBody] Lokacija lokacija)
     {
-        var zemlja = await _zemljaService.DodajZemlju(lokacija.PripadaZemlji);
-        var lokacijaID = Guid.NewGuid();
-        await _client.Cypher
-            .Match("(z:Zemlja {Naziv: $nazivZemlje})")
-            .Create("(l:Lokacija {ID: $id, Naziv: $naziv})-[:PRIPADA_ZEMLJI]->(z)")
-            .WithParam("id", lokacijaID)
-            .WithParam("naziv", lokacija.Naziv)
-            .WithParam("nazivZemlje", lokacija.PripadaZemlji.Naziv)
-            .ExecuteWithoutResultsAsync();
-        
-        return Ok($"Uspesno dodata lokacija sa id: {lokacijaID}");
+        try
+        {
+            var zemlja = await _zemljaService.DodajZemlju(lokacija.PripadaZemlji);
+            var lokacijaID = Guid.NewGuid();
+            await _client.Cypher
+                .Match("(z:Zemlja {Naziv: $nazivZemlje})")
+                .Create("(l:Lokacija {ID: $id, Naziv: $naziv})-[:PRIPADA_ZEMLJI]->(z)")
+                .WithParam("id", lokacijaID)
+                .WithParam("naziv", lokacija.Naziv)
+                .WithParam("nazivZemlje", lokacija.PripadaZemlji.Naziv)
+                .ExecuteWithoutResultsAsync();
+            
+            return Ok($"Uspesno dodata lokacija sa id: {lokacijaID}");
+        }
+        catch (Exception ex)  
+        {
+            return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
+        }
     }
 
     [HttpGet("GetLokacija/{id}")]
     public async Task<IActionResult> GetLokacija(Guid id)
     {
-        var lokacija = (await _client.Cypher.Match("(l:Lokacija)-[:PRIPADA_ZEMLJI]->(z:Zemlja)")
-                                            .Where((Lokacija l) => l.ID == id)
-                                            .Return((l, z) => new {
-                                                Lokacija = l.As<Lokacija>(),
-                                                Zemlja = z.As<Zemlja>()
-                                            })
-                                            .ResultsAsync)
-                                            .FirstOrDefault();
+        try
+        {
+            var lokacija = (await _client.Cypher.Match("(l:Lokacija)-[:PRIPADA_ZEMLJI]->(z:Zemlja)")
+                                                .Where((Lokacija l) => l.ID == id)
+                                                .Return((l, z) => new {
+                                                    Lokacija = l.As<Lokacija>(),
+                                                    Zemlja = z.As<Zemlja>()
+                                                })
+                                                .ResultsAsync)
+                                                .FirstOrDefault();
 
-        if (lokacija == null)
-            return BadRequest($"Lokacija sa ID {id} nije pronađena.");
+            if (lokacija == null)
+                return BadRequest($"Lokacija sa ID {id} nije pronađena.");
 
-        lokacija.Lokacija.PripadaZemlji = lokacija.Zemlja;
-        return Ok(lokacija.Lokacija);
+            lokacija.Lokacija.PripadaZemlji = lokacija.Zemlja;
+            return Ok(lokacija.Lokacija);
+        }
+        catch (Exception ex)  
+        {
+            return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
+        }
     }
 
     [HttpGet("GetAllLokacije")]
     public async Task<IActionResult> GetAllLokacije()
     {
-        var lokacije = (await _client.Cypher.Match("(l:Lokacija)-[:PRIPADA_ZEMLJI]->(z:Zemlja)")
-                                           .Return((l, z) => new {
-                                               Lokacija = l.As<Lokacija>(),
-                                               Zemlja = z.As<Zemlja>()
-                                           })
-                                           .ResultsAsync)
-                                           .ToList();
+        try
+        {
+            var lokacije = (await _client.Cypher.Match("(l:Lokacija)-[:PRIPADA_ZEMLJI]->(z:Zemlja)")
+                                                .Return((l, z) => new {
+                                                    Lokacija = l.As<Lokacija>(),
+                                                    Zemlja = z.As<Zemlja>()
+                                                })
+                                                .ResultsAsync)
+                                                .ToList();
 
-        if (!lokacije.Any())
-            return BadRequest("Nema dostupnih lokacija.");
+            if (!lokacije.Any())
+                return BadRequest("Nema dostupnih lokacija.");
 
-        var result = lokacije.Select(l => {
-            l.Lokacija.PripadaZemlji = l.Zemlja;
-            return l.Lokacija;
-        }).ToList();
+            var result = lokacije.Select(l => {
+                l.Lokacija.PripadaZemlji = l.Zemlja;
+                return l.Lokacija;
+            }).ToList();
 
-        return Ok(result);
+            return Ok(result);
+        }
+        catch (Exception ex)  
+        {
+            return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
+        }
     }
 
     [HttpDelete("DeleteLokacija/{id}")]
     public async Task<IActionResult> DeleteLokacija(Guid id)
     {
-        await _client.Cypher.Match("(l:Lokacija)")
-                            .Where((Lokacija l) => l.ID == id)
-                            .OptionalMatch("(l)-[r:PRIPADA_ZEMLJI]->(z:Zemlja)")
-                            .Delete("r, l")
-                            .ExecuteWithoutResultsAsync();
-        
-        return Ok($"Lokacija sa ID {id} je obrisana.");
+        try
+        {
+            await _client.Cypher.Match("(l:Lokacija)")
+                                .Where((Lokacija l) => l.ID == id)
+                                .OptionalMatch("(l)-[r:PRIPADA_ZEMLJI]->(z:Zemlja)")
+                                .Delete("r, l")
+                                .ExecuteWithoutResultsAsync();
+            
+            return Ok($"Lokacija sa ID {id} je obrisana.");
+        }
+        catch (Exception ex)  
+        {
+            return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
+        }
     }
 }

@@ -99,7 +99,45 @@ public class DinastijaController : ControllerBase
         }
     }
 
-    [HttpPut("UpdateDinastija/{id}")]//ZA SVE UPDATE TREBA PROVERA DA JE GOD KRAJA VECA OD GODINE POCETKA
+    [HttpGet("GetAllDinastije")]
+    public async Task<IActionResult> GetAllDinastije()
+    {
+        try 
+        {
+            var dinastije = (await _client.Cypher.Match("(d:Dinastija)")  
+                                                 .OptionalMatch("(d)-[:POCETAK_VLADAVINE]->(pg:Godina)") 
+                                                 .OptionalMatch("(d)-[:KRAJ_VLADAVINE]->(kg:Godina)")  
+                                                 .Return((d, pg, kg) => new {
+                                                     Dinastija = d.As<Dinastija>(),
+                                                     PocetakVladavine = pg.As<Godina>(),
+                                                     KrajVladavine = kg.As<Godina>()
+                                                 }) 
+                                                 .ResultsAsync)
+                                                 .ToList(); 
+
+            if (dinastije == null || !dinastije.Any())
+            {
+                return BadRequest("Nije pronadjena nijedna dinastija!");
+            }
+
+            var result = dinastije.Select(item => new Dinastija {
+                                            ID = item.Dinastija.ID,
+                                            Naziv = item.Dinastija.Naziv,
+                                            Slika = item.Dinastija.Slika,
+                                            PocetakVladavine = item.PocetakVladavine ?? new Godina(), //godine ce uvek da nadje ako nisu nullable
+                                            KrajVladavine = item.KrajVladavine ?? new Godina() 
+                                            //Clanovi = item.Clanovi?.ToList() ?? new List<Licnost>()  // If no Licnost found, return empty list
+                                        }).ToList();
+
+            return Ok(result);
+        }
+        catch (Exception ex)  
+        {
+            return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
+        }
+    }
+
+    [HttpPut("UpdateDinastija/{id}")]
     public async Task<IActionResult> UpdateDinastija([FromBody] Dinastija dinastija, Guid id)
     {
         try
@@ -217,67 +255,7 @@ public class DinastijaController : ControllerBase
             return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
         }
     }
-
-    [HttpDelete("DeleteDinastija/{id}")]
-    public async Task<IActionResult> DeleteDinastija(Guid id)
-    {
-        try
-        {
-            await _client.Cypher.Match("(d:Dinastija)")
-                                .Where((Dinastija d) => d.ID == id)
-                                .OptionalMatch("(d)-[r:POCETAK_VLADAVINE]->(pg:Godina)")
-                                .OptionalMatch("(d)-[r2:KRAJ_VLADAVINE]->(kg:Godina)")
-                                //.OptionalMatch("(d)-[r3:CLANOVI]->(l:Licnost)")//dodaj nadnadno
-                                .Delete("r, r2, d")//r3
-                                .ExecuteWithoutResultsAsync();
-
-            return Ok($"Dinastija sa id: {id} je uspesno obrisana iz baze!");
-        }
-        
-        catch (Exception ex)  
-        {
-            return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
-        }
-    }
-
-    [HttpGet("GetAllDinastije")]
-    public async Task<IActionResult> GetAllDinastije()
-    {
-        try 
-        {
-            var dinastije = (await _client.Cypher.Match("(d:Dinastija)")  
-                                                 .OptionalMatch("(d)-[:POCETAK_VLADAVINE]->(pg:Godina)") 
-                                                 .OptionalMatch("(d)-[:KRAJ_VLADAVINE]->(kg:Godina)")  
-                                                 .Return((d, pg, kg) => new {
-                                                     Dinastija = d.As<Dinastija>(),
-                                                     PocetakVladavine = pg.As<Godina>(),
-                                                     KrajVladavine = kg.As<Godina>()
-                                                 }) 
-                                                 .ResultsAsync)
-                                                 .ToList(); 
-
-            if (dinastije == null || !dinastije.Any())
-            {
-                return BadRequest("Nije pronadjena nijedna dinastija!");
-            }
-
-            var result = dinastije.Select(item => new Dinastija {
-                                            ID = item.Dinastija.ID,
-                                            Naziv = item.Dinastija.Naziv,
-                                            Slika = item.Dinastija.Slika,
-                                            PocetakVladavine = item.PocetakVladavine ?? new Godina(), //godine ce uvek da nadje ako nisu nullable
-                                            KrajVladavine = item.KrajVladavine ?? new Godina() 
-                                            //Clanovi = item.Clanovi?.ToList() ?? new List<Licnost>()  // If no Licnost found, return empty list
-                                        }).ToList();
-
-            return Ok(result);
-        }
-        catch (Exception ex)  
-        {
-            return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
-        }
-    }
-
+    
     [HttpPut("UpdateDinastijaPocetakVladavine/{id}/{god}")]
     public async Task<IActionResult> UpdateDinastijaPocetakVladavine(Guid id, int god)
     {
@@ -382,6 +360,28 @@ public class DinastijaController : ControllerBase
 
             return Ok($"Godina kraja vladavine dinastije {din.Dinastija.Naziv} sa id: {id} je uspesno promenjena!");
         }
+        catch (Exception ex)  
+        {
+            return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
+        }
+    }
+
+    [HttpDelete("DeleteDinastija/{id}")]
+    public async Task<IActionResult> DeleteDinastija(Guid id)
+    {
+        try
+        {
+            await _client.Cypher.Match("(d:Dinastija)")
+                                .Where((Dinastija d) => d.ID == id)
+                                .OptionalMatch("(d)-[r:POCETAK_VLADAVINE]->(pg:Godina)")
+                                .OptionalMatch("(d)-[r2:KRAJ_VLADAVINE]->(kg:Godina)")
+                                //.OptionalMatch("(d)-[r3:CLANOVI]->(l:Licnost)")//dodaj nadnadno
+                                .Delete("r, r2, d")//r3
+                                .ExecuteWithoutResultsAsync();
+
+            return Ok($"Dinastija sa id: {id} je uspesno obrisana iz baze!");
+        }
+        
         catch (Exception ex)  
         {
             return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
