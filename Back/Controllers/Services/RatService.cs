@@ -18,7 +18,7 @@ public class RatService
         _zemljaService= zemljaService;
     }
 
-    public async Task<Rat> DodajRat(Rat rat, Lokacija lokacija)
+    public async Task<Rat> DodajRat(Rat rat, Lokacija lokacija1)
     {
         // Proveri da li rat već postoji po imenu
         var postojiRat = (await _client.Cypher
@@ -31,8 +31,8 @@ public class RatService
     {
         await _godinaService.DodajGodinu(rat.Godina.God);
         await _godinaService.DodajGodinu(rat.GodinaDo.God);
-        //await _zemljaService.DodajZemlju(rat.Lokacija.PripadaZemlji);
-        //var lokacija = await _lokacijaService.DodajLokaciju(rat.Lokacija.Naziv, rat.Lokacija.PripadaZemlji);
+        await _zemljaService.DodajZemlju(rat.Lokacija.PripadaZemlji);
+        var lokacija = await _lokacijaService.DodajLokaciju(rat.Lokacija.Naziv, rat.Lokacija.PripadaZemlji);
         
         var ratID = Guid.NewGuid();
         postojiRat = (await _client.Cypher   

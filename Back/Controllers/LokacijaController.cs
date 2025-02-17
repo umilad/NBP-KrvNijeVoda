@@ -114,4 +114,52 @@ public class LokacijaController : ControllerBase
             return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
         }
     }
+
+[HttpPut("UpdateLokacija/{id}")]
+public async Task<IActionResult> UpdateLokacija(Guid id, [FromBody] Lokacija updatedLokacija)
+{
+    try
+    {
+        if (updatedLokacija == null)
+            return BadRequest("Podaci za ažuriranje nisu poslati.");
+
+        var lokacija = (await _client.Cypher
+            .Match("(l:Lokacija)")
+            .Where((Lokacija l) => l.ID == id)
+            .Return(l => l.As<Lokacija>())
+            .ResultsAsync)
+            .FirstOrDefault();
+
+        if (lokacija == null)
+            return NotFound($"Lokacija sa ID: {id} nije pronađena.");
+
+        var cypher = _client.Cypher
+            .Match("(l:Lokacija)")
+            .Where((Lokacija l) => l.ID == id)
+            .Set("l.Naziv = $naziv")
+            .WithParam("naziv", updatedLokacija.Naziv);
+
+
+       
+        if (updatedLokacija.PripadaZemlji != null)
+        {
+            await _zemljaService.DodajZemlju(updatedLokacija.PripadaZemlji);
+            cypher = cypher
+                .With("l")
+                .Match("(z:Zemlja {Naziv: $nazivZemlje})")
+                .OptionalMatch("(l)-[rel:PRIPADA_ZEMLJI]->(z)")
+                .Delete("rel")
+                .Merge("(l)-[:PRIPADA_ZEMLJI]->(z)")
+                .WithParam("nazivZemlje", updatedLokacija.PripadaZemlji.Naziv);
+        }
+
+        await cypher.ExecuteWithoutResultsAsync();
+        return Ok($"Lokacija sa ID: {id} uspešno ažurirana.");
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(500, $"Došlo je do greške pri ažuriranju u Neo4j bazi: {ex.Message}");
+    }
+}
+
 }

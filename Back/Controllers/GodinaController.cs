@@ -137,4 +137,37 @@ public class GodinaController : ControllerBase
             return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
         }
     }
+[HttpPut("UpdateGodina/{id}")]
+public async Task<IActionResult> UpdateGodina(Guid id, [FromBody] Godina updatedGodina)
+{
+    try 
+    {
+  
+        var god = (await _client.Cypher
+            .Match("(g:Godina)")
+            .Where((Godina g) => g.ID == id)
+            .Return(g => g.As<Godina>())
+            .ResultsAsync)
+            .FirstOrDefault();
+
+        if (god == null)
+            return NotFound($"Godina sa ID: {id} nije pronađena.");
+
+        // Ažuriranje godine
+        await _client.Cypher
+            .Match("(g:Godina)")
+            .Where((Godina g) => g.ID == id)
+            .Set("g.God = $godina")
+            .WithParam("godina", updatedGodina.God)
+            .ExecuteWithoutResultsAsync();
+
+        return Ok($"Godina sa ID: {id} uspešno ažurirana.");
+    }
+
+    catch (Exception ex)  
+    {
+        return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
+    }
+}
+
 }

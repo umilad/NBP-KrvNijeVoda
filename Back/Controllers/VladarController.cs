@@ -333,8 +333,8 @@ public class VladarController : ControllerBase
     //     }        
     // }
 
-    [HttpDelete("DeleteLicnost/{id}")]
-    public async Task<IActionResult> DeleteLicnost(Guid id)
+    [HttpDelete("DeleteVladar/{id}")]
+    public async Task<IActionResult> DeleteVladar(Guid id)
     {
         try {
             await _client.Cypher.Match("(v:Licnost:Vladar)")

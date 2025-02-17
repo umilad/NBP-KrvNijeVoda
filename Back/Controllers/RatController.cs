@@ -175,4 +175,78 @@ public class RatController : ControllerBase
             return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
         }
     }
+
+[HttpPut("UpdateRat/{id}")]
+public async Task<IActionResult> UpdateRat(Guid id, [FromBody] Rat updatedRat)
+{
+    try
+    {
+        if (updatedRat == null)
+            return BadRequest("Podaci za ažuriranje nisu poslati.");
+
+        var rat = (await _client.Cypher
+            .Match("(r:Rat)")
+            .Where((Rat r) => r.ID == id)
+            .Return(r => r.As<Rat>())
+            .ResultsAsync)
+            .FirstOrDefault();
+
+        if (rat == null)
+            return NotFound($"Rat sa ID: {id} nije pronađen.");
+
+        var cypher = _client.Cypher
+            .Match("(r:Rat)")
+            .Where((Rat r) => r.ID == id)
+            .Set("r.Ime = $ime, r.Tekst = $tekst")
+            .WithParam("ime", updatedRat.Ime)
+            .WithParam("tekst", updatedRat.Tekst);
+            
+        // Ažuriranje godina
+        if (updatedRat.Godina != null)
+        {
+            await _godinaService.DodajGodinu(updatedRat.Godina.God);
+            cypher = cypher
+                .With("r") // Potrebno da bi nastavili sa MATCH
+                .Match("(g:Godina {God: $godina})")
+                .OptionalMatch("(r)-[rel:DESIO_SE]->()")
+                .Delete("rel")
+                .Merge("(r)-[:DESIO_SE]->(g)")
+                .WithParam("godina", updatedRat.Godina.God);
+        }
+
+        if (updatedRat.GodinaDo != null)
+        {
+            await _godinaService.DodajGodinu(updatedRat.GodinaDo.God);
+            cypher = cypher
+                .With("r") 
+                .Match("(gd:Godina {God: $godinaDo})")
+                .OptionalMatch("(r)-[rel:RAT_TRAJAO_DO]->()")
+                .Delete("rel")
+                .Merge("(r)-[:RAT_TRAJAO_DO]->(gd)")
+                .WithParam("godinaDo", updatedRat.GodinaDo.God);
+        }
+
+        // Ažuriranje lokacije
+        if (updatedRat.Lokacija != null)
+        {
+            await _zemljaService.DodajZemlju(updatedRat.Lokacija.PripadaZemlji);
+            var lokacija = await _lokacijaService.DodajLokaciju(updatedRat.Lokacija.Naziv, updatedRat.Lokacija.PripadaZemlji);
+            cypher = cypher
+                .With("r") 
+                .Match("(l:Lokacija {ID: $idLokacije})")
+                .OptionalMatch("(r)-[rel:DESIO_SE_U]->()")
+                .Delete("rel")
+                .Merge("(r)-[:DESIO_SE_U]->(l)")
+                .WithParam("idLokacije", lokacija.ID);
+        }
+
+        await cypher.ExecuteWithoutResultsAsync();
+        return Ok($"Rat sa ID: {id} uspešno ažuriran.");
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(500, $"Došlo je do greške pri ažuriranju u Neo4j bazi: {ex.Message}");
+    }
+}
+
 }
