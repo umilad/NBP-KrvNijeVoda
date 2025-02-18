@@ -156,30 +156,30 @@ public class VladarController : ControllerBase
         try 
         {
             var vl = (await _client.Cypher.Match("(l:Licnost:Vladar)")
-                                           .Where((Vladar l) => l.ID == id)
-                                           .OptionalMatch("(l)-[r:RODJEN]->(gr:Godina)")
-                                           .OptionalMatch("(l)-[r2:UMRO]->(gs:Godina)")
-                                           .OptionalMatch("(l)-[r3:RODJEN_U]->(m:Lokacija)-[:PRIPADA_ZEMLJI]->(z:Zemlja)")
-                                           .OptionalMatch("(l)-[r4:VLADAO_OD]->(gpv:Godina)")
-                                           .OptionalMatch("(l)-[r5:VLADAO_DO]->(gkv:Godina)")
-                                           .OptionalMatch("(l)-[r6:PRIPADA_DINASTIJI]->(d:Dinastija)")
-                                           .Return((l, gr, gs, m, z, gpv, gkv, d) => new {
-                                               Vladar = l.As<Vladar>(),
-                                               Rodjen = gr.As<Godina>(),
-                                               Umro = gs.As<Godina>(),
-                                               Mesto =  m.As<Lokacija>(),
-                                               Zemlja = z.As<Zemlja>(),
-                                               Pocetak = gpv.As<Godina>(),
-                                               Kraj = gkv.As<Godina>(),
-                                               Dinastija = d.As<Dinastija>()                                        
-                                           }) 
-                                           .ResultsAsync)
-                                           .FirstOrDefault();
+                                          .Where((Vladar l) => l.ID == id)
+                                          .OptionalMatch("(l)-[r:RODJEN]->(gr:Godina)")
+                                          .OptionalMatch("(l)-[r2:UMRO]->(gs:Godina)")
+                                          .OptionalMatch("(l)-[r3:RODJEN_U]->(m:Lokacija)-[:PRIPADA_ZEMLJI]->(z:Zemlja)")
+                                          .OptionalMatch("(l)-[r4:VLADAO_OD]->(gpv:Godina)")
+                                          .OptionalMatch("(l)-[r5:VLADAO_DO]->(gkv:Godina)")
+                                          .OptionalMatch("(l)-[r6:PRIPADA_DINASTIJI]->(d:Dinastija)")
+                                          .Return((l, gr, gs, m, z, gpv, gkv, d) => new {
+                                              Vladar = l.As<Vladar>(),
+                                              Rodjen = gr.As<Godina>(),
+                                              Umro = gs.As<Godina>(),
+                                              Mesto =  m.As<Lokacija>(),
+                                              Zemlja = z.As<Zemlja>(),
+                                              Pocetak = gpv.As<Godina>(),
+                                              Kraj = gkv.As<Godina>(),
+                                              Dinastija = d.As<Dinastija>()                                        
+                                          }) 
+                                          .ResultsAsync)
+                                          .FirstOrDefault();
             
 
             if(vl == null)
             {
-                return BadRequest($"Vladar sa id {id} nije pronadjen u bazi!");
+                return BadRequest($"Vladar sa ID: {id} nije pronadjen u bazi!");
             }
             if(vl.Mesto != null)
                 vl.Mesto.PripadaZemlji = vl.Zemlja ?? new Zemlja();
@@ -207,42 +207,50 @@ public class VladarController : ControllerBase
         }                
     }
 
-    // [HttpPut("UpdateLicnost/{id}")]
-    // public async Task<IActionResult> UpdateLicnost([FromBody] Licnost licnost, Guid id)
+    // [HttpPut("UpdateVladar/{id}")]
+    // public async Task<IActionResult> UpdateVladar([FromBody] Vladar vladar, Guid id)
     // {
+    //     //racunamo da mora da ima titulu, ime, prezime i od veza samo pocetak i kraj vladavine
     //     try {
-    //         var lic = (await _client.Cypher.Match("(l:Licnost)")
-    //                                        .Where((Licnost l) => l.ID == id)
-    //                                        .OptionalMatch("(l)-[r:RODJEN]->(gr:Godina)")
-    //                                        .OptionalMatch("(l)-[r2:UMRO]->(gs:Godina)")
-    //                                        .OptionalMatch("(l)-[r3:RODJEN_U]->(m:Lokacija)-[:PRIPADA_ZEMLJI]->(z:Zemlja)")
-    //                                        .Return((l, gr, gs, m, z) => new {
-    //                                             Licnost = l.As<Licnost>(),
-    //                                             Rodjen = gr.As<Godina>(),
-    //                                             Umro = gs.As<Godina>(),
-    //                                             Mesto =  m.As<Lokacija>(),
-    //                                             Zemlja = z.As<Zemlja>()                                        
-    //                                         }) 
-    //                                        .ResultsAsync)
-    //                                        .FirstOrDefault();
+    //         var vl = (await _client.Cypher.Match("(l:Licnost:Vladar)")
+    //                                       .Where((Vladar l) => l.ID == id)
+    //                                       .OptionalMatch("(l)-[r:RODJEN]->(gr:Godina)")
+    //                                       .OptionalMatch("(l)-[r2:UMRO]->(gs:Godina)")
+    //                                       .OptionalMatch("(l)-[r3:RODJEN_U]->(m:Lokacija)-[:PRIPADA_ZEMLJI]->(z:Zemlja)")
+    //                                       .OptionalMatch("(l)-[r4:VLADAO_OD]->(gpv:Godina)")
+    //                                       .OptionalMatch("(l)-[r5:VLADAO_DO]->(gkv:Godina)")
+    //                                       .OptionalMatch("(l)-[r6:PRIPADA_DINASTIJI]->(d:Dinastija)")
+    //                                       .Return((l, gr, gs, m, z, gpv, gkv, d) => new {
+    //                                           Vladar = l.As<Vladar>(),
+    //                                           Rodjen = gr.As<Godina>(),
+    //                                           Umro = gs.As<Godina>(),
+    //                                           Mesto =  m.As<Lokacija>(),
+    //                                           Zemlja = z.As<Zemlja>(),
+    //                                           Pocetak = gpv.As<Godina>(),
+    //                                           Kraj = gkv.As<Godina>(),
+    //                                           Dinastija = d.As<Dinastija>()                                        
+    //                                       }) 
+    //                                       .ResultsAsync)
+    //                                       .FirstOrDefault();
         
+    //         //prvo update obicne atribute pa provera za sve ostale
 
-    //         if(lic == null)
+    //         if(vl == null)
     //         {
-    //             return BadRequest($"Licnost sa id {id} nije pronadjena u bazi!");
+    //             return BadRequest($"Vladar sa ID: {id} nije pronadjena u bazi!");
     //         }
 
     //         bool promenjenaGodRodj = false;
     //         bool promenjenaGodSmrti = false;
     //         bool promenjenoMestoRodj = false;
 
-    //         if(licnost.GodinaRodjenja != null)
+    //         if(vladar.GodinaRodjenja != null)
     //         {
-    //             if(lic.Rodjen != null)
+    //             if(vladar.Rodjen != null)
     //             {
-    //                 if(lic.Rodjen.God != licnost.GodinaRodjenja.God)
+    //                 if(vladar.Rodjen.God != vladar.GodinaRodjenja.God)
     //                 {
-    //                     await _godinaService.DodajGodinu(licnost.GodinaRodjenja.God);
+    //                     await _godinaService.DodajGodinu(vladar.GodinaRodjenja.God);
     //                     promenjenaGodRodj = true;
     //                 }
     //             }
@@ -250,13 +258,13 @@ public class VladarController : ControllerBase
     //             promenjenaGodRodj = true;
     //         }
 
-    //         if(licnost.GodinaSmrti != null)
+    //         if(vladar.GodinaSmrti != null)
     //         {
-    //             if(lic.Umro != null)
+    //             if(vladar.Umro != null)
     //             {
-    //                 if(lic.Umro.God != licnost.GodinaSmrti.God)
+    //                 if(vladar.Umro.God != vladar.GodinaSmrti.God)
     //                 {
-    //                     await _godinaService.DodajGodinu(licnost.GodinaSmrti.God);
+    //                     await _godinaService.DodajGodinu(vladar.GodinaSmrti.God);
     //                     promenjenaGodSmrti = true;
     //                 }
     //             }
@@ -264,13 +272,13 @@ public class VladarController : ControllerBase
     //                 promenjenaGodSmrti = true;
     //         }
     //         Lokacija nl = new Lokacija();
-    //         if(licnost.MestoRodjenja != null && licnost.MestoRodjenja.PripadaZemlji != null)
+    //         if(vladar.MestoRodjenja != null && vladar.MestoRodjenja.PripadaZemlji != null)
     //         {
-    //             var nz = await _zemljaService.DodajZemlju(licnost.MestoRodjenja.PripadaZemlji);
-    //             nl = await _lokacijaService.DodajLokaciju(licnost.MestoRodjenja.Naziv, nz);
-    //             if(lic.Mesto != null && lic.Zemlja != null)//jer ne moze da se napravi mesto bez zemlje
+    //             var nz = await _zemljaService.DodajZemlju(vladar.MestoRodjenja.PripadaZemlji);
+    //             nl = await _lokacijaService.DodajLokaciju(vladar.MestoRodjenja.Naziv, nz);
+    //             if(vladar.Mesto != null && vladar.Zemlja != null)//jer ne moze da se napravi mesto bez zemlje
     //             {
-    //                 if(lic.Mesto.Naziv != licnost.MestoRodjenja.Naziv || lic.Zemlja.Naziv != licnost.MestoRodjenja.PripadaZemlji.Naziv)
+    //                 if(vladar.Mesto.Naziv != vladar.MestoRodjenja.Naziv || vladar.Zemlja.Naziv != vladar.MestoRodjenja.PripadaZemlji.Naziv)
     //                 {
     //                     promenjenoMestoRodj = true;
     //                 }
@@ -283,12 +291,12 @@ public class VladarController : ControllerBase
     //                             .Where("l.ID = $id")
     //                             .Set("l.Titula = $titula, l.Ime = $ime, l.Prezime = $prezime, l.Pol = $pol, l.Slika = $slika")
     //                             .WithParam("id", id)
-    //                             .WithParam("titula", licnost.Titula)
-    //                             .WithParam("ime", licnost.Ime)
-    //                             .WithParam("prezime", licnost.Prezime)
+    //                             .WithParam("titula", vladar.Titula)
+    //                             .WithParam("ime", vladar.Ime)
+    //                             .WithParam("prezime", vladar.Prezime)
 
-    //                             .WithParam("pol", licnost.Pol)
-    //                             .WithParam("slika", licnost.Slika)
+    //                             .WithParam("pol", vladar.Pol)
+    //                             .WithParam("slika", vladar.Slika)
     //                             .ExecuteWithoutResultsAsync();
 
     //         if(promenjenaGodRodj)
@@ -299,18 +307,18 @@ public class VladarController : ControllerBase
     //                                 .Delete("r")
     //                                 .Create("(l)-[:RODJEN]->(gr)")
     //                                 .WithParam("id", id)
-    //                                 .WithParam("rodjen", licnost.GodinaRodjenja!.God)//provera za null je bila da je null ne bi bool bio true 
+    //                                 .WithParam("rodjen", vladar.GodinaRodjenja!.God)//provera za null je bila da je null ne bi bool bio true 
     //                                 .ExecuteWithoutResultsAsync();
     //         }
     //         if(promenjenaGodSmrti)
     //         {
-    //             await _client.Cypher.Match("(l:Licnost)", "(gs:Godina)")
+    //             await _client.Cypher.Match("(l:vladar)", "(gs:Godina)")
     //                                 .Where("l.ID = $id AND gs.God = $umro")
     //                                 .OptionalMatch("(l)-[r:UMRO]->(:Godina)")
     //                                 .Delete("r")
     //                                 .Create("(l)-[:UMRO]->(gs)")
     //                                 .WithParam("id", id)
-    //                                 .WithParam("umro", licnost.GodinaSmrti!.God)//provera za null je bila da je null ne bi bool bio true 
+    //                                 .WithParam("umro", vladar.GodinaSmrti!.God)//provera za null je bila da je null ne bi bool bio true 
     //                                 .ExecuteWithoutResultsAsync();
     //         }
     //         if(promenjenoMestoRodj)

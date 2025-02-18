@@ -1,5 +1,5 @@
 using Neo4jClient;
-
+//unique da se definise ovde i onda da se handleuje taj error po fjama vidi s chatgpt ako treba
     public class Neo4jService
     {
         private readonly IGraphClient _client;
