@@ -8,11 +8,14 @@ namespace KrvNijeVoda.Models
         public string Titula { get; set;}
         public string Ime { get; set; }
         public string Prezime { get; set; }
-        public Godina? GodinaRodjenja { get; set; }
-        public Godina? GodinaSmrti { get; set; }
+        
+        public string? GodinaRodjenja { get; set; }
+        public string? GodinaSmrti { get; set; }
+        //VEZE POSTOJE SA GODINAMA
         public string Pol { get; set; }
         public string? Slika { get; set; }//na osnovu pola moze da stavlja one prazne slike kao na fb
-        public Lokacija? MestoRodjenja { get; set; }
+        public string? MestoRodjenja { get; set; }
+        //IMA VEZU SA LOKACIJOM
     }
 
 }
