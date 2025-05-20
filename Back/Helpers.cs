@@ -2,13 +2,13 @@ namespace KrvNijeVoda.Back.Helpers
 {
     public struct GodinaStruct
     {
-        public int God;
-        public bool PNE;
+        public int GodS { get; set; }
+        public bool PneS { get; set; }
 
-        // public GodinaStruct(int god, bool pne)
-        // {
-        //     God = god;
-        //     PNE = pne;
-        // }
+        public GodinaStruct(int god, bool pne = false)//nece djubre 
+        {
+            GodS = god;
+            PneS = pne;
+        }
     }
 }

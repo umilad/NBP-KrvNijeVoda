@@ -3,11 +3,14 @@ using KrvNijeVoda.Back.Helpers;
 
 namespace KrvNijeVoda.Back.Models 
 {
-    public class Vladar : Licnost {
+    public class Vladar : Licnost
+    {
         public Dinastija? Dinastija { get; set; }
         public string? Teritorija { get; set; }//slika
-        public GodinaStruct PocetakVladavine  { get; set; }
-        public GodinaStruct KrajVladavine  { get; set; }
+        public int PocetakVladavineGod { get; set; }
+        public bool PocetakVladavinePNE { get; set; } = false;
+        public int KrajVladavineGod { get; set; }
+        public bool KrajVladavinePNE { get; set; } = false;
         //VEZE OSTAJU 
         // public Godina PocetakVladavine  { get; set; }
         // public Godina KrajVladavine  { get; set; }

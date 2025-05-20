@@ -10,8 +10,10 @@ namespace KrvNijeVoda.Models
         public string Ime { get; set; }
         public string Prezime { get; set; }
         
-        public GodinaStruct? GodinaRodjenja { get; set; }
-        public GodinaStruct? GodinaSmrti { get; set; }
+        public int? GodinaRodjenja { get; set; }
+        public bool? GodinaRodjenjaPNE { get; set; } = false;
+        public int? GodinaSmrti { get; set; }
+        public bool? GodinaSmrtiPNE { get; set; } = false;
         //VEZE POSTOJE SA GODINAMA
         public string Pol { get; set; }
         public string? Slika { get; set; }//na osnovu pola moze da stavlja one prazne slike kao na fb

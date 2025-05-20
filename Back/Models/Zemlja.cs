@@ -5,6 +5,6 @@ namespace KrvNijeVoda.Back.Models
         public string Naziv { get; set; }// UNIQUE
         public string? Trajanje { get; set; }
         public string? Grb { get; set; }//slika
-        public int BrojStanovnika { get; set; }
+        public int? BrojStanovnika { get; set; }
     }
 }
