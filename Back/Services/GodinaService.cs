@@ -13,21 +13,26 @@ public class GodinaService
 
     //MORA DA SE DODA ZA P.N.E. ----dodav treba da se testira
 
-    public async Task DodajGodinu(int go, bool pne)
-    {    
+    public async Task <Godina> DodajGodinu(int go, bool pne)
+    {
         var ng = (await _client.Cypher.Match("(g:Godina)")
-                                      .Where((Godina g) => g.God == go && g.IsPNE == pne) 
+                                      .Where((Godina g) => g.God == go && g.IsPNE == pne)
                                       .Return(g => g.As<Godina>())
                                       .ResultsAsync)
                                       .FirstOrDefault();
-        if(ng == null)
+        if (ng == null)
         {
-            await _client.Cypher.Create("(g:Godina {ID: $id, God: $god, IsPNE: $ispne})")
-                            .WithParam("god", go)
-                            .WithParam("ispne", pne)
-                            .WithParam("id", Guid.NewGuid())
+            var god = new Godina {
+                ID = Guid.NewGuid(),
+                God = go,
+                IsPNE= pne
+            };
+            ng = (await _client.Cypher.Create("(g:Godina $godina)")
+                            .WithParam("godina", god)
                             .Return(g => g.As<Godina>())
-                            .ResultsAsync;
+                            .ResultsAsync)
+                            .FirstOrDefault();
         }
+        return ng!;
     }
 }
