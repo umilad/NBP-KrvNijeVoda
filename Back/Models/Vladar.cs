@@ -1,12 +1,13 @@
 using KrvNijeVoda.Models;
+using KrvNijeVoda.Back.Helpers;
 
 namespace KrvNijeVoda.Back.Models 
 {
     public class Vladar : Licnost {
         public Dinastija? Dinastija { get; set; }
         public string? Teritorija { get; set; }//slika
-        public string PocetakVladavine  { get; set; }
-        public string KrajVladavine  { get; set; }
+        public GodinaStruct PocetakVladavine  { get; set; }
+        public GodinaStruct KrajVladavine  { get; set; }
         //VEZE OSTAJU 
         // public Godina PocetakVladavine  { get; set; }
         // public Godina KrajVladavine  { get; set; }

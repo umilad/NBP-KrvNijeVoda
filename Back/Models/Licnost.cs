@@ -1,4 +1,5 @@
 using KrvNijeVoda.Back.Models;
+using KrvNijeVoda.Back.Helpers;
 
 namespace KrvNijeVoda.Models 
 {//TREBA DA DODAMO VEZE ZA DECU I ZA SUPRUZNIKE
@@ -9,8 +10,8 @@ namespace KrvNijeVoda.Models
         public string Ime { get; set; }
         public string Prezime { get; set; }
         
-        public string? GodinaRodjenja { get; set; }
-        public string? GodinaSmrti { get; set; }
+        public GodinaStruct? GodinaRodjenja { get; set; }
+        public GodinaStruct? GodinaSmrti { get; set; }
         //VEZE POSTOJE SA GODINAMA
         public string Pol { get; set; }
         public string? Slika { get; set; }//na osnovu pola moze da stavlja one prazne slike kao na fb

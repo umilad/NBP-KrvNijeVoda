@@ -1,14 +1,16 @@
 using KrvNijeVoda.Models;
+using KrvNijeVoda.Back.Helpers;
 //nadogradnja bi bila da postoje dinastije koje mogu da se zovu isto al tipa u razlicitim zemljama znaci + zemlja property
 namespace KrvNijeVoda.Back.Models
 { 
     public class Dinastija  {
         public Guid ID { get; set; }
         public string Naziv { get; set; }
-        public string? PocetakVladavine  { get; set; }//sta ako nisu vladali je l moze to??
-        public string? KrajVladavine  { get; set; }//AKO SU NULLABLE MORA DA SE MENJA CREATE
+        
+        public GodinaStruct? PocetakVladavine  { get; set; }
+        //public PocetakVladavine  { get; set; }//sta ako nisu vladali je l moze to??
+        public GodinaStruct? KrajVladavine  { get; set; }//AKO SU NULLABLE MORA DA SE MENJA CREATE
         //VEZE POSTOJE SA GODINAMA
-
         // public Godina? PocetakVladavine  { get; set; }//sta ako nisu vladali je l moze to??
         // public Godina? KrajVladavine  { get; set; }//AKO SU NULLABLE MORA DA SE MENJA CREATE
         public string? Slika { get; set; }
