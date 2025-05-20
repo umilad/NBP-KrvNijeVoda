@@ -11,9 +11,9 @@ namespace KrvNijeVoda.Models
         public string Prezime { get; set; }
         
         public int? GodinaRodjenja { get; set; }
-        public bool? GodinaRodjenjaPNE { get; set; } = false;
+        public bool GodinaRodjenjaPNE { get; set; } = false;
         public int? GodinaSmrti { get; set; }
-        public bool? GodinaSmrtiPNE { get; set; } = false;
+        public bool GodinaSmrtiPNE { get; set; } = false;
         //VEZE POSTOJE SA GODINAMA
         public string Pol { get; set; }
         public string? Slika { get; set; }//na osnovu pola moze da stavlja one prazne slike kao na fb
