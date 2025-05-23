@@ -17,6 +17,7 @@ public class ZemljaController : ControllerBase
         _client = neo4jService.GetClient();
     }
     [HttpPost("CreateZemlja")]
+    //broj stanovnika >0 front 
     public async Task<IActionResult> CreateZemlja([FromBody] Zemlja zemlja)
     {
         try
@@ -153,47 +154,47 @@ public class ZemljaController : ControllerBase
     }
     
     [HttpPut("UpdateZemlja/{id}")]
-public async Task<IActionResult> UpdateZemlja(Guid id, [FromBody] Zemlja updatedZemlja)
-{
-    try
+    public async Task<IActionResult> UpdateZemlja(Guid id, [FromBody] Zemlja updatedZemlja)
     {
-        var duplikat = (await _client.Cypher
-            .Match("(z:Zemlja)")
-            .Where("toLower(z.Naziv) = toLower($naziv) AND z.ID <> $id")
-            .WithParam("naziv", updatedZemlja.Naziv)
-            .WithParam("id", id)
-            .Return(z => z.As<Zemlja>())
-            .ResultsAsync)
-            .Any();
-
-        if (duplikat)
+        try
         {
-            return BadRequest($"Zemlja sa nazivom '{updatedZemlja.Naziv}' već postoji u bazi!");
+            var duplikat = (await _client.Cypher
+                .Match("(z:Zemlja)")
+                .Where("toLower(z.Naziv) = toLower($naziv) AND z.ID <> $id")
+                .WithParam("naziv", updatedZemlja.Naziv)
+                .WithParam("id", id)
+                .Return(z => z.As<Zemlja>())
+                .ResultsAsync)
+                .Any();
+
+            if (duplikat)
+            {
+                return BadRequest($"Zemlja sa nazivom '{updatedZemlja.Naziv}' već postoji u bazi!");
+            }
+            var zemlja = (await _client.Cypher.Match("(z:Zemlja)")
+                                            .Where((Zemlja z) => z.ID == id)
+                                            .Return(z => z.As<Zemlja>())
+                                            .ResultsAsync)
+                                            .FirstOrDefault();
+            if (zemlja == null)
+            {
+                return NotFound($"Zemlja sa ID {id} ne postoji u bazi!");
+            }
+
+            await _client.Cypher.Match("(z:Zemlja)")
+                                .Where((Zemlja z) => z.ID == id)
+                                .Set("z.Naziv = $naziv, z.Trajanje = $trajanje, z.Grb = $grb, z.BrojStanovnika = $brojstanovnika")
+                                .WithParam("naziv", updatedZemlja.Naziv)
+                                .WithParam("trajanje", updatedZemlja.Trajanje)
+                                .WithParam("grb", updatedZemlja.Grb)
+                                .WithParam("brojstanovnika", updatedZemlja.BrojStanovnika)
+                                .ExecuteWithoutResultsAsync();
+
+            return Ok($"Zemlja sa ID-em {id} je uspešno ažurirana.");
         }
-        var zemlja = (await _client.Cypher.Match("(z:Zemlja)")
-                                          .Where((Zemlja z) => z.ID == id)
-                                          .Return(z => z.As<Zemlja>())
-                                          .ResultsAsync)
-                                          .FirstOrDefault();
-        if (zemlja == null)
+        catch (Exception ex) 
         {
-            return NotFound($"Zemlja sa ID {id} ne postoji u bazi!");
+            return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
         }
-
-        await _client.Cypher.Match("(z:Zemlja)")
-                            .Where((Zemlja z) => z.ID == id)
-                            .Set("z.Naziv = $naziv, z.Trajanje = $trajanje, z.Grb = $grb, z.BrojStanovnika = $brojstanovnika")
-                            .WithParam("naziv", updatedZemlja.Naziv)
-                            .WithParam("trajanje", updatedZemlja.Trajanje)
-                            .WithParam("grb", updatedZemlja.Grb)
-                            .WithParam("brojstanovnika", updatedZemlja.BrojStanovnika)
-                            .ExecuteWithoutResultsAsync();
-
-        return Ok($"Zemlja sa ID-em {id} je uspešno ažurirana.");
     }
-    catch (Exception ex) 
-    {
-        return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
-    }
-}
 }
