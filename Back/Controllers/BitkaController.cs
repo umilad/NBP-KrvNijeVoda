@@ -262,7 +262,6 @@ public async Task<IActionResult> GetRatForBitka(Guid bitkaId)
                     .Delete("rel");
             }
 
-            )
             if (updatedBitka.Godina != null)
             {
                 var godina = await _godinaService.DodajGodinu(updatedBitka.Godina.God, updatedBitka.Godina.IsPNE);
