@@ -44,6 +44,7 @@ public class DinastijaController : ControllerBase
                              .Match("(pg:Godina {God: $pocetak, IsPNE: $pocetakPNE})")
                              .WithParam("pocetak", dinastija.PocetakVladavineGod)
                              .WithParam("pocetakPNE", dinastija.PocetakVladavinePNE)
+                             .Set("d.PocetakVladavineGod = $pocetak, d.PocetakVladavinePNE = $pocetakPNE")
                              .Create("(d)-[:POCETAK_VLADAVINE]->(pg)");
             }
 
@@ -54,6 +55,7 @@ public class DinastijaController : ControllerBase
                              .Match("(kg:Godina {God: $kraj, IsPNE: $krajPNE})")
                              .WithParam("kraj", dinastija.KrajVladavineGod)
                              .WithParam("krajPNE", dinastija.KrajVladavinePNE)
+                             .Set("d.KrajVladavineGod = $kraj, d.KrajVladavinePNE = $krajPNE")
                              .Create("(d)-[:KRAJ_VLADAVINE]->(kg)");
             }
 
@@ -82,6 +84,8 @@ public class DinastijaController : ControllerBase
             if (din == null)
                 return NotFound($"Dinastija sa ID: {id} ne postoji u bazi!");
 
+            //Da se sredi prikaz 
+            
             // var result = new Dinastija
             // {
             //     ID = din.ID,
@@ -108,10 +112,10 @@ public class DinastijaController : ControllerBase
         try
         {
             var din = (await _client.Cypher.Match("(d:Dinastija)")
-                                             .Where((Dinastija d) => d.ID == id)
-                                             .Return(d => d.As<Dinastija>())
-                                             .ResultsAsync)
-                                             .FirstOrDefault();
+                                            .Where((Dinastija d) => d.ID == id)
+                                            .Return(d => d.As<Dinastija>())
+                                            .ResultsAsync)
+                                            .FirstOrDefault();
 
             if (din == null)
                 return BadRequest($"Dinastija sa ID: {id} ne postoji u bazi!");
@@ -169,6 +173,7 @@ public class DinastijaController : ControllerBase
                              .Match("(pg:Godina {God: $pocetak, IsPNE: $pocetakPNE})")
                              .WithParam("pocetak", dinastija.PocetakVladavineGod)
                              .WithParam("pocetakPNE", dinastija.PocetakVladavinePNE)
+                             .Set("d.PocetakVladavineGod = $pocetak, d.PocetakVladavinePNE = $pocetakPNE")
                              .Create("(d)-[:POCETAK_VLADAVINE]->(pg)");
             }
 
@@ -179,7 +184,8 @@ public class DinastijaController : ControllerBase
                              .Match("(kg:Godina {God: $kraj, IsPNE: $krajPNE})") //mora da se mecuje i godina da bi bila referenca na cvor inace je samo na objekat
                              .WithParam("kraj", dinastija.KrajVladavineGod)
                              .WithParam("krajPNE", dinastija.KrajVladavinePNE)
-                             .Create("(d)-[:KRAJ_VLADAVINE]->(nkg)");
+                             .Set("d.KrajVladavineGod = $kraj, d.KrajVladavinePNE = $krajPNE")
+                             .Create("(d)-[:KRAJ_VLADAVINE]->(kg)");
             }
 
             await query.ExecuteWithoutResultsAsync();
