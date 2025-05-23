@@ -24,42 +24,68 @@ public class DogadjajController : ControllerBase
     [HttpPost("CreateDogadjaj")]
     public async Task<IActionResult> CreateDogadjaj([FromBody] Dogadjaj dogadjaj)
     {
+        //Provera za tip dogadjaja da li je broj veci od 5 ili manji od 0
         try
         {
-            var god = await _godinaService.DodajGodinu(dogadjaj.Godina.God, dogadjaj.Godina.IsPNE);
-            //await _zemljaService.DodajZemlju(dogadjaj.Lokacija.PripadaZemlji);
-
-            var zemljaPostoji = (await _client.Cypher
-                                                    .Match("(z:Zemlja)")
-                                                    .Where("toLower(z.Naziv) = toLower($naziv)")
-                                                    .WithParam("naziv", dogadjaj.Lokacija)
-                                                    .Return(z => z.As<Zemlja>())
-                                                    .ResultsAsync)
-                                                    .Any();
-
-            if (!zemljaPostoji)
+            Godina god = null;
+            if (dogadjaj.Godina != null)
             {
-                return BadRequest($"Zemlja sa nazivom '{dogadjaj.Lokacija}' ne postoji u bazi!");
+                god = await _godinaService.DodajGodinu(dogadjaj.Godina.God, dogadjaj.Godina.IsPNE);
+            }
+            //await _zemljaService.DodajZemlju(dogadjaj.Lokacija.PripadaZemlji);
+            if (dogadjaj.Lokacija != null)
+            {
+                var zemljaPostoji = (await _client.Cypher
+                                                        .Match("(z:Zemlja)")
+                                                        .Where("toLower(z.Naziv) = toLower($naziv)")
+                                                        .WithParam("naziv", dogadjaj.Lokacija)
+                                                        .Return(z => z.As<Zemlja>())
+                                                        .ResultsAsync)
+                                                        .Any();
+
+                if (!zemljaPostoji)
+                {
+                    return BadRequest($"Zemlja sa nazivom '{dogadjaj.Lokacija}' ne postoji u bazi!");
+                }
             }
 
             string label = dogadjaj.Tip.ToString();
             var dogadjajID = Guid.NewGuid();
-            await _client.Cypher
-                              .Match("(g:Godina {ID: $idGodine})")
-                              .Match("(z:Zemlja)")
-                              .Where("toLower(z.Naziv) = toLower($nazivZemlje)")
-                              .Create($"(d:Dogadjaj:{label} {{ID: $id, Ime: $ime, Tip: $tip, Tekst: $tekst, Lokacija: $lokacija}})")
-                              .Create("(d)-[:DESIO_SE]->(g)")
-                              .Create("(d)-[:DESIO_SE_U]->(z)")
-                              .WithParam("id", dogadjajID)
-                              .WithParam("ime", dogadjaj.Ime)
-                              .WithParam("tip", dogadjaj.Tip.ToString())
-                              .WithParam("tekst", dogadjaj.Tekst)
-                              .WithParam("idGodine", god.ID)
-                              .WithParam("nazivZemlje", dogadjaj.Lokacija)
-                              .WithParam("lokacija", dogadjaj.Lokacija)
-                              .ExecuteWithoutResultsAsync();
-            return Ok($"Uspesno dodat dogadjaj sa id:{dogadjajID} u bazu!");
+
+                
+            var query = _client.Cypher
+                               .Create($"(d:Dogadjaj:{label} {{ID: $id, Ime: $ime, Tip: $tip, Tekst: $tekst, Lokacija: $lokacija}})")
+                               .WithParam("id", dogadjajID)
+                               .WithParam("ime", dogadjaj.Ime)
+                               .WithParam("tip", dogadjaj.Tip.ToString())
+                               .WithParam("tekst", dogadjaj.Tekst)
+                               .WithParam("lokacija", dogadjaj.Lokacija);
+
+                
+                if (god != null && god.ID != Guid.Empty)
+                {
+                    query = query
+                                .With("d")
+                                .Match("(g:Godina {ID: $idGodine})")
+                                .Create("(d)-[:DESIO_SE]->(g)")
+                                .WithParam("idGodine", god.ID);
+
+                }
+
+                if (!string.IsNullOrWhiteSpace(dogadjaj.Lokacija))
+                {
+                    query = query
+                        .With("d")
+                        .Match("(z:Zemlja)")
+                        .Where("toLower(z.Naziv) = toLower($nazivZemlje)")
+                        .Create("(d)-[:DESIO_SE_U]->(z)")
+                        .WithParam("nazivZemlje", dogadjaj.Lokacija);
+                }
+
+                await query.ExecuteWithoutResultsAsync();
+
+                return Ok($"Uspesno dodat dogadjaj sa id:{dogadjajID} u bazu!");
+
         }
         catch (Exception ex)
         {
@@ -95,7 +121,7 @@ public class DogadjajController : ControllerBase
                 Ime = dog.Dogadjaj.Ime,
                 Tip = dog.Dogadjaj.Tip,
                 Tekst = dog.Dogadjaj.Tekst,
-                Godina = dog.DogadjajUGodini ?? new Godina { God = 0 },
+                Godina = dog.DogadjajUGodini,
                 Lokacija = dog.Dogadjaj.Lokacija
             };
             return Ok(result);
@@ -112,9 +138,7 @@ public class DogadjajController : ControllerBase
         {
             await _client.Cypher.Match("(d:Dogadjaj)")
                                 .Where((Dogadjaj d) => d.ID == id)
-                                .OptionalMatch("(d)-[r:DESIO_SE]->(g:Godina)")
-                                .OptionalMatch("(d)-[r2:DESIO_SE_U]->(z:Zemlja)")
-                                .Delete("r, r2, d")
+                                .DetachDelete("d")
                                 .ExecuteWithoutResultsAsync();
             return Ok($"Dogadjaj sa id {id} je obrisan!");
         }
@@ -127,6 +151,7 @@ public class DogadjajController : ControllerBase
     [HttpPut("UpdateDogadjaj/{id}")]
     public async Task<IActionResult> UpdateDogadjaj(Guid id, [FromBody] Dogadjaj updatedDogadjaj)
     {
+        //isto provera za tip kao i za create
         var dog = (await _client.Cypher
             .Match("(d:Dogadjaj)")
             .Where((Dogadjaj d) => d.ID == id)
@@ -142,7 +167,7 @@ public class DogadjajController : ControllerBase
                     .Where((Dogadjaj d) => d.ID == id)
                     .Set("d.Ime = $ime, d.Tekst = $tekst, d.Tip=$tip, d.Lokacija= $lokacija")
                     .Remove("d:Bitka:Rat:Sporazum:Savez:Dokument:Ustanak")
-                    .Set($"d:{updatedDogadjaj.Tip}") // Dodajemo novi tip događaja
+                    .Set($"d:{updatedDogadjaj.Tip}") 
                     .WithParam("ime", updatedDogadjaj.Ime)
                     .WithParam("tip", updatedDogadjaj.Tip)
                     .WithParam("tekst", updatedDogadjaj.Tekst)
@@ -158,15 +183,45 @@ public class DogadjajController : ControllerBase
                             .Merge("(d)-[:DESIO_SE]->(g)");
         }
 
+        else
+        {
+            cypher = cypher.With("d")
+                        .OptionalMatch("(d)-[rel:DESIO_SE]->()")
+                        .Delete("rel");
+        }
         if (updatedDogadjaj.Lokacija != null)
         {
 
-            cypher = cypher.With("d").Match("(z:Zemlja {Naziv: $naziv})")
-                            .OptionalMatch("(d)-[rel:DESIO_SE_U]->()")
-                            .Delete("rel")
-                            .WithParam("naziv", updatedDogadjaj.Lokacija)
-                            .Merge("(d)-[:DESIO_SE_U]->(z)");
+            var zemljaPostoji = await _client.Cypher
+                                             .Match("(z:Zemlja)")
+                                             .Where("toLower(z.Naziv) = toLower($naziv)")
+                                             .WithParam("naziv", updatedDogadjaj.Lokacija)
+                                             .Return(z => z.As<Zemlja>())
+                                             .ResultsAsync;
+
+            if (zemljaPostoji.Any())
+            {
+                cypher = cypher
+                         .With("d")
+                         .Match("(z:Zemlja {Naziv: $naziv})")
+                         .OptionalMatch("(d)-[rel:DESIO_SE_U]->()")
+                         .Delete("rel")
+                         .WithParam("naziv", updatedDogadjaj.Lokacija)
+                         .Merge("(d)-[:DESIO_SE_U]->(z)");
+            }
+            else
+            {
+                return BadRequest($"Zemlja sa nazivom {updatedDogadjaj.Lokacija} ne postoji!");
+            }
         }
+        else
+        {
+            
+            cypher = cypher.With("d")
+                        .OptionalMatch("(d)-[rel:DESIO_SE_U]->()")
+                        .Delete("rel");
+        }
+
         
         await cypher.ExecuteWithoutResultsAsync();
         return Ok($"Uspešno ažuriran događaj '{updatedDogadjaj.Ime}' sa ID: {id}!");

@@ -11,17 +11,287 @@ using KrvNijeVoda.Back;
 public class RatController : ControllerBase
 {
     private readonly IGraphClient _client;
-    // private readonly GodinaService _godinaService;
+    private readonly GodinaService _godinaService;
     // private readonly LokacijaService _lokacijaService;
     // private readonly ZemljaService _zemljaService;
 
-    public RatController(Neo4jService neo4jService/*, GodinaService godinaService, LokacijaService lokacijaService, ZemljaService zemljaService*/)
+    public RatController(Neo4jService neo4jService, GodinaService godinaService /*, LokacijaService lokacijaService, ZemljaService zemljaService*/)
     {
         _client = neo4jService.GetClient();
-        // _godinaService = godinaService;
+        _godinaService = godinaService;
         // _lokacijaService = lokacijaService;
         // _zemljaService = zemljaService;
     }
+
+    [HttpPost("CreateRat")]
+    public async Task<IActionResult> CreateRat([FromBody] Rat rat)
+    {
+        try
+        {
+            Godina godPocetak = null;
+            Godina godKraj = null;
+
+            var ratID = Guid.NewGuid();
+
+            var query = _client.Cypher
+                               .Create($"(r:Dogadjaj:Rat {{ID: $id, Ime: $ime, Tip: 'Rat', Tekst: $tekst, Lokacija: $lokacija, Pobednik: $pobednik}})")
+                               .WithParam("id", ratID)
+                               .WithParam("ime", rat.Ime)
+                               .WithParam("pobednik", rat.Pobednik)
+                               .WithParam("tekst", rat.Tekst)
+                               .WithParam("lokacija", rat.Lokacija);
+
+            if (rat.Lokacija != null)
+            {
+                var zemljaPostoji = (await _client.Cypher
+                                                        .Match("(z:Zemlja)")
+                                                        .Where("toLower(z.Naziv) = toLower($naziv)")
+                                                        .WithParam("naziv", rat.Lokacija)
+                                                        .Return(z => z.As<Zemlja>())
+                                                        .ResultsAsync)
+                                                        .Any();
+
+                if (!zemljaPostoji)
+                {
+                    return BadRequest($"Zemlja sa nazivom '{rat.Lokacija}' ne postoji u bazi!");
+                }
+
+                query = query
+                            .With("r")
+                            .Match("(z:Zemlja {Naziv: $nazivZemlje})")
+                            .Create("(r)-[:DESIO_SE_U]->(z)")
+                            .WithParam("nazivZemlje", rat.Lokacija);
+            }
+
+            if (rat.Godina != null)
+            {
+                godPocetak = await _godinaService.DodajGodinu(rat.Godina.God, rat.Godina.IsPNE);
+                query = query
+                            .With("r")
+                            .Match("(g:Godina {ID: $idGodine})")
+                            .Create("(r)-[:DESIO_SE]->(g)")
+                            .WithParam("idGodine", godPocetak.ID);
+
+            }
+
+            if (rat.GodinaDo != null)
+            {
+                godKraj = await _godinaService.DodajGodinu(rat.GodinaDo.God, rat.Godina.IsPNE);
+                query = query
+                            .With("r")
+                            .Match("(g:Godina {ID: $idGodineDo})")
+                            .Create("(r)-[:RAT_TRAJAO_DO]->(g)")
+                            .WithParam("idGodineDo", godKraj.ID);
+
+            }
+            await query.ExecuteWithoutResultsAsync();
+            return Ok($"Rat '{rat.Ime}' je uspešno dodat!");
+
+
+        }
+
+
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Greška: {ex.Message}");
+        }
+
+
+    }
+
+    [HttpGet("GetRat/{id}")]
+    public async Task<IActionResult> GetRat(Guid id)
+    {
+        try
+        {
+            var result = (await _client.Cypher
+                .Match("(r:Dogadjaj:Rat)")
+                .Where((Rat r) => r.ID == id)
+                .OptionalMatch("(r)-[:DESIO_SE]->(g:Godina)")
+                .OptionalMatch("(r)-[:RAT_TRAJAO_DO]->(gdo:Godina)")
+                .OptionalMatch("(b:Dogadjaj:Bitka)-[:BITKA_U_RATU]->(r)")
+                .OptionalMatch("(r)-[:DESIO_SE_U]->(z:Zemlja)")
+                .Return((r, g, gdo, b) => new
+                {
+                    Rat = r.As<Rat>(),
+                    GodinaOd = g.As<Godina>(),
+                    GodinaDo = gdo.As<Godina>(),
+                    Bitke = b.CollectAs<Bitka>()
+                })
+                .ResultsAsync).FirstOrDefault();
+
+            if (result == null)
+                return NotFound($"Rat sa ID {id} nije pronađen!");
+
+            var rat = result.Rat;
+            rat.Godina = result.GodinaOd;
+            rat.GodinaDo = result.GodinaDo;
+            rat.Bitke = result.Bitke.ToList();
+
+            return Ok(rat);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Greška prilikom rada sa Neo4j bazom: {ex.Message}");
+        }
+    }
+
+    [HttpGet("GetBitkeZaRat/{ratID}")]
+    public async Task<IActionResult> GetBitkeZaRat(Guid ratID)
+    {
+        try
+        {
+            var bitke = await _client.Cypher
+                .Match("(r:Rat)<-[:BITKA_U_RATU]-(b:Bitka)")
+                .Where((Rat r) => r.ID == ratID)
+                .Return(b => b.As<Bitka>())
+                .ResultsAsync;
+
+            if (!bitke.Any())
+                return NotFound($"Nema bitki za rat sa ID: {ratID}");
+
+            return Ok(bitke);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Greška pri dohvatanju bitki: {ex.Message}");
+        }
+    }
+
+    [HttpDelete("DeleteRat/{id}")]
+    public async Task<IActionResult> DeleteRat(Guid id)
+    {
+        try
+        {
+            var rat = (await _client.Cypher
+                .Match("(r:Dogadjaj:Rat)")
+                .Where((Rat r) => r.ID == id)
+                .Return(r => r.As<Rat>())
+                .ResultsAsync).FirstOrDefault();
+
+            if (rat == null)
+                return NotFound($"Rat sa ID {id} nije pronađen!");
+
+            await _client.Cypher
+                .Match("(r:Dogadjaj:Rat)")
+                .Where((Rat r) => r.ID == id)
+                .DetachDelete("r")
+                .ExecuteWithoutResultsAsync();
+
+            return Ok($"Rat sa ID {id} je uspešno obrisan!");
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
+        }
+    }
+
+[HttpPut("UpdateRat/{id}")]
+public async Task<IActionResult> UpdateRat(Guid id, [FromBody] Rat updatedRat)
+{
+    try
+    {
+        var rat = (await _client.Cypher
+            .Match("(r:Dogadjaj:Rat)")
+            .Where((Rat r) => r.ID == id)
+            .Return(r => r.As<Rat>())
+            .ResultsAsync)
+            .FirstOrDefault();
+
+        if (rat == null)
+            return NotFound($"Rat sa ID {id} nije pronađen!");
+
+        var cypher = _client.Cypher
+                            .Match("(r:Dogadjaj:Rat)")
+                            .Where((Rat r) => r.ID == id)
+                            .Set("r.Ime = $ime, r.Tekst = $tekst, r.Tip = 'Rat', r.Lokacija = $lokacija, r.Pobednik = $pobednik")
+                            .With("r")
+                            .WithParams(new
+                            {
+                                ime = updatedRat.Ime,
+                                tekst = updatedRat.Tekst,
+                                lokacija = updatedRat.Lokacija,
+                                pobednik = updatedRat.Pobednik
+                            });
+
+        if (updatedRat.Godina != null)
+        {
+            var god = await _godinaService.DodajGodinu(updatedRat.Godina.God, updatedRat.Godina.IsPNE);
+            cypher = cypher
+                .With("r")
+                .OptionalMatch("(r)-[rel:DESIO_SE]->()")
+                .Delete("rel")
+                .With("r")
+                .Match("(g:Godina {ID: $idGodine})")
+                .WithParam("idGodine", god.ID)
+                .Merge("(r)-[:DESIO_SE]->(g)");
+        }
+        else
+        {
+                cypher = cypher
+                    .With("r")
+                    .OptionalMatch("(r)-[rel:DESIO_SE]->()")
+                    .Delete("rel");
+        }
+        if (updatedRat.GodinaDo != null)
+        {
+            var godDo = await _godinaService.DodajGodinu(updatedRat.GodinaDo.God, updatedRat.GodinaDo.IsPNE);
+            cypher = cypher
+                .With("r")
+                .OptionalMatch("(r)-[rel:RAT_TRAJAO_DO]->()")
+                .Delete("rel")
+                .With("r")
+                .Match("(gdo:Godina {ID: $idGodineDo})")
+                .WithParam("idGodineDo", godDo.ID)
+                .Merge("(r)-[:RAT_TRAJAO_DO]->(gdo)");
+        }
+        else
+        {
+                cypher = cypher
+                    .With("r")
+                    .OptionalMatch("(r)-[rel:RAT_TRAJAO_DO]->()")
+                    .Delete("rel");
+        }
+
+        if (!string.IsNullOrEmpty(updatedRat.Lokacija))
+        {
+            var zemljaPostoji = (await _client.Cypher
+                .Match("(z:Zemlja)")
+                .Where("toLower(z.Naziv) = toLower($naziv)")
+                .WithParam("naziv", updatedRat.Lokacija)
+                .Return(z => z.As<Zemlja>())
+                .ResultsAsync)
+                .Any();
+
+            if (!zemljaPostoji)
+                return BadRequest($"Zemlja sa nazivom '{updatedRat.Lokacija}' ne postoji!");
+
+            cypher = cypher
+                .With("r")
+                .OptionalMatch("(r)-[rel:DESIO_SE_U]->()")
+                .Delete("rel")
+                .With("r")
+                .Match("(z:Zemlja {Naziv: $nazivZemlje})")
+                .WithParam("nazivZemlje", updatedRat.Lokacija)
+                .Merge("(r)-[:DESIO_SE_U]->(z)");
+        }
+        else
+        {
+                cypher = cypher
+                    .With("r")
+                    .OptionalMatch("(r)-[rel:DESIO_SE_U]->()")
+                    .Delete("rel");
+                
+        }
+//OBRNI REDOSLED I PROVERI!
+        await cypher.ExecuteWithoutResultsAsync();
+        return Ok($"Rat '{updatedRat.Ime}' uspešno ažuriran!");
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(500, $"Došlo je do greške pri radu sa bazom: {ex.Message}");
+    }
+}
 
 
 }
