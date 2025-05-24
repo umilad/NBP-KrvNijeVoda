@@ -153,15 +153,20 @@ public class DogadjajController : ControllerBase
     {
         //isto provera za tip kao i za create
         var dog = (await _client.Cypher
-            .Match("(d:Dogadjaj)")
-            .Where((Dogadjaj d) => d.ID == id)
-            .Return(d => d.As<Dogadjaj>())
-            .ResultsAsync)
-            .FirstOrDefault();
+                                .Match("(d:Dogadjaj)")
+                                .Where((Dogadjaj d) => d.ID == id)
+                                .OptionalMatch("(d)-[:DESIO_SE]->(g:Godina)")
+                                .Return((d, g) => new
+                                {
+                                    Dogadjaj = d.As<Dogadjaj>(),
+                                    Godina = g.As<Godina>()
+                                })
+                                .ResultsAsync)
+                                .FirstOrDefault();
 
         if (dog == null)
             return NotFound($"Dogadjaj sa ID {id} nije pronađen!");
-
+    
         var cypher = _client.Cypher
                     .Match("(d:Dogadjaj)")
                     .Where((Dogadjaj d) => d.ID == id)
@@ -175,52 +180,57 @@ public class DogadjajController : ControllerBase
 
         if (updatedDogadjaj.Godina != null)
         {
-            var god = await _godinaService.DodajGodinu(updatedDogadjaj.Godina.God, updatedDogadjaj.Godina.IsPNE);
-            cypher = cypher.With("d").Match("(g:Godina {ID: $idGodine})")
-                            .OptionalMatch("(d)-[rel:DESIO_SE]->()")
-                            .Delete("rel")
-                            .WithParam("idGodine", god.ID)
-                            .Merge("(d)-[:DESIO_SE]->(g)");
-        }
-
-        else
-        {
-            cypher = cypher.With("d")
-                        .OptionalMatch("(d)-[rel:DESIO_SE]->()")
-                        .Delete("rel");
-        }
-        if (updatedDogadjaj.Lokacija != null)
-        {
-
-            var zemljaPostoji = await _client.Cypher
-                                             .Match("(z:Zemlja)")
-                                             .Where("toLower(z.Naziv) = toLower($naziv)")
-                                             .WithParam("naziv", updatedDogadjaj.Lokacija)
-                                             .Return(z => z.As<Zemlja>())
-                                             .ResultsAsync;
-
-            if (zemljaPostoji.Any())
+            if (dog.Godina.God != updatedDogadjaj.Godina.God || dog.Godina.IsPNE != updatedDogadjaj.Godina.IsPNE)
             {
-                cypher = cypher
-                         .With("d")
-                         .Match("(z:Zemlja {Naziv: $naziv})")
-                         .OptionalMatch("(d)-[rel:DESIO_SE_U]->()")
-                         .Delete("rel")
-                         .WithParam("naziv", updatedDogadjaj.Lokacija)
-                         .Merge("(d)-[:DESIO_SE_U]->(z)");
+                var god = await _godinaService.DodajGodinu(updatedDogadjaj.Godina.God, updatedDogadjaj.Godina.IsPNE);
+                cypher = cypher.With("d").Match("(g:Godina {ID: $idGodine})")
+                                .OptionalMatch("(d)-[rel:DESIO_SE]->()")
+                                .Delete("rel")
+                                .WithParam("idGodine", god.ID)
+                                .Merge("(d)-[:DESIO_SE]->(g)");
             }
+        }
+
             else
             {
-                return BadRequest($"Zemlja sa nazivom {updatedDogadjaj.Lokacija} ne postoji!");
+                cypher = cypher.With("d")
+                            .OptionalMatch("(d)-[rel:DESIO_SE]->()")
+                            .Delete("rel");
+            }
+        if (updatedDogadjaj.Lokacija != null)
+        {
+            if (dog.Dogadjaj.Lokacija != updatedDogadjaj.Lokacija)
+            {
+                var zemljaPostoji = await _client.Cypher
+                                                 .Match("(z:Zemlja)")
+                                                 .Where("toLower(z.Naziv) = toLower($naziv)")
+                                                 .WithParam("naziv", updatedDogadjaj.Lokacija)
+                                                 .Return(z => z.As<Zemlja>())
+                                                 .ResultsAsync;
+
+                if (zemljaPostoji.Any())
+                {
+                    cypher = cypher
+                             .With("d")
+                             .Match("(z:Zemlja {Naziv: $naziv})")
+                             .OptionalMatch("(d)-[rel:DESIO_SE_U]->()")
+                             .Delete("rel")
+                             .WithParam("naziv", updatedDogadjaj.Lokacija)
+                             .Merge("(d)-[:DESIO_SE_U]->(z)");
+                }
+                else
+                {
+                    return BadRequest($"Zemlja sa nazivom {updatedDogadjaj.Lokacija} ne postoji!");
+                }
             }
         }
-        else
-        {
-            
-            cypher = cypher.With("d")
-                        .OptionalMatch("(d)-[rel:DESIO_SE_U]->()")
-                        .Delete("rel");
-        }
+            else
+            {
+
+                cypher = cypher.With("d")
+                            .OptionalMatch("(d)-[rel:DESIO_SE_U]->()")
+                            .Delete("rel");
+            }
 
         
         await cypher.ExecuteWithoutResultsAsync();
