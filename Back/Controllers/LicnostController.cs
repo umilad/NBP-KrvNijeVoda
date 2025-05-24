@@ -73,23 +73,20 @@ public class LicnostController : ControllerBase
                              .Create("(l)-[:UMRO]->(gs)");
             }
 
-            if (!string.IsNullOrWhiteSpace(licnost.MestoRodjenja))
+            if (!string.IsNullOrWhiteSpace(licnost.MestoRodjenja) && licnost.MestoRodjenja != "string")
             {
-                if (postojecaLicnost.MestoRodjenja != licnost.MestoRodjenja)
-                {
-                    var z = (await _client.Cypher.Match("(z:Zemlja {Naziv: $naziv})")
-                                            .WithParam("naziv", licnost.MestoRodjenja)
-                                            .Return(z => z.As<Zemlja>())
-                                            .ResultsAsync)
-                                            .FirstOrDefault();
+                var z = (await _client.Cypher.Match("(z:Zemlja {Naziv: $naziv})")
+                          .WithParam("naziv", licnost.MestoRodjenja)
+                          .Return(z => z.As<Zemlja>())
+                          .ResultsAsync)
+                          .FirstOrDefault();
 
-                    if (z != null)
-                        query = query.With("l")
-                                     .Match("(z:Zemlja {Naziv: $naziv})")
-                                     .WithParam("naziv", licnost.MestoRodjenja)
-                                     .Create("(l)-[:RODJEN_U]->(z)")
-                                     .Set("l.MestoRodjenja = $naziv");
-                }
+                if (z != null)
+                    query = query.With("l")
+                                 .Match("(z:Zemlja {Naziv: $naziv})")
+                                 .WithParam("naziv", licnost.MestoRodjenja)
+                                 .Create("(l)-[:RODJEN_U]->(z)")
+                                 .Set("l.MestoRodjenja = $naziv");
             }
 
             await query.ExecuteWithoutResultsAsync();
@@ -142,7 +139,8 @@ public class LicnostController : ControllerBase
                 GodinaSmrtiPNE = lic.GodinaSmrtiPNE,
                 Pol = lic.Pol,
                 Slika = lic.Slika,
-                MestoRodjenja = lic.MestoRodjenja ?? ""
+                MestoRodjenja = lic.MestoRodjenja ?? "",
+                Tekst = lic.Tekst
             };
 
             return Ok(result);
@@ -246,20 +244,39 @@ public class LicnostController : ControllerBase
             }
 
             //mesto
-            if (!string.IsNullOrWhiteSpace(licnost.MestoRodjenja))
-            {//FALI PROVERA DA NEMA VEC NEKO MESTO UPISANO.......................................
+            if (!string.IsNullOrWhiteSpace(licnost.MestoRodjenja) && licnost.MestoRodjenja != "string")//uneto mesto 
+            {
                 var z = (await _client.Cypher.Match("(z:Zemlja {Naziv: $naziv})")
                                              .WithParam("naziv", licnost.MestoRodjenja)
                                              .Return(z => z.As<Zemlja>())
                                              .ResultsAsync)
                                              .FirstOrDefault();
 
-                if (z != null)
-                    query = query.With("l")
-                                 .Match("(z:Zemlja {Naziv: $naziv})")
-                                 .WithParam("naziv", licnost.MestoRodjenja)
-                                 .Create("(l)-[:RODJEN_U]->(z)")
-                                 .Set("l.MestoRodjenja = $naziv");
+                if (z != null)//postoji takvo mesto ima smisla da se bilo sta proverava
+                {
+                    if (!string.IsNullOrWhiteSpace(lic.MestoRodjenja) && lic.MestoRodjenja != "string")//vec postoji nesto u bazi  
+                    {
+                        //provera je l su ista mesta 
+                        if (lic.MestoRodjenja != licnost.MestoRodjenja)//izmenjeno je 
+                        {
+                            query = query.With("l")
+                                         .Match("(z:Zemlja {Naziv: $naziv})")
+                                         .Match("(l)-[r2:RODJEN_U]->(sz:Zemlja)")
+                                         .WithParam("naziv", licnost.MestoRodjenja)
+                                         .Delete("r2")
+                                         .Create("(l)-[:RODJEN_U]->(z)")
+                                         .Set("l.MestoRodjenja = $naziv");
+                        }
+                        //else isto je 
+                    }
+                    else //nije postojalo mesto u bazi ali je uneto novo 
+                        query = query.With("l")
+                                     .Match("(z:Zemlja {Naziv: $naziv})")
+                                     .WithParam("naziv", licnost.MestoRodjenja)
+                                     .Create("(l)-[:RODJEN_U]->(z)")
+                                     .Set("l.MestoRodjenja = $naziv");
+                }
+                //else to mesto ne postoji kao da nista nije ni uneto                
             }
 
             await query.ExecuteWithoutResultsAsync();
