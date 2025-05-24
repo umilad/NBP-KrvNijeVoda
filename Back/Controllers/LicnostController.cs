@@ -87,6 +87,10 @@ public class LicnostController : ControllerBase
                                  .WithParam("naziv", licnost.MestoRodjenja)
                                  .Create("(l)-[:RODJEN_U]->(z)")
                                  .Set("l.MestoRodjenja = $naziv");
+                else
+                    query = query.With("l")
+                                 .Set("l.MestoRodjenja = $mr")
+                                 .WithParam("mr", "/");
             }
 
             await query.ExecuteWithoutResultsAsync();
