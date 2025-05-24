@@ -71,7 +71,7 @@ public class DinastijaController : ControllerBase
     }
 
     //SREDI
-    [HttpGet("GetDinastija/{id}")]//NE ODVEZUJE KAKO TREBA DELETE POPRAVI VEZUJE DOBRO
+    [HttpGet("GetDinastija/{id}")]
     public async Task<IActionResult> GetDinastija(Guid id)
     {
         try

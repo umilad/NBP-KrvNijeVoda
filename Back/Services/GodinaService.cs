@@ -13,7 +13,7 @@ public class GodinaService
 
     //MORA DA SE DODA ZA P.N.E. ----dodav treba da se testira
 
-    public async Task <Godina> DodajGodinu(int go, bool pne)
+    public async Task<Godina> DodajGodinu(int go, bool pne)
     {
         var ng = (await _client.Cypher.Match("(g:Godina)")
                                       .Where((Godina g) => g.God == go && g.IsPNE == pne)
@@ -22,10 +22,11 @@ public class GodinaService
                                       .FirstOrDefault();
         if (ng == null)
         {
-            var god = new Godina {
+            var god = new Godina
+            {
                 ID = Guid.NewGuid(),
                 God = go,
-                IsPNE= pne
+                IsPNE = pne
             };
             ng = (await _client.Cypher.Create("(g:Godina $godina)")
                             .WithParam("godina", god)
@@ -35,4 +36,41 @@ public class GodinaService
         }
         return ng!;
     }
+
+//NIKAKO NE MOZE DA SE NAPRAVI HILJADU PARAMETARA BI IMALO I NI TO NE BI BILO DOVOLJNO 
+    // public async Task<IActionResult> GodinaUpdate(int stara, int nova, bool pneS, bool pneN)
+    // {
+    //     if (nova != 0)//uneta godina
+    //         {
+    //             if (stara != 0)//postoji vec neka godina
+    //             {
+    //                 if (stara != nova || pneS != pneN)
+    //                 {//promenjena je 
+    //                     await _godinaService.DodajGodinu(nova, pneN);
+    //                     query = query.With("l")
+    //                                  .Match("(l)-[r1:UMRO]->(sgs:Godina)")
+    //                                  .Match("(g2:Godina {God: $gods, IsPNE: $pnes})")
+    //                                  .WithParam("gods", licnost.GodinaSmrti)
+    //                                  .WithParam("pnes", licnost.GodinaSmrtiPNE)
+    //                                  .Delete("r1")
+    //                                  .Create("(l)-[:UMRO]->(g2)")
+    //                                  .Set("l.GodinaSmrti = $gods, l.GodinaSmrtiPNE = $pnes");
+
+    //                 }
+    //                 //else ista je godina ne radi se nista 
+    //             }
+    //             else
+    //             {
+    //                 //ne postoji godina samo unosimo novu 
+    //                 await _godinaService.DodajGodinu(licnost.GodinaSmrti, licnost.GodinaSmrtiPNE);
+    //                 query = query.With("l")
+    //                              .Match("(g2:Godina {God: $gods, IsPNE: $pnes})")
+    //                              .WithParam("gods", licnost.GodinaSmrti)
+    //                              .WithParam("pnes", licnost.GodinaSmrtiPNE)
+    //                              .Create("(l)-[:UMRO]->(g2)")
+    //                              .Set("l.GodinaSmrti = $gods, l.GodinaSmrtiPNE = $pnes");
+    //             }
+
+    //         }
+    // }
 }
