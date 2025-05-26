@@ -32,6 +32,15 @@ public class DinastijaController : ControllerBase
         //pne na false FRONT??
         try
         {
+            var din = (await _client.Cypher.Match("(d:Dinastija)")
+                                            .Where((Dinastija d) => d.Naziv == dinastija.Naziv)
+                                            .Return(d => d.As<Dinastija>())
+                                            .ResultsAsync)
+                                            .FirstOrDefault();
+
+            if (din != null)
+                return BadRequest($"Dinastija sa imenom {dinastija.Naziv} vec postoji u bazi!");
+
             var query = _client.Cypher.Create("(d:Dinastija {ID: $id, Naziv: $naziv, Slika: $slika})")
                                       .WithParam("id", Guid.NewGuid())
                                       .WithParam("naziv", dinastija.Naziv)
@@ -146,6 +155,12 @@ public class DinastijaController : ControllerBase
                 else //nije bila postavljena godina ali sad je unosimo 
                     promenjenPocetak = true; //treba da se doda veza
             }
+            else //ostavljeno je prazno polje brisemo godinu 
+            {
+                query = query.With("d")
+                             .OptionalMatch("(d)-[r:POCETAK_VLADAVINE]->()")
+                             .Delete("r");
+            }
             //isto za kraj
             if (dinastija.KrajVladavineGod != 0)//uneta je izmena
             {
@@ -154,13 +169,19 @@ public class DinastijaController : ControllerBase
                     if (din.KrajVladavineGod != dinastija.KrajVladavineGod || din.KrajVladavinePNE != dinastija.KrajVladavinePNE)//ako ga preskoci iste su godine
                     {//uso je godina je promenjena                        
                         query = query.With("d")//brisemo godinu s kojom je bila vezana
-                                     .Match("(d)-[r:KRAJ_VLADAVINE]->(pg:Godina)")
-                                     .Delete("r");
+                                     .Match("(d)-[r1:KRAJ_VLADAVINE]->(pg:Godina)")
+                                     .Delete("r1");
                         promenjenKraj = true;
                     }
                 }
                 else //nije bila postavljena godina ali sad je unosimo 
                     promenjenKraj = true;
+            }
+            else //ostavljeno je prazno polje brisemo godinu 
+            {
+                query = query.With("d")
+                             .OptionalMatch("(d)-[r1:KRAJ_VLADAVINE]->()")
+                             .Delete("r1");
             }
 
             //da li nam treba da nam fja vrati novu dinastiju
@@ -203,6 +224,14 @@ public class DinastijaController : ControllerBase
     {
         try
         {
+            var din = (await _client.Cypher.Match("(d:Dinastija)")
+                                    .Where((Dinastija d) => d.ID == id)
+                                    .Return(d => d.As<Dinastija>())
+                                    .ResultsAsync)
+                                    .FirstOrDefault();
+            if (din == null)
+                return BadRequest($"Dinastija sa ID: {id} ne postoji u bazi!");
+
             await _client.Cypher.Match("(d:Dinastija)")
                                 .Where((Dinastija d) => d.ID == id)
                                 .OptionalMatch("(d)-[r:POCETAK_VLADAVINE]->(pg:Godina)")

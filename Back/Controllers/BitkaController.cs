@@ -30,21 +30,31 @@ public class BitkaController : ControllerBase
     {
         try
         {
-            if (string.IsNullOrEmpty(bitka.Pobednik))
-                return BadRequest("Polje 'Pobednik' je obavezno.");
+            //ovo ide na front
+            // if (string.IsNullOrEmpty(bitka.Pobednik))
+            //     return BadRequest("Polje 'Pobednik' je obavezno.");
 
-            Guid bitkaID = Guid.NewGuid();
+            var bit = (await _client.Cypher.Match("(b:Dogadjaj:Bitka)")
+                                           .Where((Bitka b) => b.Ime == bitka.Ime)
+                                           .Return(b => b.As<Bitka>())
+                                           .ResultsAsync)
+                                           .FirstOrDefault();
+
+            if (bit != null)
+            {
+                return BadRequest($"Bitka sa imenom {bitka.Ime} vec postoji u bazi!");
+            }
 
             var query = _client.Cypher
-                .Create("(b:Dogadjaj:Bitka {ID: $id, Ime: $ime, Tip: 'Bitka', Tekst: $tekst, Lokacija: $lokacija, Pobednik: $pobednik, BrojZrtava: $brojZrtava, RatID: $ratID})")
-                .WithParam("id", bitkaID)
+                .Create("(b:Dogadjaj:Bitka {ID: $id, Ime: $ime, Tip: 'Bitka', Tekst: $tekst, Pobednik: $pobednik, BrojZrtava: $brojZrtava, RatID: $ratID})")
+                .WithParam("id", Guid.NewGuid())
                 .WithParam("ime", bitka.Ime)
                 .WithParam("pobednik", bitka.Pobednik)
                 .WithParam("tekst", bitka.Tekst)
-                .WithParam("lokacija", bitka.Lokacija)
                 .WithParam("brojZrtava", bitka.BrojZrtava)
                 .WithParam("ratID", bitka.RatID);
-            if (!string.IsNullOrEmpty(bitka.Lokacija))
+
+            if (!string.IsNullOrEmpty(bitka.Lokacija) && bitka.Lokacija != "string")
             {
                 var zemljaPostoji = (await _client.Cypher
                     .Match("(z:Zemlja)")
@@ -54,15 +64,21 @@ public class BitkaController : ControllerBase
                     .ResultsAsync)
                     .Any();
 
-                if (!zemljaPostoji)
-                    return BadRequest($"Zemlja sa nazivom '{bitka.Lokacija}' ne postoji u bazi!");
-
-                query = query
-                    .With("b")
-                    .Match("(z:Zemlja {Naziv: $nazivZemlje})")
-                    .Create("(b)-[:DESIO_SE_U]->(z)")
-                    .WithParam("nazivZemlje", bitka.Lokacija);
+                if (zemljaPostoji != null)
+                {
+                    query = query.With("b")
+                                 .Match("(z:Zemlja)")
+                                 .Where("toLower(z.Naziv) = toLower($nazivZemlje)")
+                                 .Create("(b)-[:DESIO_SE_U]->(z)")
+                                 .WithParam("nazivZemlje", bitka.Lokacija)
+                                 .Set("b.Lokacija = $nazivZemlje");
+                }
+                else
+                    query = query.With("b")
+                                 .Set("b.Lokacija = $nazivZemlje")
+                                 .WithParam("nazivZemlje", "string"); 
             }
+//////////////////////////////////////////
             if (bitka.RatID != null)
             {
                 var ratPostoji = (await _client.Cypher
@@ -81,7 +97,7 @@ public class BitkaController : ControllerBase
                     .Create("(b)-[:BITKA_U_RATU]->(r)")
                     .WithParam("ratId", bitka.RatID);
             }
-
+/////////////////////////////////////////
             if (bitka.Godina != null)
             {
                 var godina = await _godinaService.DodajGodinu(bitka.Godina.God, bitka.Godina.IsPNE);

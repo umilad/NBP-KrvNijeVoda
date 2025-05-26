@@ -12,7 +12,7 @@ namespace KrvNijeVoda.Back.Models
     }
     public class Dogadjaj {
         public Guid ID { get; set; }
-        public string Ime { get; set; }
+        public string Ime { get; set; }//unique
         public TipDogadjaja Tip { get; set; }
         public Godina? Godina { get; set; }//mozda nekad null sad ne
         public string? Lokacija { get; set; }//STAVI VEZU SA ZEMLJOM

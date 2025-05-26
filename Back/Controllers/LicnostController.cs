@@ -40,16 +40,13 @@ public class LicnostController : ControllerBase
             if (postojecaLicnost != null)
                 return BadRequest($"Licnost {licnost.Titula} {licnost.Ime} {licnost.Prezime} vec postoji u bazi sa ID: {postojecaLicnost.ID}!");
 
-
-            var licnostID = Guid.NewGuid();
-            var query = _client.Cypher.Create("(l:Licnost {ID: $id, Titula: $titula, Ime: $ime, Prezime: $prezime, Pol: $pol, Slika: $slika, MestoRodjenja: $mestoRodjenja, Tekst: $tekst})")
-                                .WithParam("id", licnostID)
+            var query = _client.Cypher.Create("(l:Licnost {ID: $id, Titula: $titula, Ime: $ime, Prezime: $prezime, Pol: $pol, Slika: $slika, Tekst: $tekst})")
+                                .WithParam("id", Guid.NewGuid())
                                 .WithParam("titula", licnost.Titula)
                                 .WithParam("ime", licnost.Ime)
                                 .WithParam("prezime", licnost.Prezime)
                                 .WithParam("pol", licnost.Pol)
                                 .WithParam("slika", licnost.Slika)
-                                .WithParam("mestoRodjenja", licnost.MestoRodjenja)
                                 .WithParam("tekst", licnost.Tekst); 
 
             if (licnost.GodinaRodjenja != 0)
@@ -75,22 +72,24 @@ public class LicnostController : ControllerBase
 
             if (!string.IsNullOrWhiteSpace(licnost.MestoRodjenja) && licnost.MestoRodjenja != "string")
             {
-                var z = (await _client.Cypher.Match("(z:Zemlja {Naziv: $naziv})")
-                          .WithParam("naziv", licnost.MestoRodjenja)
-                          .Return(z => z.As<Zemlja>())
-                          .ResultsAsync)
-                          .FirstOrDefault();
+                var z = (await _client.Cypher.Match("(z:Zemlja)")
+                                             .Where("toLower(z.Naziv) = toLower($naziv)")
+                                             .WithParam("naziv", licnost.MestoRodjenja)
+                                             .Return(z => z.As<Zemlja>())
+                                             .ResultsAsync)
+                                             .FirstOrDefault();
 
                 if (z != null)
                     query = query.With("l")
-                                 .Match("(z:Zemlja {Naziv: $naziv})")
+                                 .Match("(z:Zemlja)")
+                                 .Where("toLower(z.Naziv) = toLower($naziv)")
                                  .WithParam("naziv", licnost.MestoRodjenja)
                                  .Create("(l)-[:RODJEN_U]->(z)")
                                  .Set("l.MestoRodjenja = $naziv");
                 else
                     query = query.With("l")
                                  .Set("l.MestoRodjenja = $mr")
-                                 .WithParam("mr", "/");
+                                 .WithParam("mr", "string");
             }
 
             await query.ExecuteWithoutResultsAsync();
@@ -126,7 +125,7 @@ public class LicnostController : ControllerBase
 
             if (lic == null)
             {
-                return BadRequest($"Licnost sa id {id} nije pronadjena u bazi!");
+                return BadRequest($"Licnost sa ID: {id} nije pronadjena u bazi!");
             }
 
             // if (lic.Mesto != null)
@@ -191,8 +190,8 @@ public class LicnostController : ControllerBase
                                      .Match("(l)-[r:RODJEN]->(sg:Godina)")
                                      .Match("(g:Godina {God: $god, IsPNE: $pne})")
                                      .WithParam("god", licnost.GodinaRodjenja)
-                                     .WithParam("pne", licnost.GodinaRodjenjaPNE)                                     
-                                     .Delete("r")     
+                                     .WithParam("pne", licnost.GodinaRodjenjaPNE)
+                                     .Delete("r")
                                      .Create("(l)-[:RODJEN]->(g)")
                                      .Set("l.GodinaRodjenja = $god, l.GodinaRodjenjaPNE = $pne");
 
@@ -210,7 +209,13 @@ public class LicnostController : ControllerBase
                                  .Create("(l)-[:RODJEN]->(g)")
                                  .Set("l.GodinaRodjenja = $god, l.GodinaRodjenjaPNE = $pne");
                 }
-                
+
+            }
+            else //nije uneta godina brisemo staru
+            {
+                cypher = cypher.With("l")
+                               .OptionalMatch("(l)-[r1:RODJEN]->()")
+                               .Delete("r1");
             }
 
             //isto samo za smrt
@@ -244,13 +249,20 @@ public class LicnostController : ControllerBase
                                  .Create("(l)-[:UMRO]->(g2)")
                                  .Set("l.GodinaSmrti = $gods, l.GodinaSmrtiPNE = $pnes");
                 }
-                
+
+            }
+            else
+            {
+                cypher = cypher.With("l")
+                               .OptionalMatch("(l)-[r2:UMRO]->()")
+                               .Delete("r2");
             }
 
             //mesto
             if (!string.IsNullOrWhiteSpace(licnost.MestoRodjenja) && licnost.MestoRodjenja != "string")//uneto mesto 
             {
-                var z = (await _client.Cypher.Match("(z:Zemlja {Naziv: $naziv})")
+                var z = (await _client.Cypher.Match("(z:Zemlja)")
+                                             .Where("toLower(z.Naziv) = toLower($naziv)")
                                              .WithParam("naziv", licnost.MestoRodjenja)
                                              .Return(z => z.As<Zemlja>())
                                              .ResultsAsync)
@@ -264,7 +276,8 @@ public class LicnostController : ControllerBase
                         if (lic.MestoRodjenja != licnost.MestoRodjenja)//izmenjeno je 
                         {
                             query = query.With("l")
-                                         .Match("(z:Zemlja {Naziv: $naziv})")
+                                         .Match("(z:Zemlja)")
+                                         .Where("toLower(z.Naziv) = toLower($naziv)")
                                          .Match("(l)-[r2:RODJEN_U]->(sz:Zemlja)")
                                          .WithParam("naziv", licnost.MestoRodjenja)
                                          .Delete("r2")
@@ -275,7 +288,8 @@ public class LicnostController : ControllerBase
                     }
                     else //nije postojalo mesto u bazi ali je uneto novo 
                         query = query.With("l")
-                                     .Match("(z:Zemlja {Naziv: $naziv})")
+                                     .Match("(z:Zemlja)")
+                                     .Where("toLower(z.Naziv) = toLower($naziv)")
                                      .WithParam("naziv", licnost.MestoRodjenja)
                                      .Create("(l)-[:RODJEN_U]->(z)")
                                      .Set("l.MestoRodjenja = $naziv");
@@ -296,7 +310,19 @@ public class LicnostController : ControllerBase
     [HttpDelete("DeleteLicnost/{id}")]
     public async Task<IActionResult> DeleteLicnost(Guid id)
     {
-        try {
+        try
+        {
+            var lic = (await _client.Cypher.Match("(l:Licnost)")
+                                           .Where((Licnost l) => l.ID == id)
+                                           .Return(l => l.As<Licnost>())
+                                           .ResultsAsync)
+                                           .FirstOrDefault();
+
+            if (lic == null)
+            {
+                return BadRequest($"Licnost sa ID: {id} nije pronadjena u bazi!");
+            }
+
             await _client.Cypher.Match("(l:Licnost)")
                                 .Where((Licnost l) => l.ID == id)
                                 .OptionalMatch("(l)-[r:RODJEN]->(gr:Godina)")

@@ -100,15 +100,17 @@ public class VladarController : ControllerBase
 
             if (!string.IsNullOrWhiteSpace(vladar.MestoRodjenja) && vladar.MestoRodjenja != "string")
             {
-                var z = (await _client.Cypher.Match("(z:Zemlja {Naziv: $naziv})")
-                          .WithParam("naziv", vladar.MestoRodjenja)
-                          .Return(z => z.As<Zemlja>())
-                          .ResultsAsync)
-                          .FirstOrDefault();
+                var z = (await _client.Cypher.Match("(z:Zemlja)")
+                                             .Where("toLower(z.Naziv) = toLower($naziv)")
+                                             .WithParam("naziv", vladar.MestoRodjenja)
+                                             .Return(z => z.As<Zemlja>())
+                                             .ResultsAsync)
+                                             .FirstOrDefault();
 
                 if (z != null)
                     query = query.With("v")
-                                 .Match("(z:Zemlja {Naziv: $naziv})")
+                                 .Match("(z:Zemlja)")
+                                 .Where("toLower(z.Naziv) = toLower($naziv)")
                                  .WithParam("naziv", vladar.MestoRodjenja)
                                  .Create("(v)-[:RODJEN_U]->(z)")
                                  .Set("v.MestoRodjenja = $naziv");
@@ -123,7 +125,8 @@ public class VladarController : ControllerBase
             {
                 if (!string.IsNullOrWhiteSpace(vladar.Dinastija.Naziv) || vladar.Dinastija.Naziv != "string")
                 {
-                    var din = (await _client.Cypher.Match("(d:Dinastija {Naziv: $naziv})")
+                    var din = (await _client.Cypher.Match("(d:Dinastija)")
+                                                   .Where("toLower(d.Naziv) = toLower($naziv)")
                                                    .WithParam("naziv", vladar.Dinastija.Naziv)
                                                    .Return(d => d.As<Dinastija>())
                                                    .ResultsAsync)
@@ -131,12 +134,14 @@ public class VladarController : ControllerBase
 
                     if (din != null)
                     {
-                        vladar.Dinastija = din;
+                        //vladar.Dinastija = din;
                         query = query.With("v")
-                                     .Match("(d:Dinastija {Naziv: $naziv})")
+                                     .Match("(d:Dinastija)")
+                                     .Where("toLower(d.Naziv) = toLower($naziv)")
                                      .WithParam("naziv", vladar.Dinastija.Naziv)
                                      .Create("(v)-[:PRIPADA_DINASTIJI]->(d)");
                         //za setovanje parametara svih.Set("d.Dinastija")
+                        //nema potrebe jer ih ne ocitavam tu a kad povuce vezu videce sve 
                     }
                 }
             }
@@ -321,7 +326,8 @@ public class VladarController : ControllerBase
             //mesto
             if (!string.IsNullOrWhiteSpace(vladar.MestoRodjenja) && vladar.MestoRodjenja != "string")//uneto mesto 
             {
-                var z = (await _client.Cypher.Match("(z:Zemlja {Naziv: $n})")
+                var z = (await _client.Cypher.Match("(z:Zemlja)")
+                                             .Where("toLower(z.Naziv) = toLower($n)")
                                              .WithParam("n", vladar.MestoRodjenja)
                                              .Return(z => z.As<Zemlja>())
                                              .ResultsAsync)
@@ -335,7 +341,8 @@ public class VladarController : ControllerBase
                         if (vl.Vladar.MestoRodjenja != vladar.MestoRodjenja)//izmenjeno je 
                         {
                             query = query.With("v")
-                                         .Match("(z:Zemlja {Naziv: $n})")
+                                         .Match("(z:Zemlja)")
+                                         .Where("toLower(z.Naziv) = toLower($n)")
                                          .Match("(v)-[r2:RODJEN_U]->(sz:Zemlja)")
                                          .WithParam("n", vladar.MestoRodjenja)
                                          .Delete("r2")
@@ -346,7 +353,8 @@ public class VladarController : ControllerBase
                     }
                     else //nije postojalo mesto u bazi ali je uneto novo 
                         query = query.With("v")
-                                     .Match("(z:Zemlja {Naziv: $n})")
+                                     .Match("(z:Zemlja)")
+                                     .Where("toLower(z.Naziv) = toLower($n)")
                                      .WithParam("n", vladar.MestoRodjenja)
                                      .Create("(v)-[:RODJEN_U]->(z)")
                                      .Set("v.MestoRodjenja = $n");
@@ -415,11 +423,13 @@ public class VladarController : ControllerBase
             if (vladar.Dinastija != null && !string.IsNullOrWhiteSpace(vladar.Dinastija.Naziv) || vladar.Dinastija.Naziv != "string")
             //napravi DINASTIJASERVICE
             {
-                var din = (await _client.Cypher.Match("(d:Dinastija {Naziv: $naziv})")
-                                                       .WithParam("naziv", vladar.Dinastija.Naziv)
-                                                       .Return(d => d.As<Dinastija>())
-                                                       .ResultsAsync)
-                                                       .FirstOrDefault();
+                var din = (await _client.Cypher.Match("(d:Dinastija)")
+                                               .Where("toLower(d.Naziv) = toLower($naziv)")
+                                               .WithParam("naziv", vladar.Dinastija.Naziv)
+                                               .Return(d => d.As<Dinastija>())
+                                               .ResultsAsync)
+                                               .FirstOrDefault();
+                                                       
                 if (din != null)//postoji takva dinastija pa ima smisla da se proverava 
                 {
                     if (vl.Dinastija != null)//postoji vec neka u bazi 
@@ -428,13 +438,14 @@ public class VladarController : ControllerBase
                         {//promenjena
                             vladar.Dinastija = din;
                             query = query.With("v")
-                                         .Match("(d:Dinastija {Naziv: $naziv})")
+                                         .Match("(d:Dinastija)")
+                                         .Where("toLower(d.Naziv) = toLower($naziv)")
                                          .Match("(v)-[r9:PRIPADA_DINASTIJI]->(d)")
                                          .WithParam("naziv", vladar.Dinastija.Naziv)
                                          .Delete("r9")
                                          .Create("(v)-[:PRIPADA_DINASTIJI]->(d)");
                             //za setovanje parametara svih.Set("d.Dinastija")
-                            
+
                         }
                         //else ista je 
                     }
@@ -442,7 +453,8 @@ public class VladarController : ControllerBase
                     {
                         vladar.Dinastija = din;
                         query = query.With("v")
-                                     .Match("(d:Dinastija {Naziv: $naziv})")
+                                     .Match("(d:Dinastija)")
+                                     .Where("toLower(d.Naziv) = toLower($naziv)")
                                      .WithParam("naziv", vladar.Dinastija.Naziv)
                                      .Create("(v)-[:PRIPADA_DINASTIJI]->(d)");
                         //za setovanje parametara svih.Set("d.Dinastija")
@@ -519,8 +531,8 @@ public class VladarController : ControllerBase
                                      .Match("(v)-[r:RODJEN]->(sg:Godina)")
                                      .Match("(g:Godina {God: $god, IsPNE: $pne})")
                                      .WithParam("god", vladar.GodinaRodjenja)
-                                     .WithParam("pne", vladar.GodinaRodjenjaPNE)                                     
-                                     .Delete("r")     
+                                     .WithParam("pne", vladar.GodinaRodjenjaPNE)
+                                     .Delete("r")
                                      .Create("(v)-[:RODJEN]->(g)")
                                      .Set("v.GodinaRodjenja = $god, v.GodinaRodjenjaPNE = $pne");
                     }
@@ -536,6 +548,12 @@ public class VladarController : ControllerBase
                                  .Create("(v)-[:RODJEN]->(g)")
                                  .Set("v.GodinaRodjenja = $god, v.GodinaRodjenjaPNE = $pne");
                 }
+            }
+            else //nije uneta godina brisemo staru
+            {
+                cypher = cypher.With("v")
+                               .OptionalMatch("(v)-[r1:RODJEN]->()")
+                               .Delete("r1");
             }
 
             //isto samo za smrt
@@ -569,13 +587,20 @@ public class VladarController : ControllerBase
                                  .Create("(v)-[:UMRO]->(g2)")
                                  .Set("v.GodinaSmrti = $gods, v.GodinaSmrtiPNE = $pnes");
                 }
-                
+
+            }
+            else
+            {
+                cypher = cypher.With("v")
+                               .OptionalMatch("(v)-[r2:UMRO]->()")
+                               .Delete("r2");
             }
 
             //mesto
             if (!string.IsNullOrWhiteSpace(vladar.MestoRodjenja) && vladar.MestoRodjenja != "string")//uneto mesto 
             {
-                var z = (await _client.Cypher.Match("(z:Zemlja {Naziv: $naziv})")
+                var z = (await _client.Cypher.Match("(z:Zemlja)")
+                                             .Where("toLower(z.Naziv) = toLower($naziv)")
                                              .WithParam("naziv", vladar.MestoRodjenja)
                                              .Return(z => z.As<Zemlja>())
                                              .ResultsAsync)
@@ -589,7 +614,8 @@ public class VladarController : ControllerBase
                         if (vl.MestoRodjenja != vladar.MestoRodjenja)//izmenjeno je 
                         {
                             query = query.With("v")
-                                         .Match("(z:Zemlja {Naziv: $naziv})")
+                                         .Match("(z:Zemlja)")
+                                         .Where("toLower(z.Naziv) = toLower($naziv)")
                                          .Match("(v)-[r2:RODJEN_U]->(sz:Zemlja)")
                                          .WithParam("naziv", vladar.MestoRodjenja)
                                          .Delete("r2")
@@ -600,7 +626,8 @@ public class VladarController : ControllerBase
                     }
                     else //nije postojalo mesto u bazi ali je uneto novo 
                         query = query.With("v")
-                                     .Match("(z:Zemlja {Naziv: $naziv})")
+                                     .Match("(z:Zemlja)")
+                                     .Where("toLower(z.Naziv) = toLower($naziv)")
                                      .WithParam("naziv", vladar.MestoRodjenja)
                                      .Create("(v)-[:RODJEN_U]->(z)")
                                      .Set("v.MestoRodjenja = $naziv");
@@ -636,6 +663,12 @@ public class VladarController : ControllerBase
                                  .Create("(v)-[:VLADAO_OD]->(gp)");
                 }
             }
+            else
+            {
+                cypher = cypher.With("v")
+                               .OptionalMatch("(v)-[r3:VLADAO_OD]->()")
+                               .Delete("r3");
+            }
 
             if (vladar.KrajVladavineGod != 0)
             {
@@ -665,6 +698,12 @@ public class VladarController : ControllerBase
                                  .Create("(v)-[:VLADAO_DO]->(gk)");
                 }
             }
+            else
+            {
+                cypher = cypher.With("v")
+                               .OptionalMatch("(v)-[r4:VLADAO_DO]->()")
+                               .Delete("r4");
+            }
 
             await query.ExecuteWithoutResultsAsync();
 
@@ -679,7 +718,19 @@ public class VladarController : ControllerBase
     [HttpDelete("DeleteVladar/{id}")]
     public async Task<IActionResult> DeleteVladar(Guid id)
     {
-        try {
+        try
+        {
+            var v = (await _client.Cypher.Match("(v:Licnost:Vladar)")
+                                         .Where((Vladar v) => v.ID == id)
+                                         .Return(v => v.As<Vladar>())
+                                         .ResultsAsync)
+                                         .FirstOrDefault();
+
+            if (v == null)
+            {
+                return BadRequest($"Vladar sa ID: {id} nije pronadjen u bazi!");
+            }
+
             await _client.Cypher.Match("(v:Licnost:Vladar)")
                                 .Where((Vladar v) => v.ID == id)
                                 .OptionalMatch("(v)-[r:RODJEN]->(gr:Godina)")
