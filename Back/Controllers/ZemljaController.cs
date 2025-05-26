@@ -60,7 +60,7 @@ public class ZemljaController : ControllerBase
                                             .FirstOrDefault();
             if (zemlja == null)
             {
-                return NotFound($"Zemlja sa ID-em {id} ne postoji u bazi!");
+                return NotFound($"Zemlja sa ID: {id} ne postoji u bazi!");
             }
 
             return Ok(zemlja);
@@ -107,7 +107,7 @@ public class ZemljaController : ControllerBase
                                             .FirstOrDefault();
             if (zemlja == null)
             {
-                return NotFound($"Zemlja sa ID-em {id} ne postoji u bazi!");
+                return NotFound($"Zemlja sa ID: {id} ne postoji u bazi!");
             }
 
             await _client.Cypher.Match("(z:Zemlja)")
@@ -115,7 +115,7 @@ public class ZemljaController : ControllerBase
                                 .DetachDelete("z")
                                 .ExecuteWithoutResultsAsync();
 
-            return Ok($"Zemlja sa ID-em {id} je uspešno obrisana iz baze!");
+            return Ok($"Zemlja sa ID: {id} je uspešno obrisana iz baze!");
         }
         catch (Exception ex)
         {
@@ -160,7 +160,7 @@ public class ZemljaController : ControllerBase
         {
             var duplikat = (await _client.Cypher
                 .Match("(z:Zemlja)")
-                .Where("toLower(z.Naziv) = toLower($naziv) AND z.ID <> $id")
+                .Where("toLower(z.Naziv) = toLower($naziv) AND z.ID = $id")
                 .WithParam("naziv", updatedZemlja.Naziv)
                 .WithParam("id", id)
                 .Return(z => z.As<Zemlja>())
@@ -190,7 +190,7 @@ public class ZemljaController : ControllerBase
                                 .WithParam("brojstanovnika", updatedZemlja.BrojStanovnika)
                                 .ExecuteWithoutResultsAsync();
 
-            return Ok($"Zemlja sa ID-em {id} je uspešno ažurirana.");
+            return Ok($"Zemlja sa ID: {id} je uspešno ažurirana.");
         }
         catch (Exception ex) 
         {

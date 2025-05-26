@@ -87,7 +87,7 @@ public class GodinaController : ControllerBase
                                 .DetachDelete("g") 
                                 .ExecuteWithoutResultsAsync();
 
-            return Ok($"Godina sa ID-em {id} je uspešno obrisana iz baze!");
+            return Ok($"Godina sa ID: {id} je uspešno obrisana iz baze!");
         }
         catch (Exception ex)
         {

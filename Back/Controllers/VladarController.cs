@@ -31,7 +31,7 @@ public class VladarController : ControllerBase
         {
             //obavezni atributi    titula ime prezime na frontu    
             var postojeciVladar = (await _client.Cypher.Match("(l:Licnost:Vladar)")
-                                                       .Where("l.Titula = $titula AND l.Ime = $ime AND l.Prezime = $prezime")
+                                                       .Where("toLower(l.Titula) = toLower($titula) AND toLower(l.Ime) = toLower($ime) AND toLower(l.Prezime) = toLower($prezime)") 
                                                        .WithParam("titula", vladar.Titula)
                                                        .WithParam("ime", vladar.Ime)
                                                        .WithParam("prezime", vladar.Prezime)
@@ -117,7 +117,7 @@ public class VladarController : ControllerBase
                 else
                     query = query.With("v")
                                  .Set("v.MestoRodjenja = $mr")
-                                 .WithParam("mr", "/");
+                                 .WithParam("mr", "string");
             }
 
             if (vladar.Dinastija != null)
@@ -256,7 +256,7 @@ public class VladarController : ControllerBase
                                       .WithParam("pol", vladar.Pol)
                                       .WithParam("slika", vladar.Slika)
                                       .WithParam("tekst", vladar.Tekst)
-                                      .WithParam("mestoRodjenja", vladar.MestoRodjenja)
+                                      .WithParam("mestoRodjenja", vl.Vladar.MestoRodjenja)
                                       .WithParam("teritorija", vladar.Teritorija);
 
             if (vladar.GodinaRodjenja != 0)
@@ -551,7 +551,7 @@ public class VladarController : ControllerBase
             }
             else //nije uneta godina brisemo staru
             {
-                cypher = cypher.With("v")
+                query = query.With("v")
                                .OptionalMatch("(v)-[r1:RODJEN]->()")
                                .Delete("r1");
             }
@@ -591,7 +591,7 @@ public class VladarController : ControllerBase
             }
             else
             {
-                cypher = cypher.With("v")
+                query = query.With("v")
                                .OptionalMatch("(v)-[r2:UMRO]->()")
                                .Delete("r2");
             }
@@ -665,7 +665,7 @@ public class VladarController : ControllerBase
             }
             else
             {
-                cypher = cypher.With("v")
+                query = query.With("v")
                                .OptionalMatch("(v)-[r3:VLADAO_OD]->()")
                                .Delete("r3");
             }
@@ -700,7 +700,7 @@ public class VladarController : ControllerBase
             }
             else
             {
-                cypher = cypher.With("v")
+                query = query.With("v")
                                .OptionalMatch("(v)-[r4:VLADAO_DO]->()")
                                .Delete("r4");
             }

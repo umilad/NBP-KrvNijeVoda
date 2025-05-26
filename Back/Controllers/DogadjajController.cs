@@ -29,7 +29,8 @@ public class DogadjajController : ControllerBase
         try
         {
             var dog = (await _client.Cypher.Match("(d: Dogadjaj)")
-                                           .Where((Dogadjaj d) => d.Ime == dogadjaj.Ime)
+                                           .Where("toLower(d.Ime) = toLower($ime)")
+                                           .WithParam("ime", dogadjaj.Ime)
                                            .Return(d => d.As<Dogadjaj>())
                                            .ResultsAsync)
                                            .FirstOrDefault();
@@ -64,7 +65,8 @@ public class DogadjajController : ControllerBase
                 if (zemljaPostoji)
                 {
                     query = query.With("d")
-                                 .Match("(z:Zemlja {Naziv: $lokac})")
+                                 .Match("(z:Zemlja)")
+                                 .Where("toLower(z.Naziv) = toLower($lokac)")
                                  .WithParam("lokac", dogadjaj.Lokacija)
                                  .Create("(d)-[:DESIO_SE_U]->(z)")
                                  .Set("d.Lokacija = $lokac");
@@ -181,9 +183,9 @@ public class DogadjajController : ControllerBase
                     .WithParam("tip", updatedDogadjaj.Tip)
                     .WithParam("tekst", updatedDogadjaj.Tekst);
 
-        if (updatedDogadjaj.Godina != null)//uneta nova 
+        if (updatedDogadjaj.Godina != null && updatedDogadjaj.Godina.God != 0)//uneta nova 
         {
-            if (dog.Godina != null)//da li je postojala godina u bazi 
+            if (dog.Godina != null && dog.Godina.God != 0)//da li je postojala godina u bazi 
             {
                 if (dog.Godina.God != updatedDogadjaj.Godina.God || dog.Godina.IsPNE != updatedDogadjaj.Godina.IsPNE)
                 {//promenjena je 
@@ -207,8 +209,6 @@ public class DogadjajController : ControllerBase
                                .WithParam("dogGod", updatedDogadjaj.Godina.God)
                                .WithParam("dogPNE", updatedDogadjaj.Godina.IsPNE);       
             }
-            
-            
         }
         else
         {
@@ -217,7 +217,7 @@ public class DogadjajController : ControllerBase
                            .Delete("rel");
         }
 
-        if (updatedDogadjaj.Lokacija != null)
+        if (!string.IsNullOrEmpty(updatedDogadjaj.Lokacija) && updatedDogadjaj.Lokacija != "string")
         {
             var zemljaPostoji = await _client.Cypher
                                                      .Match("(z:Zemlja)")
@@ -233,7 +233,8 @@ public class DogadjajController : ControllerBase
                     {//promenjena je
                         cypher = cypher
                                  .With("d")
-                                 .Match("(z:Zemlja {Naziv: $naziv})")
+                                 .Match("(z:Zemlja)")
+                                 .Where("toLower(z.Naziv) = toLower($naziv)")
                                  .OptionalMatch("(d)-[rel:DESIO_SE_U]->()")
                                  .Delete("rel")
                                  .WithParam("naziv", updatedDogadjaj.Lokacija)
@@ -245,7 +246,8 @@ public class DogadjajController : ControllerBase
                 else //nije postojala
                     cypher = cypher
                                  .With("d")
-                                 .Match("(z:Zemlja {Naziv: $naziv})")
+                                 .Match("(z:Zemlja)")
+                                 .Where("toLower(z.Naziv) = toLower($naziv)")
                                  .WithParam("naziv", updatedDogadjaj.Lokacija)
                                  .Create("(d)-[:DESIO_SE_U]->(z)")
                                  .Set("d.Lokacija = $naziv");

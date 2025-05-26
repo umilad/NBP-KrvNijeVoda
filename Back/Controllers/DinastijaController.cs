@@ -33,10 +33,11 @@ public class DinastijaController : ControllerBase
         try
         {
             var din = (await _client.Cypher.Match("(d:Dinastija)")
-                                            .Where((Dinastija d) => d.Naziv == dinastija.Naziv)
-                                            .Return(d => d.As<Dinastija>())
-                                            .ResultsAsync)
-                                            .FirstOrDefault();
+                                           .Where("toLower(d.Naziv) = toLower($naziv)")
+                                           .WithParam("naziv", dinastija.Naziv)
+                                           .Return(d => d.As<Dinastija>())
+                                           .ResultsAsync)
+                                           .FirstOrDefault();
 
             if (din != null)
                 return BadRequest($"Dinastija sa imenom {dinastija.Naziv} vec postoji u bazi!");
@@ -121,10 +122,10 @@ public class DinastijaController : ControllerBase
         try
         {
             var din = (await _client.Cypher.Match("(d:Dinastija)")
-                                            .Where((Dinastija d) => d.ID == id)
-                                            .Return(d => d.As<Dinastija>())
-                                            .ResultsAsync)
-                                            .FirstOrDefault();
+                                           .Where((Dinastija d) => d.ID == id)
+                                           .Return(d => d.As<Dinastija>())
+                                           .ResultsAsync)
+                                           .FirstOrDefault();
 
             if (din == null)
                 return BadRequest($"Dinastija sa ID: {id} ne postoji u bazi!");
@@ -225,10 +226,10 @@ public class DinastijaController : ControllerBase
         try
         {
             var din = (await _client.Cypher.Match("(d:Dinastija)")
-                                    .Where((Dinastija d) => d.ID == id)
-                                    .Return(d => d.As<Dinastija>())
-                                    .ResultsAsync)
-                                    .FirstOrDefault();
+                                           .Where((Dinastija d) => d.ID == id)
+                                           .Return(d => d.As<Dinastija>())
+                                           .ResultsAsync)
+                                           .FirstOrDefault();
             if (din == null)
                 return BadRequest($"Dinastija sa ID: {id} ne postoji u bazi!");
 

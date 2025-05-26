@@ -40,8 +40,9 @@ public class LicnostController : ControllerBase
             if (postojecaLicnost != null)
                 return BadRequest($"Licnost {licnost.Titula} {licnost.Ime} {licnost.Prezime} vec postoji u bazi sa ID: {postojecaLicnost.ID}!");
 
+            Guid licnostID = Guid.NewGuid();
             var query = _client.Cypher.Create("(l:Licnost {ID: $id, Titula: $titula, Ime: $ime, Prezime: $prezime, Pol: $pol, Slika: $slika, Tekst: $tekst})")
-                                .WithParam("id", Guid.NewGuid())
+                                .WithParam("id", licnostID)
                                 .WithParam("titula", licnost.Titula)
                                 .WithParam("ime", licnost.Ime)
                                 .WithParam("prezime", licnost.Prezime)
@@ -91,6 +92,7 @@ public class LicnostController : ControllerBase
                                  .Set("l.MestoRodjenja = $mr")
                                  .WithParam("mr", "string");
             }
+            //DODAJ DA SE SETUJE GORE AKO NE OSTAJE SAM PO SEBI STRING ILI NULL
 
             await query.ExecuteWithoutResultsAsync();
 
@@ -166,7 +168,7 @@ public class LicnostController : ControllerBase
         
             if(lic == null)
             {
-                return BadRequest($"Licnost sa id {id} nije pronadjena u bazi!");
+                return BadRequest($"Licnost sa ID: {id} nije pronadjena u bazi!");
             }
 
             var query = _client.Cypher.Match("(l:Licnost)")
@@ -213,9 +215,9 @@ public class LicnostController : ControllerBase
             }
             else //nije uneta godina brisemo staru
             {
-                cypher = cypher.With("l")
-                               .OptionalMatch("(l)-[r1:RODJEN]->()")
-                               .Delete("r1");
+                query = query.With("l")
+                             .OptionalMatch("(l)-[r1:RODJEN]->()")
+                             .Delete("r1");
             }
 
             //isto samo za smrt
@@ -253,9 +255,9 @@ public class LicnostController : ControllerBase
             }
             else
             {
-                cypher = cypher.With("l")
-                               .OptionalMatch("(l)-[r2:UMRO]->()")
-                               .Delete("r2");
+                query = query.With("l")
+                             .OptionalMatch("(l)-[r2:UMRO]->()")
+                             .Delete("r2");
             }
 
             //mesto
@@ -296,7 +298,14 @@ public class LicnostController : ControllerBase
                 }
                 //else to mesto ne postoji kao da nista nije ni uneto                
             }
-
+            else //nije uneo nista brise se staro 
+            {
+                query = query.With("l")
+                             .OptionalMatch("(l)-[r3:RODJEN_U]->()")
+                             .Delete("r3")
+                             .Set("l.MestoRodjenja = 'string'");
+            }
+            //DODAJ GORE DA SETUJE NA STARO MESTO 
             await query.ExecuteWithoutResultsAsync();
         
             return Ok($"Licnost sa id: {id} je uspesno promenjena!");
