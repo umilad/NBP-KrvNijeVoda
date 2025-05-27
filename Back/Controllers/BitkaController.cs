@@ -65,7 +65,7 @@ public class BitkaController : ControllerBase
                     .ResultsAsync)
                     .Any();
 
-                if (zemljaPostoji != null)
+                if (zemljaPostoji)
                 {
                     query = query.With("b")
                                  .Match("(z:Zemlja)")

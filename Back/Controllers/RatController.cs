@@ -61,7 +61,7 @@ public class RatController : ControllerBase
                         .ResultsAsync)
                         .Any();
 
-                    if (zemljaPostoji != null)
+                    if (zemljaPostoji)
                     {
                         query = query.With("r")
                                      .Match("(z:Zemlja)")
