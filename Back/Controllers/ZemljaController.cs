@@ -158,9 +158,20 @@ public class ZemljaController : ControllerBase
     {
         try
         {
+            var zemlja = (await _client.Cypher.Match("(z:Zemlja)")
+                                            .Where((Zemlja z) => z.ID == id)
+                                            .Return(z => z.As<Zemlja>())
+                                            .ResultsAsync)
+                                            .FirstOrDefault();
+            if (zemlja == null)
+            {
+                return NotFound($"Zemlja sa ID {id} ne postoji u bazi!");
+            }
+            
+            //ako naziv ostaje isti to je ta ista zemlja 
             var duplikat = (await _client.Cypher
                 .Match("(z:Zemlja)")
-                .Where("toLower(z.Naziv) = toLower($naziv) AND z.ID = $id")
+                .Where("toLower(z.Naziv) = toLower($naziv) AND z.ID <> $id")
                 .WithParam("naziv", updatedZemlja.Naziv)
                 .WithParam("id", id)
                 .Return(z => z.As<Zemlja>())
@@ -171,15 +182,7 @@ public class ZemljaController : ControllerBase
             {
                 return BadRequest($"Zemlja sa nazivom '{updatedZemlja.Naziv}' već postoji u bazi!");
             }
-            var zemlja = (await _client.Cypher.Match("(z:Zemlja)")
-                                            .Where((Zemlja z) => z.ID == id)
-                                            .Return(z => z.As<Zemlja>())
-                                            .ResultsAsync)
-                                            .FirstOrDefault();
-            if (zemlja == null)
-            {
-                return NotFound($"Zemlja sa ID {id} ne postoji u bazi!");
-            }
+            
 
             await _client.Cypher.Match("(z:Zemlja)")
                                 .Where((Zemlja z) => z.ID == id)

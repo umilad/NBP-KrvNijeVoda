@@ -507,6 +507,21 @@ public class VladarController : ControllerBase
                 return BadRequest($"Vladar sa ID: {id} nije pronadjena u bazi!");
             }
 
+            var postojeciVladar = (await _client.Cypher.Match("(l:Licnost:Vladar)")
+                                                       .Where("toLower(l.Titula) = toLower($titula) AND toLower(l.Ime) = toLower($ime) AND toLower(l.Prezime) = toLower($prezime) AND l.ID <> $id")
+                                                       .WithParam("titula", vladar.Titula)
+                                                       .WithParam("ime", vladar.Ime)
+                                                       .WithParam("prezime", vladar.Prezime)
+                                                       .WithParam("id", id)
+                                                       .Return(l => l.As<Vladar>())
+                                                       .ResultsAsync)
+                                                       .FirstOrDefault();
+
+
+            if (postojeciVladar != null)
+                return BadRequest($"Vladar {vladar.Titula} {vladar.Ime} {vladar.Prezime} vec postoji u bazi sa ID: {postojeciVladar.ID}!");
+
+
             var query = _client.Cypher.Match("(v:Licnost:Vladar)")
                                       .Where((Vladar v) => v.ID == id)
                                       .OptionalMatch("(v)-[r6:PRIPADA_DINASTIJI]->(d:Dinastija)")

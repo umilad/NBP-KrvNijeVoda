@@ -199,43 +199,43 @@ public class BitkaController : ControllerBase
         }
     }
 
-    //OVU NISAM GLEDALA
-    [HttpGet("GetRatForBitka/{bitkaId}")]
-    public async Task<IActionResult> GetRatForBitka(Guid bitkaId)
-    {
-        try
-        {
-            var result = (await _client.Cypher
-                .Match("(b:Dogadjaj:Bitka)-[:BITKA_U_RATU]->(r:Dogadjaj:Rat)")
-                .Where((Bitka b) => b.ID == bitkaId)
-                .OptionalMatch("(r)-[:DESIO_SE]->(g:Godina)")
-                .OptionalMatch("(r)-[:RAT_TRAJAO_DO]->(gdo:Godina)")
-                .OptionalMatch("(bitka:Dogadjaj:Bitka)-[:BITKA_U_RATU]->(r)")
-                .Return((r, g, gdo, bitka) => new
-                {
-                    Rat = r.As<Rat>(),
-                    GodinaOd = g.As<Godina>(),
-                    GodinaDo = gdo.As<Godina>(),
-                    Bitke = bitka.CollectAs<Bitka>()
-                })
-                .ResultsAsync)
-                .FirstOrDefault();
+    // OVU NISAM GLEDALA
+    // [HttpGet("GetRatForBitka/{bitkaId}")]
+    // public async Task<IActionResult> GetRatForBitka(Guid bitkaId)
+    // {
+    //     try
+    //     {
+    //         var result = (await _client.Cypher
+    //             .Match("(b:Dogadjaj:Bitka)-[:BITKA_U_RATU]->(r:Dogadjaj:Rat)")
+    //             .Where((Bitka b) => b.ID == bitkaId)
+    //             .OptionalMatch("(r)-[:DESIO_SE]->(g:Godina)")
+    //             .OptionalMatch("(r)-[:RAT_TRAJAO_DO]->(gdo:Godina)")
+    //             .OptionalMatch("(bitka:Dogadjaj:Bitka)-[:BITKA_U_RATU]->(r)")
+    //             .Return((r, g, gdo, bitka) => new
+    //             {
+    //                 Rat = r.As<Rat>(),
+    //                 GodinaOd = g.As<Godina>(),
+    //                 GodinaDo = gdo.As<Godina>(),
+    //                 Bitke = bitka.CollectAs<Bitka>()
+    //             })
+    //             .ResultsAsync)
+    //             .FirstOrDefault();
 
-            if (result == null)
-                return NotFound($"Rat za bitku sa ID {bitkaId} nije pronađen!");
+    //         if (result == null)
+    //             return NotFound($"Rat za bitku sa ID {bitkaId} nije pronađen!");
 
-            var rat = result.Rat;
-            rat.Godina = result.GodinaOd;
-            rat.GodinaDo = result.GodinaDo;
-            rat.Bitke = result.Bitke.ToList();
+    //         var rat = result.Rat;
+    //         rat.Godina = result.GodinaOd;
+    //         rat.GodinaDo = result.GodinaDo;
+    //         rat.Bitke = result.Bitke.ToList();
 
-            return Ok(rat);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, $"Greška prilikom rada sa Neo4j bazom: {ex.Message}");
-        }
-    }
+    //         return Ok(rat);
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         return StatusCode(500, $"Greška prilikom rada sa Neo4j bazom: {ex.Message}");
+    //     }
+    // }
 
     [HttpPut("UpdateBitka/{id}")]
     public async Task<IActionResult> UpdateBitka(Guid id, [FromBody] Bitka updatedBitka)
@@ -258,6 +258,21 @@ public class BitkaController : ControllerBase
 
             if (bitka == null)
                 return NotFound($"Bitka sa ID: {id} nije pronađena!");
+            
+             //ako naziv ostaje isti to je ta ista 
+            var duplikat = (await _client.Cypher
+                .Match("(b:Dogadjaj:Bitka)")
+                .Where("toLower(b.Ime) = toLower($naziv) AND b.ID <> $id")
+                .WithParam("naziv", updatedBitka.Ime)
+                .WithParam("id", id)
+                .Return(b => b.As<Bitka>())
+                .ResultsAsync)
+                .Any();
+
+            if (duplikat)
+            {
+                return BadRequest($"Bitka sa nazivom '{updatedBitka.Ime}' već postoji u bazi!");
+            }
 
             var cypher = _client.Cypher
                 .Match("(b:Dogadjaj:Bitka)")

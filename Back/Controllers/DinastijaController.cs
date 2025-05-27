@@ -130,6 +130,21 @@ public class DinastijaController : ControllerBase
             if (din == null)
                 return BadRequest($"Dinastija sa ID: {id} ne postoji u bazi!");
 
+             //ako naziv ostaje isti to je ta ista 
+            var duplikat = (await _client.Cypher
+                .Match("(d:Dinastija)")
+                .Where("toLower(d.Naziv) = toLower($naziv) AND d.ID <> $id")
+                .WithParam("naziv", dinastija.Naziv)
+                .WithParam("id", id)
+                .Return(d => d.As<Dinastija>())
+                .ResultsAsync)
+                .Any();
+
+            if (duplikat)
+            {
+                return BadRequest($"Dinastija sa nazivom '{dinastija.Naziv}' već postoji u bazi!");
+            }
+
             //dinastija postoji => update sve proste atribute                         
             var query = _client.Cypher.Match("(d:Dinastija)")
                                       .Where((Dinastija d) => d.ID == id)

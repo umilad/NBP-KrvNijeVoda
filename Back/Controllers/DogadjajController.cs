@@ -173,6 +173,20 @@ public class DogadjajController : ControllerBase
         if (dog == null)
             return NotFound($"Dogadjaj sa ID {id} nije pronađen!");
 
+         //ako naziv ostaje isti to je ta ista 
+            var duplikat = (await _client.Cypher
+                .Match("(d:Dogadjaj)")
+                .Where("toLower(d.Ime) = toLower($naziv) AND d.ID <> $id")
+                .WithParam("naziv", updatedDogadjaj.Ime)
+                .WithParam("id", id)
+                .Return(d => d.As<Dogadjaj>())
+                .ResultsAsync)
+                .Any();
+
+            if (duplikat)
+            {
+                return BadRequest($"Dogadjaj sa nazivom '{updatedDogadjaj.Ime}' već postoji u bazi!");
+            }
         var cypher = _client.Cypher
                     .Match("(d:Dogadjaj)")
                     .Where((Dogadjaj d) => d.ID == id)

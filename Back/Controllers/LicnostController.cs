@@ -171,6 +171,20 @@ public class LicnostController : ControllerBase
                 return BadRequest($"Licnost sa ID: {id} nije pronadjena u bazi!");
             }
 
+            var postojecaLicnost = (await _client.Cypher.Match("(l:Licnost)")
+                                                        .Where("l.Titula = $titula AND l.Ime = $ime AND l.Prezime = $prezime AND l.ID <> $id")
+                                                        .WithParam("titula", licnost.Titula)
+                                                        .WithParam("ime", licnost.Ime)
+                                                        .WithParam("prezime", licnost.Prezime)
+                                                        .WithParam("id", id)
+                                                        .Return(l => l.As<Licnost>())
+                                                        .ResultsAsync)
+                                                        .FirstOrDefault();
+
+            if (postojecaLicnost != null)
+                return BadRequest($"Licnost {licnost.Titula} {licnost.Ime} {licnost.Prezime} vec postoji u bazi sa ID: {postojecaLicnost.ID}!");
+
+
             var query = _client.Cypher.Match("(l:Licnost)")
                                       .Where((Licnost l) => l.ID == id)
                                       .Set("l.Titula = $titula, l.Ime = $ime, l.Prezime = $prezime, l.Pol = $pol, l.Slika = $slika, l.Tekst = $tekst")

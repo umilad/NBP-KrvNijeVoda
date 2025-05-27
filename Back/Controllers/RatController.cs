@@ -96,35 +96,47 @@ public class RatController : ControllerBase
                     .Create("(r)-[:RAT_TRAJAO_DO]->(g)")
                     .WithParam("idGodineDo", godKraj.ID);
             }
-
             await query.ExecuteWithoutResultsAsync();
+
+            // var kreiranRat = (await _client.Cypher.Match("(r:Dogadjaj:Rat {ID: $ratID})")
+            //                                       .WithParam("ratID", ratID)
+            //                                       .Return(r => r.As<Rat>())
+            //                                       .ResultsAsync)
+            //                                       .FirstOrDefault();
+
+            //Poveži postojeće bitke
+            //POPRAVLJENO ALI BEZ DODAVANJA U LISTU I TREBA DA BUDE DOGADJAJ GENERALNO NE BITKA
+            if (rat.Bitke != null && rat.Bitke.Any())
+            {
+                foreach (var bitka in rat.Bitke)
+                {
+                    var bitkaPostoji = (await _client.Cypher
+                                .Match("(b:Bitka)")
+                                .Where("toLower(b.Ime) = toLower($imeBitke)")
+                                .WithParam("imeBitke", bitka)
+                                .Return(b => b.As<Bitka>())
+                                .ResultsAsync).Any();
+
+                    if (bitkaPostoji)
+                    {
+                        await _client.Cypher
+                                .Match("(r:Rat {ID: $ratID})")
+                                .Match("(b:Bitka)")
+                                .Where("toLower(b.Ime) = toLower($imeBitke)")
+                                .Create("(b)-[:BITKA_U_RATU]->(r)")
+                                .WithParam("ratID", ratID)
+                                .WithParam("imeBitke", bitka)
+                                .ExecuteWithoutResultsAsync();
+
+                        //kreiranRat.Bitke.Add(bitka);
+                    }
+
+                }
+            }
 
             return Ok($"Rat '{rat.Ime}' je uspešno dodat u bazu!");
 
-                // Poveži postojeće bitke
-                //POPRAVLJENO ALI BEZ DODAVANJA U LISTU I TREBA DA BUDE DOGADJAJ GENERALNO NE BITKA
-                // if (rat.Bitke != null && rat.Bitke.Any())
-                // {
-                //     foreach (var bitka in rat.Bitke)
-                //     {
-                //         var bitkaPostoji = (await _client.Cypher
-                //                     .Match("(b:Bitka)")
-                //                     .Where("toLower(b.Ime) = toLower(bitka.Ime)")
-                //                     .Return(b => b.As<Bitka>())
-                //                     .ResultsAsync).Any();
-
-                //         if (bitkaPostoji)
-                //             await _client.Cypher
-                //                     .Match("(r:Rat {ID: $ratID})")
-                //                     .Match("(b:Bitka)")
-                //                     .Where("toLower(b.Ime) = toLower(bitka.Ime)")
-                //                     .Create("(b)-[:BITKA_U_RATU]->(r)")
-                //                     .WithParams("ratID", ratID)
-                //                     .ExecuteWithoutResultsAsync();
-
-                //     }
-                // }
-
+            
                 //return Ok($"Rat '{rat.Ime}' je uspešno dodat i povezane su postojeće bitke.");
         }
         catch (Exception ex)
@@ -132,7 +144,6 @@ public class RatController : ControllerBase
             return StatusCode(500, $"Greška: {ex.Message}");
         }
     }
-
 
     [HttpGet("GetRat/{id}")]
     public async Task<IActionResult> GetRat(Guid id)
@@ -145,23 +156,23 @@ public class RatController : ControllerBase
                 .OptionalMatch("(r)-[:DESIO_SE]->(g:Godina)")
                 .OptionalMatch("(r)-[:RAT_TRAJAO_DO]->(gdo:Godina)")
                 .OptionalMatch("(b:Dogadjaj:Bitka)-[:BITKA_U_RATU]->(r)")
-                //.OptionalMatch("(r)-[:DESIO_SE_U]->(z:Zemlja)")
-                .Return((r, g, gdo, b) => new
+                .With("r, g, gdo, collect(b.Ime) as imenaBitki") // <- pravi alias imena
+                .Return((r, g, gdo, imenaBitki) => new
                 {
-                    Rat = r.As<Rat>(),
-                    GodinaOd = g.As<Godina>(),
-                    GodinaDo = gdo.As<Godina>(),
-                    Bitke = b.CollectAs<Bitka>()
+                    rat = r.As<Rat>(),
+                    godinaOd = g.As<Godina>(),
+                    godinaDo = gdo.As<Godina>(),
+                    imenaBitki = imenaBitki.As<List<string>>() // <- koristi alias
                 })
                 .ResultsAsync).FirstOrDefault();
 
             if (result == null)
                 return NotFound($"Rat sa ID: {id} nije pronađen!");
 
-            var rat = result.Rat;
-            rat.Godina = result.GodinaOd;
-            rat.GodinaDo = result.GodinaDo;
-            rat.Bitke = result.Bitke.ToList();
+            var rat = result.rat;
+            rat.Godina = result.godinaOd;
+            rat.GodinaDo = result.godinaDo;
+            rat.Bitke = result.imenaBitki ?? new List<string>();
 
             return Ok(rat);
         }
@@ -170,7 +181,6 @@ public class RatController : ControllerBase
             return StatusCode(500, $"Greška prilikom rada sa Neo4j bazom: {ex.Message}");
         }
     }
-
     //NISAM GLEDALA
     [HttpGet("GetBitkeZaRat/{ratID}")]
     public async Task<IActionResult> GetBitkeZaRat(Guid ratID)
@@ -254,6 +264,21 @@ public class RatController : ControllerBase
 
             if (rat == null)
                 return NotFound($"Rat sa ID: {id} nije pronađen!");
+
+             //ako naziv ostaje isti to je ta ista 
+            var duplikat = (await _client.Cypher
+                .Match("(r:Dogadjaj:Rat)")
+                .Where("toLower(r.Ime) = toLower($naziv) AND r.ID <> $id")
+                .WithParam("naziv", updatedRat.Ime)
+                .WithParam("id", id)
+                .Return(r => r.As<Rat>())
+                .ResultsAsync)
+                .Any();
+
+            if (duplikat)
+            {
+                return BadRequest($"Rat sa nazivom '{updatedRat.Ime}' već postoji u bazi!");
+            }
 
             var cypher = _client.Cypher
                                 .Match("(r:Dogadjaj:Rat)")
