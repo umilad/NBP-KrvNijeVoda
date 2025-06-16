@@ -1,0 +1,421 @@
+
+//key constraint => unique and exists
+//unique constraint => exists
+//znaci ovo ne treba 
+//CREATE CONSTRAINT exists_Godina_God IF NOT EXISTS FOR (g:Godina) REQUIRE g.God IS NOT NULL;
+//CREATE CONSTRAINT exists_Dinastija_Naziv IF NOT EXISTS FOR (din:Dinastija) REQUIRE din.Naziv IS NOT NULL;
+//CREATE CONSTRAINT exists_Zemlja_Naziv IF NOT EXISTS FOR (z:Zemlja) REQUIRE z.Naziv IS NOT NULL;
+//CREATE CONSTRAINT exists_Dogadjaj_Ime IF NOT EXISTS FOR (d:Dogadjaj) REQUIRE d.Ime IS NOT NULL;
+
+
+//node property type constraint mozda moze da bude dobro za neki property koj se stalno poredi po imenu 
+//dogadjaj dinastija mada rekose da nije dobro da se constraintom obezbedjuje tip propertija
+
+//redosled
+//GODINA - uvek se kreira jer je veza sa necim 
+
+//DINASTIJA (godina)
+
+//DOGADJAJ god i lokacija 
+//BITKA ima god i rat 
+//RAT ima god 
+
+//ZEMLJA - kreira se na kraju da se kreiraju sve upotrebljene zemlje u dogadjajima i licnostima 
+
+//znaci prvo pravimo bitke i one imaju rat koj se kreira samo tako sa imenom
+//onda kreiramo rat koj ima listu bitki i ona samo postoji 
+//kad smo pravili bitku vezali smo je sa ratom 
+//a kad pravimo rat on ce da prepozna to ime i samo da mu doda podatke 
+
+//LICNOST god i lokacija
+//VLADAR (zavisi od dinastije god i lokacije)
+
+
+//DROP za ciscenje baze 
+DROP INDEX range_index_tip_dogadjaja IF EXISTS;
+DROP CONSTRAINT key_Dogadjaj_ID IF EXISTS;
+DROP CONSTRAINT key_Dinastija_ID IF EXISTS;
+DROP CONSTRAINT key_Godina_ID IF EXISTS;
+DROP CONSTRAINT key_Licnost_ID IF EXISTS;
+DROP CONSTRAINT key_Zemlja_ID IF EXISTS;
+DROP CONSTRAINT unique_Dogadjaj_Ime IF EXISTS;
+DROP CONSTRAINT unique_Dinastija_Naziv IF EXISTS;
+DROP CONSTRAINT unique_Godina_God IF EXISTS;
+DROP CONSTRAINT unique_Licnost_identity IF EXISTS;
+DROP CONSTRAINT unique_Zemlja_Naziv IF EXISTS;
+
+//ili voz dis trebalo bi da uradi sve ovo prethodno
+/*CALL {
+  CALL db.constraints() YIELD name
+  CALL db.dropConstraint(name) YIELD name AS dropped
+  RETURN count(*) AS constraintsDropped
+}
+CALL {
+  CALL db.indexes() YIELD name
+  CALL db.dropIndex(name) YIELD name AS dropped
+  RETURN count(*) AS indexesDropped
+}*/
+
+//brisanje cvorova i veza
+MATCH (n) 
+DETACH DELETE n;
+
+
+// Unique constraints on keys
+CREATE CONSTRAINT key_Dogadjaj_ID IF NOT EXISTS FOR (d:Dogadjaj) REQUIRE d.ID IS NODE KEY;
+CREATE CONSTRAINT key_Dinastija_ID IF NOT EXISTS FOR (din:Dinastija) REQUIRE din.ID IS KEY;
+CREATE CONSTRAINT key_Godina_ID IF NOT EXISTS FOR (g:Godina) REQUIRE g.ID IS KEY;
+CREATE CONSTRAINT key_Licnost_ID IF NOT EXISTS FOR (l:Licnost) REQUIRE l.ID IS KEY;
+CREATE CONSTRAINT key_Zemlja_ID IF NOT EXISTS FOR (z:Zemlja) REQUIRE z.ID IS KEY;
+
+// Unique constraints on unique properties
+CREATE CONSTRAINT unique_Dogadjaj_Ime IF NOT EXISTS FOR (d:Dogadjaj) REQUIRE d.Ime IS UNIQUE;
+CREATE CONSTRAINT unique_Dinastija_Naziv IF NOT EXISTS FOR (din:Dinastija) REQUIRE din.Naziv IS UNIQUE;
+CREATE CONSTRAINT unique_Godina IF NOT EXISTS
+FOR (g:Godina)
+REQUIRE (g.God, g.IsPNE) IS UNIQUE;
+CREATE CONSTRAINT unique_Licnost_identity IF NOT EXISTS 
+FOR (l:Licnost) 
+REQUIRE (l.Titula, l.Ime, l.Prezime) IS UNIQUE; //ne sme nijedno da bude null
+CREATE CONSTRAINT unique_Zemlja_Naziv IF NOT EXISTS FOR (z:Zemlja) REQUIRE z.Naziv IS UNIQUE;
+
+
+//INDEXES --kad smislis query vidi da li bi performanse bile bolje sa indexom ili bez i koliko cesto se koristi jer index zauzima memoriju 
+CREATE INDEX range_index_tip_dogadjaja FOR (d:Dogadjaj) ON (d.Tip);
+
+
+
+//------------------DINASTIJA------------------
+LOAD CSV WITH HEADERS FROM 'https://github.com/umilad/NBP-KrvNijeVoda/blob/407dad12697105ee124bd18db7fc19573b2aae9d/csv/dinastije.csv' AS line
+WITH line, 
+     CASE WHEN line.PocetakVladavineGod IS NOT NULL AND line.PocetakVladavineGod <> "" THEN toInteger(line.PocetakVladavineGod) ELSE null END AS pocGod,
+     CASE WHEN line.PocetakVladavinePNE IS NOT NULL AND line.PocetakVladavinePNE <> "" THEN toBoolean(line.PocetakVladavinePNE) ELSE false END AS pocPNE,
+     CASE WHEN line.KrajVladavineGod IS NOT NULL AND line.KrajVladavineGod <> "" THEN toInteger(line.KrajVladavineGod) ELSE null END AS krajGod,
+     CASE WHEN line.KrajVladavinePNE IS NOT NULL AND line.KrajVladavinePNE <> "" THEN toBoolean(line.KrajVladavinePNE) ELSE false END AS krajPNE
+
+MERGE (d:Dinastija {Naziv: trim(line.Naziv)})
+ON CREATE SET 
+  d.ID = randomUUID(),
+  d.PocetakVladavineGod = pocGod,
+  d.PocetakVladavinePNE = pocPNE,
+  d.KrajVladavineGod = krajGod,
+  d.KrajVladavinePNE = krajPNE,
+  d.Slika = CASE line.Slika WHEN "" THEN null ELSE line.Slika END
+ON MATCH SET 
+  d.PocetakVladavineGod = pocGod,
+  d.PocetakVladavinePNE = pocPNE,
+  d.KrajVladavineGod = krajGod,
+  d.KrajVladavinePNE = krajPNE,
+  d.Slika = CASE line.Slika WHEN "" THEN null ELSE line.Slika END
+
+// VEZA SA GODINOM POCETKA AKO POSTOJI
+WITH d, pocGod, pocPNE, krajGod, krajPNE
+WHERE pocGod IS NOT NULL
+MERGE (g1:Godina {God: pocGod, IsPNE: pocPNE})
+  ON CREATE SET g1.ID = randomUUID()
+MERGE (d)-[:POCETAK_VLADAVINE]->(g1)
+
+// VEZA SA GODINOM KRAJA AKO POSTOJI
+WITH d, krajGod, krajPNE
+WHERE krajGod IS NOT NULL
+MERGE (g2:Godina {God: krajGod, IsPNE: krajPNE})
+  ON CREATE SET g2.ID = randomUUID()
+MERGE (d)-[:KRAJ_VLADAVINE]->(g2);
+
+
+//------------------LICNOST------------------
+LOAD CSV WITH HEADERS FROM 'https://github.com/umilad/NBP-KrvNijeVoda/blob/407dad12697105ee124bd18db7fc19573b2aae9d/csv/licnosti.csv' AS line
+MERGE (l:Licnost {
+    Titula: trim(line.Titula),
+    Ime: trim(line.Ime),
+    Prezime: trim(line.Prezime)
+})
+ON CREATE SET
+  l.ID = randomUUID(),
+  l.Pol = line.Pol,
+  l.Slika = CASE
+               WHEN line.Slika IS NULL OR trim(line.Slika) = "" THEN
+                 CASE line.Pol WHEN 'Muški' THEN 'default_male.png' ELSE 'default_female.png' END
+               ELSE line.Slika
+             END,
+  l.Tekst = CASE WHEN line.Tekst IS NULL OR trim(line.Tekst) = "" THEN null ELSE line.Tekst END,
+  l.MestoRodjenja = CASE line.MestoRodjenja WHEN "" THEN null ELSE line.MestoRodjenja END
+ON MATCH SET
+  l.Pol = line.Pol,
+  l.Slika = CASE
+               WHEN line.Slika IS NULL OR trim(line.Slika) = "" THEN
+                 CASE line.Pol WHEN 'Muški' THEN 'default_male.png' ELSE 'default_female.png' END
+               ELSE line.Slika
+             END,
+  l.Tekst = CASE WHEN line.Tekst IS NULL OR trim(line.Tekst) = "" THEN null ELSE line.Tekst END,
+  l.MestoRodjenja = CASE line.MestoRodjenja WHEN "" THEN null ELSE line.MestoRodjenja END
+WITH l, line
+
+// Kreiranje ili pronalazak godina rođenja
+WHERE line.GodinaRodjenja IS NOT NULL AND trim(line.GodinaRodjenja) <> ""
+MERGE (godRod:Godina {God: toInteger(line.GodinaRodjenja), IsPNE: line.GodinaRodjenjaPNE = "true"})
+  ON CREATE SET godRod.ID = randomUUID()
+MERGE (l)-[:RODJEN]->(godRod)
+
+// Kreiranje ili pronalazak godina smrti
+WITH l, line
+WHERE line.GodinaSmrti IS NOT NULL AND trim(line.GodinaSmrti) <> ""
+MERGE (godSmr:Godina {God: toInteger(line.GodinaSmrti), IsPNE: line.GodinaSmrtiPNE = "true"})
+  ON CREATE SET godSmr.ID = randomUUID()
+MERGE (l)-[:UMRO]->(godSmr)
+
+// Kreiranje ili pronalazak lokacije mesta rođenja
+WITH l, line
+WHERE line.Zemlja IS NOT NULL AND trim(line.Zemlja) <> "" AND line.Zemlja <> "/"
+MERGE (loc:Zemlja {Naziv: trim(line.Zemlja)})
+  ON CREATE SET loc.ID = randomUUID()
+MERGE (l)-[:RODJEN_U]->(loc);
+
+//------------------VLADAR------------------
+LOAD CSV WITH HEADERS FROM 'https://github.com/umilad/NBP-KrvNijeVoda/blob/407dad12697105ee124bd18db7fc19573b2aae9d/csv/vladari.csv' AS line
+
+MERGE (v:Licnost:Vladar {
+    Titula: trim(line.Titula),
+    Ime: trim(line.Ime),
+    Prezime: trim(line.Prezime)
+})
+ON CREATE SET
+  v.ID = randomUUID(),
+  v.Pol = line.Pol,
+  v.Slika = CASE
+               WHEN line.Slika IS NULL OR trim(line.Slika) = "" THEN
+                 CASE line.Pol WHEN 'Muški' THEN 'default_male.png' ELSE 'default_female.png' END
+               ELSE line.Slika
+             END,
+  v.Tekst = CASE WHEN line.Tekst IS NULL OR trim(line.Tekst) = "" THEN null ELSE line.Tekst END,
+  v.MestoRodjenja = CASE line.MestoRodjenja WHEN "" THEN null ELSE line.MestoRodjenja END,
+  v.Teritorija = CASE line.Teritorija WHEN "" THEN null ELSE line.Teritorija END,
+  v.PocetakVladavineGod = toInteger(line.PocetakVladavineGod),
+  v.PocetakVladavinePNE = (line.PocetakVladavinePNE = "true"),
+  v.KrajVladavineGod = toInteger(line.KrajVladavineGod),
+  v.KrajVladavinePNE = (line.KrajVladavinePNE = "true")
+ON MATCH SET
+  v.Pol = line.Pol,
+  v.Slika = CASE
+               WHEN line.Slika IS NULL OR trim(line.Slika) = "" THEN
+                 CASE line.Pol WHEN 'Muški' THEN 'default_male.png' ELSE 'default_female.png' END
+               ELSE line.Slika
+             END,
+  v.Tekst = CASE WHEN line.Tekst IS NULL OR trim(line.Tekst) = "" THEN null ELSE line.Tekst END,
+  v.MestoRodjenja = CASE line.MestoRodjenja WHEN "" THEN null ELSE line.MestoRodjenja END,
+  v.Teritorija = CASE line.Teritorija WHEN "" THEN null ELSE line.Teritorija END,
+  v.PocetakVladavineGod = toInteger(line.PocetakVladavineGod),
+  v.PocetakVladavinePNE = (line.PocetakVladavinePNE = "true"),
+  v.KrajVladavineGod = toInteger(line.KrajVladavineGod),
+  v.KrajVladavinePNE = (line.KrajVladavinePNE = "true")
+
+WITH v, line
+
+// Godina rođenja
+WHERE line.GodinaRodjenja IS NOT NULL AND trim(line.GodinaRodjenja) <> ""
+MERGE (godRod:Godina {God: toInteger(line.GodinaRodjenja), IsPNE: line.GodinaRodjenjaPNE = "true"})
+  ON CREATE SET godRod.ID = randomUUID()
+MERGE (v)-[:RODJEN]->(godRod)
+
+// Godina smrti
+WITH v, line
+WHERE line.GodinaSmrti IS NOT NULL AND trim(line.GodinaSmrti) <> ""
+MERGE (godSmr:Godina {God: toInteger(line.GodinaSmrti), IsPNE: line.GodinaSmrtiPNE = "true"})
+  ON CREATE SET godSmr.ID = randomUUID()
+MERGE (v)-[:UMRO]->(godSmr)
+
+// Mesto rođenja - Zemlja
+WITH v, line
+WHERE line.Zemlja IS NOT NULL AND trim(line.Zemlja) <> "" AND line.Zemlja <> "/"
+MERGE (loc:Zemlja {Naziv: trim(line.Zemlja)})
+  ON CREATE SET loc.ID = randomUUID()
+MERGE (v)-[:RODJEN_U]->(loc)
+
+// Dinastija
+WITH v, line
+WHERE line.Dinastija IS NOT NULL AND trim(line.Dinastija) <> "" AND line.Dinastija <> "/"
+MERGE (d:Dinastija {Naziv: trim(line.Dinastija)})
+  ON CREATE SET d.ID = randomUUID()
+MERGE (v)-[:PRIPADA_DINASTIJI]->(d)
+
+// Godine vladavine - pocetak
+WITH v, line
+WHERE line.PocetakVladavineGod IS NOT NULL AND trim(line.PocetakVladavineGod) <> ""
+MERGE (poc:Godina {God: toInteger(line.PocetakVladavineGod), IsPNE: line.PocetakVladavinePNE = "true"})
+  ON CREATE SET poc.ID = randomUUID()
+MERGE (v)-[:VLADAO_OD]->(poc)
+
+// Godine vladavine - kraj
+WITH v, line
+WHERE line.KrajVladavineGod IS NOT NULL AND trim(line.KrajVladavineGod) <> ""
+MERGE (kraj:Godina {God: toInteger(line.KrajVladavineGod), IsPNE: line.KrajVladavinePNE = "true"})
+  ON CREATE SET kraj.ID = randomUUID()
+MERGE (v)-[:VLADAO_DO]->(kraj);
+
+
+//------------------DOGADJAJ------------------
+LOAD CSV WITH HEADERS FROM 'https://github.com/umilad/NBP-KrvNijeVoda/blob/407dad12697105ee124bd18db7fc19573b2aae9d/csv/dogadjaji.csv' AS line
+MERGE (d:Dogadjaj {Ime:trim(line.Ime)})
+ON CREATE SET
+  d.ID = randomUUID(),
+  d.Tip = CASE line.Tip
+    WHEN 'Bitka' THEN 'Bitka'
+    WHEN 'Rat' THEN 'Rat'
+    WHEN 'Ustanak' THEN 'Ustanak'
+    WHEN 'Sporazum' THEN 'Sporazum'
+    WHEN 'Savez' THEN 'Savez'
+    WHEN 'Dokument' THEN 'Dokument'
+	WHEN 'Opsada' THEN 'Opsada'
+    ELSE null
+  END,
+  d.Lokacija = CASE line.Lokacija WHEN "" THEN null ELSE line.Lokacija END,
+  d.Tekst = CASE line.Tekst WHEN "" THEN null ELSE line.Tekst END
+ON MATCH SET
+  d.Tip = CASE line.Tip
+    WHEN 'Bitka' THEN 'Bitka'
+    WHEN 'Rat' THEN 'Rat'
+    WHEN 'Ustanak' THEN 'Ustanak'
+    WHEN 'Sporazum' THEN 'Sporazum'
+    WHEN 'Savez' THEN 'Savez'
+    WHEN 'Dokument' THEN 'Dokument'
+	WHEN 'Opsada' THEN 'Opsada'
+    ELSE null
+  END,
+  d.Lokacija = CASE line.Lokacija WHEN "" THEN null ELSE line.Lokacija END,
+  d.Tekst = CASE line.Tekst WHEN "" THEN null ELSE line.Tekst END;
+
+LOAD CSV WITH HEADERS FROM https://github.com/umilad/NBP-KrvNijeVoda/blob/407dad12697105ee124bd18db7fc19573b2aae9d/csv/dogadjaji.csv AS line
+MATCH (d:Dogadjaj {Ime: line.Ime})
+WITH d, line
+WHERE line.Godina IS NOT NULL AND line.Godina <> ""
+MERGE (g:Godina {God: toInteger(line.Godina), IsPNE: line.IsPNE = "true"})
+  ON CREATE SET g.ID = randomUUID()
+MERGE (d)-[:DESIO_SE]->(g)
+WITH d, line
+WHERE line.Zemlja IS NOT NULL AND line.Zemlja <> ""
+MERGE (z:Zemlja {Naziv: line.Zemlja})
+  ON CREATE SET z.ID = randomUUID()
+MERGE (d)-[:DESIO_SE_U]->(z);
+  
+//------------------BITKA------------------
+//ubacivanje podataka preko CSV fajlova
+LOAD CSV WITH HEADERS FROM 'https://github.com/umilad/NBP-KrvNijeVoda/blob/407dad12697105ee124bd18db7fc19573b2aae9d/csv/bitke.csv' AS line
+MERGE (b:Dogadjaj:Bitka {Ime:trim(line.Ime)})
+ON CREATE SET
+  b.ID = randomUUID(),
+  b.Tip = 'Bitka',
+  b.Lokacija = CASE line.Lokacija WHEN "" THEN null ELSE line.Lokacija END,
+  b.Tekst = CASE line.Tekst WHEN "" THEN null ELSE line.Tekst END,
+  b.Pobednik = CASE line.Pobednik WHEN "" THEN null ELSE line.Pobednik END,
+  b.BrojZrtava = toInteger(line.BrojZrtava),
+  b.Rat = CASE line.Rat WHEN "" THEN null ELSE line.Rat END
+ON MATCH SET
+  b.Tip = 'Bitka',
+  b.Lokacija = CASE line.Lokacija WHEN "" THEN null ELSE line.Lokacija END,
+  b.Tekst = CASE line.Tekst WHEN "" THEN null ELSE line.Tekst END,
+  b.Pobednik = CASE line.Pobednik WHEN "" THEN null ELSE line.Pobednik END,
+  b.BrojZrtava = toInteger(line.BrojZrtava),
+  b.Rat = CASE line.Rat WHEN "" THEN null ELSE line.Rat END;
+  
+LOAD CSV WITH HEADERS FROM 'https://github.com/umilad/NBP-KrvNijeVoda/blob/407dad12697105ee124bd18db7fc19573b2aae9d/csv/bitke.csv' AS line
+MATCH (b:Dogadjaj:Bitka {Ime: line.Ime})
+WITH b, line
+WHERE line.Godina IS NOT NULL AND line.Godina <> ""
+MERGE (g:Godina {God: toInteger(line.Godina), IsPNE: line.IsPNE = "true"})
+  ON CREATE SET g.ID = randomUUID()
+MERGE (b)-[:DESIO_SE]->(g)
+WITH b, line
+WHERE line.Rat IS NOT NULL AND line.Rat <> ""
+MERGE (r:Dogadjaj:Rat {Ime: line.Rat})
+  ON CREATE SET r.ID = randomUUID()
+MERGE (b)-[:PRIPADA_RATU]->(r)
+WITH b, line
+WHERE line.Zemlja IS NOT NULL AND line.Zemlja <> ""
+MERGE (z:Zemlja {Naziv: line.Zemlja})
+  ON CREATE SET z.ID = randomUUID()
+MERGE (b)-[:DESIO_SE_U]->(z);
+
+//------------------RAT------------------
+LOAD CSV WITH HEADERS FROM 'https://github.com/umilad/NBP-KrvNijeVoda/blob/407dad12697105ee124bd18db7fc19573b2aae9d/csv/ratovi.csv' AS line
+MERGE (r:Dogadjaj:Rat {Ime:trim(line.Ime)})
+ON CREATE SET
+  r.ID = randomUUID(),
+  r.Tip = 'Rat', 
+  r.Lokacija = CASE line.Lokacija WHEN "" THEN null ELSE line.Lokacija END,
+  r.Tekst = CASE line.Tekst WHEN "" THEN null ELSE line.Tekst END,
+  r.Pobednik = CASE line.Pobednik WHEN "" THEN null ELSE line.Pobednik END
+ON MATCH SET
+  r.Tip = 'Rat', 
+  r.Lokacija = CASE line.Lokacija WHEN "" THEN null ELSE line.Lokacija END,
+  r.Tekst = CASE line.Tekst WHEN "" THEN null ELSE line.Tekst END,
+  r.Pobednik = CASE line.Pobednik WHEN "" THEN null ELSE line.Pobednik END;
+  
+LOAD CSV WITH HEADERS FROM 'https://github.com/umilad/NBP-KrvNijeVoda/blob/407dad12697105ee124bd18db7fc19573b2aae9d/csv/ratovi.csv' AS line
+MATCH (r:Dogadjaj:Rat {Ime: line.Ime})
+WITH r, line
+WHERE line.Godina IS NOT NULL AND line.Godina <> ""
+MERGE (g:Godina {God: toInteger(line.Godina), IsPNE: line.IsPNE = "true"})
+  ON CREATE SET g.ID = randomUUID()
+MERGE (r)-[:DESIO_SE]->(g)
+WITH r, line
+WHERE line.GodinaDo IS NOT NULL AND line.GodinaDo <> ""
+MERGE (g:Godina {God: toInteger(line.GodinaDo), IsPNE: line.IsPNEDo = "true"})
+  ON CREATE SET g.ID = randomUUID()
+MERGE (r)-[:RAT_TRAJAO_DO]->(g)
+WITH r, line
+WHERE line.Zemlja IS NOT NULL AND line.Zemlja <> ""
+MERGE (z:Zemlja {Naziv: line.Zemlja})
+  ON CREATE SET z.ID = randomUUID()
+MERGE (r)-[:DESIO_SE_U]->(z);
+
+//svakako ne treba jer sam prvo kreirala sve bitke i vezala ih s ovim ratovima a ovo vezuje samo sa postojecim bitkama tkd 
+//LOAD CSV WITH HEADERS FROM 'file:///ratovi.csv' AS line //opet ovo da se izbegne eager loading 
+//WITH line, apoc.text.split(line.Bitke, '|') AS bitkeLista
+//UNWIND bitkeLista AS bitkaIme
+//MATCH (r:Rat {Ime: line.Ime})
+//MATCH (b:Bitka {Ime: bitkaIme})
+//MERGE (b)-[:PRIPADA_RATU]->(r);
+
+
+//------------------ZEMLJA------------------
+LOAD CSV WITH HEADERS FROM 'https://github.com/umilad/NBP-KrvNijeVoda/blob/407dad12697105ee124bd18db7fc19573b2aae9d/csv/zemlje.csv' AS line
+MERGE (z:Zemlja {Naziv:trim(line.Naziv)})
+ON CREATE SET
+  z.ID = randomUUID(), 
+  z.Trajanje = CASE line.Trajanje WHEN "" THEN null ELSE line.Trajanje END,
+  z.Grb = CASE line.Grb WHEN "" THEN null ELSE line.Grb END,
+  z.BrojStanovnika = toInteger(line.BrojStanovnika)
+ON MATCH SET
+  z.Trajanje = CASE line.Trajanje WHEN "" THEN null ELSE line.Trajanje END,
+  z.Grb = CASE line.Grb WHEN "" THEN null ELSE line.Grb END,
+  z.BrojStanovnika = toInteger(line.BrojStanovnika);
+
+
+///////////////////////
+
+/*CREATE (:Bitka:Dogadjaj { //OBAVEZNO OBE LABELE 
+  ID: 'some-guid',
+  Ime: 'Bitka na Kosovu',
+  Tip: 'Bitka',
+  Pobednik: 'Srbija',
+  BrojZrtava: 10000
+});*/
+
+//osigurava da nijedno ne bude null i da se ne narusi constraint ovo moze i kroz C# da se uradi ali neka ga sad ovk
+/*WITH 
+  coalesce($Titula, '/') AS titula,
+  coalesce($Ime, '/') AS ime,
+  coalesce($Prezime, '/') AS prezime,
+  $Pol AS pol,
+  $GodinaRodjenja AS godinaRodjenja,
+  $GodinaSmrti AS godinaSmrti
+
+MERGE (l:Licnost {
+  Titula: titula,
+  Ime: ime,
+  Prezime: prezime
+})
+SET l.Pol = pol,
+    l.GodinaRodjenja = godinaRodjenja,
+    l.GodinaSmrti = godinaSmrti;*/
+
