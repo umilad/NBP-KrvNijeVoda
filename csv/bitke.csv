@@ -1,0 +1,22 @@
+Ime,Tip,Lokacija,Tekst,Pobednik,BrojZrtava,Godina,IsPNE,Rat,Zemlja
+Bitka kod Maratona,Bitka,Maraton,Pobeda Atinjana nad Persijancima,Atinjani,,490,True,Grčko-persijski ratovi,Stara Grčka
+Bitka kod Kane,Bitka,Kana,Kartaginska pobeda nad Rimljanima,Kartagina,,216,True,Drugi punski rat,Kartaginsko Carstvo
+Bitka kod Zame,Bitka,Zama,Rim pobedio Hanibala,Rim,,202,True,Drugi punski rat,Rimska Republika
+Bitka kod Pantina,Bitka,Toplica,Stefan Nemanja porazio braću i Vizantince,Stefan Nemanja,,1168,False,Rani srednji vek,Velika Župa Toplica (Raška)
+Bitka kod Amfipolja,Bitka,Amfipolj,Državni rat Atina vs. Sparta,Sparta,,422,True,Peloponeski rat,Atinska Liga
+Bitka na Belasici,Bitka,Belasica,Sukob Samuilovog carstva i Vizantije,Samuilovo carstvo,,,False,Srednji vek,Samuilovo Carstvo
+Bitka na Marici,Bitka,Marica,Oko 1371 – turska pobeda nad srpskim vojskama,Osmanlije,,1371,False,Osmansko-srpski ratovi,Bugarsko Carstvo
+Bitka kod Plocnika,Bitka,Plocnik,Srpska pobeda nad Osmanlijama,Srbi,,1386,False,Osmansko-srpski ratovi,Srednjovekovna Srbija
+Bitka na Kozari,Bitka,Kozara,"(primer, može biti bliže XX veku)",Srpske snage,,,False,Nepoznat rat,Kraljevina Jugoslavija
+Bitka na Kosovu,Bitka,Kosovo polje,Kosovski boj,Osmanlije,,1389,False,Srednji vek,Srednjovekovna Srbija
+Bitka kod Marice II,Bitka,Marica,Dopunata bitka sa Osmanlijama,Osmanlije,,1385,False,Srednji vek,Bugarsko Carstvo
+Bitka kod Varvarina,Bitka,Varvarin,Prva srpska pobeda u Prvom ustanku,Srbi,,1805,False,Prvi srpski ustanak,Kneževina Srbija
+Bitka kod Ivankovca,Bitka,Ivankovac,Prva velika bitka Prvog ustanka,Srpski ustanici,,1805,False,Prvi srpski ustanak,Kneževina Srbija
+Bitka kod Mišara,Bitka,Mišar,Ključna pobeda nad Osmanlijama,Srpski ustanici,,1806,False,Prvi srpski ustanak,Kneževina Srbija
+Bitka na Cokesini,Bitka,Cokesina,„Srpska Termopila“,Osmanlije,303,1804,False,Prvi ustanak,Kneževina Srbija
+Bitka kod Cegara,Bitka,Cegar,Znamenita eksplozija na Cegaru,Osmanlije,,1809,False,Prvi ustanak,Kneževina Srbija
+Bitka kod Delijgrada,Bitka,Delijgrad,Odbrana od osmanske ofanzive,Srpski ustanici,,1806,False,Prvi srpski ustanak,Kneževina Srbija
+Bitka kod Varvarina II,Bitka,Varvarin,Ponovna pobeda u Prvom ustanku,Srpski ustanici,,1810,False,Prvi ustanak,Kneževina Srbija
+Bitka kod Požarevca,Bitka,Požarevac,Događaji iz Drugog ustanka,Srbi,,1815,False,Drugi ustanak,Kneževina Srbija
+Bitka kod Ljubića,Bitka,Ljubić,Velika borba Drugog ustanka,Srbi,,1815,False,Drugi ustanak,Kneževina Srbija
+Bitka kod Plevne,Bitka,Plevna,Duga opsada tokom rata 1877,Rusija/Srbija,,1877,False,Srpsko-turski rat,Osmansko Carstvo

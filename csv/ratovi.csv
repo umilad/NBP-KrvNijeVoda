@@ -1,0 +1,11 @@
+Tip,Ime,Godina,IsPNE,GodinaDo,IsPNEDo,Lokacija,Zemlja,Pobednik,Tekst,Bitke
+Rat,Grčko-persijski ratovi,499,true,449,true,Stara Grčka,Stara Grčka,Grčka,Serija ratova između grčkih gradova-država i Persijskog carstva,Bitka kod Maratona
+Rat,Drugi punski rat,218,true,201,true,Rimska Republika,Rimska Republika,Rim,Rat između Rima i Kartagine,Bitka kod Kane|Bitka kod Zame
+Rat,Rani srednji vek,1100,false,1200,false,Srednjovekovna Srbija,Srednjovekovna Srbija,Srbija,Period ranog srednjeg veka i sukobi sa Vizantijom,Bitka kod Pantina
+Rat,Peloponeski rat,431,true,404,true,Stara Grčka,Stara Grčka,Sparta,Rat između Atine i Sparte,Bitka kod Amfipolja
+Rat,Srednji vek,1300,false,1400,false,Srednjovekovna Srbija,Srednjovekovna Srbija,Osmanlije,Period sukoba u srednjem veku,Bitka na Belasici|Bitka na Kosovu|Bitka kod Marice II
+Rat,Osmansko-srpski ratovi,1371,false,1390,false,Osmansko Carstvo,Osmansko Carstvo,Osmanlije,Sukobi između srpskih zemalja i Osmanlijskog carstva,Bitka na Marici|Bitka kod Plocnika
+Rat,Nepoznat rat,1900,false,,,BiH,Bosna i Hercegovina,Srpske snage,Rat iz nedovoljno poznatog perioda,Bitka na Kozari
+Rat,Prvi srpski ustanak,1804,false,1813,false,Srednjovekovna Srbija,Kneževina Srbija,Srpski ustanici,Ustanak protiv Osmanlijskog carstva,Bitka kod Varvarina|Bitka kod Ivankovca|Bitka kod Mišara|Bitka na Cokesini|Bitka kod Cegara|Bitka kod Delijgrada|Bitka kod Varvarina II
+Rat,Drugi ustanak,1815,false,1817,false,Srednjovekovna Srbija,Kneževina Srbija,Srbi,Ustanak u cilju oslobođenja od Osmanlija,Bitka kod Požarevca|Bitka kod Ljubića
+Rat,Srpsko-turski rat,1876,false,1878,false,Bugarska i Srbija,Kneževina Srbija i Kraljevina Bugarska,Rusija/Srbija,Rat između Srbije i Osmanlijskog carstva,Bitka kod Plevne
