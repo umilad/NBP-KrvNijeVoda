@@ -90,7 +90,7 @@ public class BitkaController : ControllerBase
                     .ResultsAsync)
                     .Any();
 
-                if (ratPostoji != null)
+                if (ratPostoji)
                     query = query
                     .With("b")
                     .Match("(r:Rat)")

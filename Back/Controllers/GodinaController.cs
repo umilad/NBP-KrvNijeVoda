@@ -17,6 +17,73 @@ public class GodinaController : ControllerBase
         _client = neo4jService.GetClient();
     }
 
+    //TEST TEST PROBA PROBA 
+    //[Authorize(Roles = "Admin")]
+    // [HttpPost("ExportDatabaseCypher")]
+    // public async Task<IActionResult> ExportDatabaseCypher()
+    // {
+    //     await _client.Cypher
+    //         .Call("apoc.export.cypher.all($file, $config)")
+    //         .WithParams(new {
+    //             file = "export.cypher",
+    //             config = new {
+    //                 format = "cypher"
+    //             }
+    //         })
+    //         .Yield("file")
+    //         .Return(file => file.As<string>())
+    //         .ResultsAsync;
+
+    //     return Ok("Export completed.");
+    // }
+
+    //PROBA 2
+    //     [HttpPost("ExportDatabaseCypherString")]
+    //     public async Task<string> ExportDatabaseAsCypherString()
+    //     {
+    //         var result = await _client.Cypher
+    //     .Call("apoc.export.cypher.all(null, {stream:true})")
+    //     .Yield("cypherStatements")
+    //     .Return<string>("cypherStatements")
+    //     .ResultsAsync;
+
+    // string cypherScript = string.Join(Environment.NewLine, result);
+
+
+
+    //         return cypherScript;
+    //     }
+    //PROBA 3
+    //     [HttpPost("ExportDatabaseCypherString")]
+    // public async Task<string> ExportDatabaseAsCypherString()
+    // {
+    //     var result = await _client.Cypher
+    //         .Call("apoc.export.cypher.all(null, {stream:true})")
+    //         .Yield("cypherStatements")
+    //         .Return<string>("cypherStatements")
+    //         .ResultsAsync;
+
+    //     string cypherScript = string.Join(Environment.NewLine, result);
+    //     return cypherScript;
+    // }
+
+    //PROBA 4 JSON
+[HttpPost("ExportDatabaseAsCypherString")]
+public async Task<IActionResult> ExportDatabaseAsCypherString()
+{
+    var result = await _client.Cypher
+        .Call("apoc.export.cypher.all(null, {stream:true})")
+        .Yield("cypherStatements")
+        .Return<string>("cypherStatements")
+        .ResultsAsync;
+
+    string cypherScript = string.Join(Environment.NewLine, result);
+    return Ok(new { Cypher = cypherScript });
+}
+
+
+
+
     [HttpPost("CreateGodina")]
     public async Task<IActionResult> CreateGodina([FromBody] Godina godina)
     {

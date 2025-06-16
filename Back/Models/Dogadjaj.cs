@@ -1,19 +1,21 @@
 using KrvNijeVoda.Models;
 
 namespace KrvNijeVoda.Back.Models
-{ 
-    public enum TipDogadjaja {
+{
+    public enum TipDogadjaja
+    {
         Bitka,
         Rat,
-        Ustanak, 
+        Ustanak,
         Sporazum,
         Savez,
-        Dokument
+        Dokument,
+        Opsada
     }
     public class Dogadjaj {
         public Guid ID { get; set; }
-        public string Ime { get; set; }//unique
         public TipDogadjaja Tip { get; set; }
+        public required string Ime { get; set; }//unique
         public Godina? Godina { get; set; }//mozda nekad null sad ne
         public string? Lokacija { get; set; }//STAVI VEZU SA ZEMLJOM
         //public Lokacija? Lokacija { get; set; }

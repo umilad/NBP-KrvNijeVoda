@@ -6,7 +6,7 @@ namespace KrvNijeVoda.Back.Models
     public class Dinastija
     {
         public Guid ID { get; set; }
-        public string Naziv { get; set; }//unique najbolje
+        public required string Naziv { get; set; }//unique najbolje REQUIRED?
 
         //public GodinaStruct? PocetakVladavineGod  { get; set; }
         public int PocetakVladavineGod { get; set; }
