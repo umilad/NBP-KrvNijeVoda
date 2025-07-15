@@ -207,7 +207,7 @@ public class VladarController : ControllerBase
                 Slika = vl.Vladar.Slika,
                 MestoRodjenja = vl.Vladar.MestoRodjenja,
                 Tekst = vl.Vladar.Tekst,
-                Dinastija = vl.Dinastija ?? new Dinastija(),
+                Dinastija = vl.Dinastija, // ?? new Dinastija() ne moze jer mora da ima naziv da bi kreirao novu zato sad ostavljam ovako 
                 Teritorija = vl.Vladar.Teritorija,
                 PocetakVladavineGod = vl.Vladar.PocetakVladavineGod,
                 PocetakVladavinePNE = vl.Vladar.PocetakVladavinePNE,

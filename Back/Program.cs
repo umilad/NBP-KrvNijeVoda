@@ -8,6 +8,17 @@ builder.Services.AddScoped<RatService>();
 builder.Services.AddScoped<DinastijaService>();
 //builder.Services.AddScoped<LokacijaService>();
 
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins("http://localhost:3000") // Your frontend address
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
+
 builder.Services.AddControllers();
 // builder.Services.AddControllers();
 
@@ -24,7 +35,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+
+
 app.UseHttpsRedirection();
+
+app.UseCors();
 
 app.UseAuthorization();
 
