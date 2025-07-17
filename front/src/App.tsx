@@ -80,20 +80,34 @@ function Navbar() {
         </ul>
 
 
-        <div className="w-50">
+        
+          
+
+        <div className="relative start-1.5 w-55 h-8 rounded-full border border-[#e6cda5f0] rounded-l-md">
+          <div className="absolute inset-y-0 start-2 flex items-center ps-3 pointer-events-none">
+            <svg className="w-4 h-4 text-[#e6cda5f0]" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
+            </svg>
+          </div>
           <input 
-            type="text"
-            className="w-full h-full px-4 py-2 border bg-[#e6cda5f0] border-[#3f2b0af0] rounded-l-md focus:outline-none focus:ring-2 focus:ring-[#3f2b0af0]"
-            placeholder="Pretraži..."
-          />
+              type="search"
+              className="absolute start-8 w-50 h-full px-4 py-2 border-none focus:outline-none "
+              placeholder="Pretraži..."
+            />
         </div>
 
-        <div className="h-full">
+
+
+          
+
+       
+
+        <div className="relative h-full w-20">
           <Link 
             to="/login"
-            className="h-full flex items-center bg-[#e6cda5f0] text-[#3f2b0af0] px-4 py-2 hover:bg-[#3f2b0af0] hover:text-white transition duration-300"
+            className="absolute start-4 h-full w-15 flex items-center justify-center rounded-full bg-[#e6cda5f0] text-[#3f2b0af0] px-4 py-2 hover:bg-[#3f2b0af0] hover:text-white transition duration-300"
           >
-            Prijavi se
+            Log in 
           </Link>
         </div>
         
