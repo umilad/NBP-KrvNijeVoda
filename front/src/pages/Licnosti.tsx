@@ -1,16 +1,16 @@
 export default function Licnosti() { 
     return (
-        <div className="licnosti-container flex flex-col items-center justify-center text-white"> 
+        <div className="licnosti-container flex flex-col items-center justify-center text-white "> 
             {/* Slika */}
             <div className="relative w-[300px] h-[355px] m-auto">
                 {/*ram*/}
                 <img
                     src="/src/images/picture-frame.png"
                     alt="Frame"
-                    className="absolute top-10 left-0 w-full h-full z-10 pointer-events-none"
+                    className="absolute top-20 left-0 w-full h-full z-10 pointer-events-none"
                 />
                 {/*slika u ramu*/}
-                <div className="absolute inset-0 top-20 flex items-center justify-center z-0">
+                <div className="absolute inset-0 top-40 flex items-center justify-center z-0">
                     <img
                         src="/src/images/download.jpeg"
                         alt="Historical Figure"
