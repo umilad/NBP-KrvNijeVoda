@@ -1,1 +1,24 @@
 @import "tailwindcss";
+
+/* Hide scrollbars */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE/Edge */
+  scrollbar-width: none;     /* Firefox */
+}
+
+.grabbing { cursor: grabbing; }
+
+/* Hide the clear (×) button in Chrome, Safari, Edge */
+input[type="search"]::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
+}
+
+/* Optional: Hide it in Firefox as well (though Firefox doesn’t show it by default) */
+input[type="search"]::-moz-search-clear {
+  display: none;
+}
