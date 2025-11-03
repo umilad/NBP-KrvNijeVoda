@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Neo4jClient;
 using System;
 using System.Threading.Tasks;
-using KrvNijeVoda.Back.Models;
+//using KrvNijeVoda.Back.Models;
 using System.Reflection.Metadata;
 using KrvNijeVoda.Back;
 
@@ -85,13 +85,13 @@ public async Task<IActionResult> ExportDatabaseAsCypherString()
 
 
     [HttpPost("CreateGodina")]
-    public async Task<IActionResult> CreateGodina([FromBody] Godina godina)
+    public async Task<IActionResult> CreateGodina([FromBody] GodinaDto godina)
     {
         try
         {
             var god = (await _client.Cypher.Match("(g:Godina)")
-                                           .Where((Godina g) => g.God == godina.God && g.IsPNE == godina.IsPNE)
-                                           .Return(g => g.As<Godina>())
+                                           .Where((GodinaNeo g) => g.God == godina.God && g.IsPNE == godina.IsPNE)
+                                           .Return(g => g.As<GodinaNeo>())
                                            .ResultsAsync)
                                            .FirstOrDefault();
 
@@ -118,8 +118,8 @@ public async Task<IActionResult> ExportDatabaseAsCypherString()
         try
         {
             var godina = (await _client.Cypher.Match("(g:Godina)")
-                                            .Where((Godina g) => g.ID == id)
-                                            .Return(g => g.As<Godina>())
+                                            .Where((GodinaNeo g) => g.ID == id)
+                                            .Return(g => g.As<GodinaNeo>())
                                             .ResultsAsync)
                                             .FirstOrDefault();
             if (godina == null)
@@ -140,8 +140,8 @@ public async Task<IActionResult> ExportDatabaseAsCypherString()
         try
         {
             var god = (await _client.Cypher.Match("(g:Godina)")
-                                            .Where((Godina g) => g.ID == id)
-                                            .Return(g => g.As<Godina>())
+                                            .Where((GodinaNeo g) => g.ID == id)
+                                            .Return(g => g.As<GodinaNeo>())
                                             .ResultsAsync)
                                             .FirstOrDefault();
             if (god == null)
@@ -150,7 +150,7 @@ public async Task<IActionResult> ExportDatabaseAsCypherString()
             }
 
             await _client.Cypher.Match("(g:Godina)")
-                                .Where((Godina g) => g.ID == id)
+                                .Where((GodinaNeo g) => g.ID == id)
                                 .DetachDelete("g") 
                                 .ExecuteWithoutResultsAsync();
 
@@ -162,14 +162,14 @@ public async Task<IActionResult> ExportDatabaseAsCypherString()
         }
     }
     [HttpPut("UpdateGodina/{id}")]
-    public async Task<IActionResult> UpdateGodina(Guid id, [FromBody] Godina updatedGodina)
+    public async Task<IActionResult> UpdateGodina(Guid id, [FromBody] GodinaDto updatedGodina)
     {
         try 
         {
     
             var god = (await _client.Cypher.Match("(g:Godina)")
-                                    .Where((Godina g) => g.ID == id)
-                                    .Return(g => g.As<Godina>())
+                                    .Where((GodinaNeo g) => g.ID == id)
+                                    .Return(g => g.As<GodinaNeo>())
                                     .ResultsAsync)
                                     .FirstOrDefault();
                 
@@ -178,8 +178,8 @@ public async Task<IActionResult> ExportDatabaseAsCypherString()
                 return NotFound($"Godina sa ID: {id} nije pronađena.");
 
             var god1 = (await _client.Cypher.Match("(g:Godina)")
-                                           .Where((Godina g) => g.God == updatedGodina.God && g.IsPNE == updatedGodina.IsPNE)
-                                           .Return(g => g.As<Godina>())
+                                           .Where((GodinaNeo g) => g.God == updatedGodina.God && g.IsPNE == updatedGodina.IsPNE)
+                                           .Return(g => g.As<GodinaNeo>())
                                            .ResultsAsync)
                                            .FirstOrDefault();
 
@@ -188,7 +188,7 @@ public async Task<IActionResult> ExportDatabaseAsCypherString()
                 return BadRequest($"Godina {updatedGodina.God}. vec postoji u bazi!");
             }
             await _client.Cypher.Match("(g:Godina)")
-                                .Where((Godina g) => g.ID == id)
+                                .Where((GodinaNeo g) => g.ID == id)
                                 .Set("g.God = $godina, g.IsPNE = $ispne")
                                 .WithParam("godina", updatedGodina.God)
                                 .WithParam("ispne", updatedGodina.IsPNE)

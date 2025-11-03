@@ -3,28 +3,29 @@ using Microsoft.AspNetCore.Mvc;
 using Neo4jClient;
 using System;
 using System.Threading.Tasks;
-using KrvNijeVoda.Back.Models;
+//using KrvNijeVoda.Back.Models;
 using System.Reflection.Metadata;
 using KrvNijeVoda.Back;
 using System.Formats.Tar;
 using KrvNijeVoda.Back.Helpers;
-
+using MongoDB.Driver;
 [Route("api")]
 [ApiController]
 public class DinastijaController : ControllerBase
 {
     private readonly IGraphClient _client;
     private readonly GodinaService _godinaService;
-
+    private readonly IMongoCollection<DinastijaMongo> _dinastijaCollection;
     // Constructor: Injecting Neo4jService and getting the client
-    public DinastijaController(Neo4jService neo4jService, GodinaService godinaService)
+    public DinastijaController(Neo4jService neo4jService, GodinaService godinaService, MongoService mongoService)
     {
         _client = neo4jService.GetClient();  // Get the Neo4jClient
         _godinaService = godinaService;
+        _dinastijaCollection = mongoService.GetCollection<DinastijaMongo>("Dinastije");
     }
 
     [HttpPost("CreateDinastija")]
-    public async Task<IActionResult> CreateDinastija([FromBody] Dinastija dinastija)
+    public async Task<IActionResult> CreateDinastija([FromBody] DinastijaDto dinastija)
     {
         //provere za prazna polja FRONT
         //provere godPocetka < godKraja i to FRONT 
@@ -35,17 +36,17 @@ public class DinastijaController : ControllerBase
             var din = (await _client.Cypher.Match("(d:Dinastija)")
                                            .Where("toLower(d.Naziv) = toLower($naziv)")
                                            .WithParam("naziv", dinastija.Naziv)
-                                           .Return(d => d.As<Dinastija>())
+                                           .Return(d => d.As<DinastijaNeo>())
                                            .ResultsAsync)
                                            .FirstOrDefault();
 
             if (din != null)
                 return BadRequest($"Dinastija sa imenom {dinastija.Naziv} vec postoji u bazi!");
 
-            var query = _client.Cypher.Create("(d:Dinastija {ID: $id, Naziv: $naziv, Slika: $slika})")
-                                      .WithParam("id", Guid.NewGuid())
-                                      .WithParam("naziv", dinastija.Naziv)
-                                      .WithParam("slika", dinastija.Slika);
+            var dinID = Guid.NewGuid();
+            var query = _client.Cypher.Create("(d:Dinastija {ID: $id, Naziv: $naziv})")
+                                      .WithParam("id", dinID)
+                                      .WithParam("naziv", dinastija.Naziv);
 
             if (dinastija.PocetakVladavineGod != 0)
             {
@@ -71,6 +72,16 @@ public class DinastijaController : ControllerBase
 
             await query.ExecuteWithoutResultsAsync();
 
+            if (!string.IsNullOrWhiteSpace(dinastija.Slika))
+            {
+                var dinastijaMongo = new DinastijaMongo
+                {
+                    ID =  dinID,
+                    Slika = dinastija.Slika
+                };
+                await _dinastijaCollection.InsertOneAsync(dinastijaMongo);
+            }
+
             return Ok($"Dinastija {dinastija.Naziv} je uspesno kreirana!");
         }
         catch (Exception ex)
@@ -87,15 +98,15 @@ public class DinastijaController : ControllerBase
         try
         {
             var din = (await _client.Cypher.Match("(d:Dinastija)")
-                                           .Where((Dinastija d) => d.ID == id)
-                                           .Return(d => d.As<Dinastija>())
+                                           .Where((DinastijaNeo d) => d.ID == id)
+                                           .Return(d => d.As<DinastijaNeo>())
                                            .ResultsAsync)
                                            .FirstOrDefault();
             if (din == null)
                 return NotFound($"Dinastija sa ID: {id} ne postoji u bazi!");
 
             //Da se sredi prikaz 
-            
+
             // var result = new Dinastija
             // {
             //     ID = din.ID,
@@ -105,8 +116,18 @@ public class DinastijaController : ControllerBase
             //     // PocetakVladavine = new GodinaStruct(din.PocetakVladavineGod, din.PocetakVladavinePNE),
             //     // KrajVladavine = new GodinaStruct(din.KrajVladavineGod, din.KrajVladavinePNE)
             // };
-
-            return Ok(din);//uredjen prikaz kasnije za pne i to 
+            var mongoDoc = await _dinastijaCollection.Find(d => d.ID == id).FirstOrDefaultAsync();
+            var dto = new DinastijaDto
+            {
+                ID = din.ID,
+                Naziv = din.Naziv,
+                PocetakVladavineGod = din.PocetakVladavineGod,
+                PocetakVladavinePNE = din.PocetakVladavinePNE,
+                KrajVladavineGod = din.KrajVladavineGod,
+                KrajVladavinePNE = din.KrajVladavinePNE,
+                Slika = mongoDoc?.Slika
+            };
+            return Ok(dto);//uredjen prikaz kasnije za pne i to 
         }
         catch (Exception ex)
         {
@@ -115,15 +136,15 @@ public class DinastijaController : ControllerBase
     }
 
     [HttpPut("UpdateDinastija/{id}")]
-    public async Task<IActionResult> UpdateDinastija([FromBody] Dinastija dinastija, Guid id)
+    public async Task<IActionResult> UpdateDinastija([FromBody] DinastijaDto dinastija, Guid id)
     {
         //samo osnovne propertije da moze da menja, na frontu ce da se sredi logistika za godine
         //napravi da na frontu postoje godine koj emozes da izaberes za kraj nakon sto izaberes pocetak da bi bile vece od pocetka
         try
         {
             var din = (await _client.Cypher.Match("(d:Dinastija)")
-                                           .Where((Dinastija d) => d.ID == id)
-                                           .Return(d => d.As<Dinastija>())
+                                           .Where((DinastijaNeo d) => d.ID == id)
+                                           .Return(d => d.As<DinastijaNeo>())
                                            .ResultsAsync)
                                            .FirstOrDefault();
 
@@ -136,7 +157,7 @@ public class DinastijaController : ControllerBase
                 .Where("toLower(d.Naziv) = toLower($naziv) AND d.ID <> $id")
                 .WithParam("naziv", dinastija.Naziv)
                 .WithParam("id", id)
-                .Return(d => d.As<Dinastija>())
+                .Return(d => d.As<DinastijaNeo>())
                 .ResultsAsync)
                 .Any();
 
@@ -147,10 +168,10 @@ public class DinastijaController : ControllerBase
 
             //dinastija postoji => update sve proste atribute                         
             var query = _client.Cypher.Match("(d:Dinastija)")
-                                      .Where((Dinastija d) => d.ID == id)
-                                      .Set("d.Naziv = $naziv, d.Slika = $slika")
-                                      .WithParam("naziv", dinastija.Naziv)
-                                      .WithParam("slika", dinastija.Slika);
+                                      .Where((DinastijaNeo d) => d.ID == id)
+                                      .Set("d.Naziv = $naziv")
+                                      .WithParam("naziv", dinastija.Naziv);
+                                      
 
             bool promenjenPocetak = false;
             bool promenjenKraj = false;
@@ -227,6 +248,14 @@ public class DinastijaController : ControllerBase
 
             await query.ExecuteWithoutResultsAsync();
 
+            if (!string.IsNullOrWhiteSpace(dinastija.Slika))
+            {
+                var filter = Builders<DinastijaMongo>.Filter.Eq(d => d.ID, id);
+                var update = Builders<DinastijaMongo>.Update.Set(d => d.Slika, dinastija.Slika);
+                var result = await _dinastijaCollection.UpdateOneAsync(filter, update);
+
+            }
+
             return Ok($"Dinastija {dinastija.Naziv} je uspesno azurirana!");
         }
         catch (Exception ex)
@@ -241,20 +270,20 @@ public class DinastijaController : ControllerBase
         try
         {
             var din = (await _client.Cypher.Match("(d:Dinastija)")
-                                           .Where((Dinastija d) => d.ID == id)
-                                           .Return(d => d.As<Dinastija>())
+                                           .Where((DinastijaNeo d) => d.ID == id)
+                                           .Return(d => d.As<DinastijaNeo>())
                                            .ResultsAsync)
                                            .FirstOrDefault();
             if (din == null)
                 return BadRequest($"Dinastija sa ID: {id} ne postoji u bazi!");
 
             await _client.Cypher.Match("(d:Dinastija)")
-                                .Where((Dinastija d) => d.ID == id)
+                                .Where((DinastijaNeo d) => d.ID == id)
                                 .OptionalMatch("(d)-[r:POCETAK_VLADAVINE]->(pg:Godina)")
                                 .OptionalMatch("(d)-[r2:KRAJ_VLADAVINE]->(kg:Godina)")
                                 .Delete("r, r2, d")
                                 .ExecuteWithoutResultsAsync();
-
+            await _dinastijaCollection.DeleteOneAsync(d => d.ID == id);
             return Ok($"Dinastija sa ID: {id} je uspesno obrisana iz baze!");
         }
         

@@ -1,5 +1,5 @@
 using Neo4jClient;
-using KrvNijeVoda.Back.Models;
+//using KrvNijeVoda.Back.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http.HttpResults;
 public class GodinaService
@@ -13,16 +13,16 @@ public class GodinaService
 
     //MORA DA SE DODA ZA P.N.E. ----dodav treba da se testira
 
-    public async Task<Godina> DodajGodinu(int go, bool pne)
+    public async Task<GodinaNeo> DodajGodinu(int go, bool pne)
     {
         var ng = (await _client.Cypher.Match("(g:Godina)")
-                                      .Where((Godina g) => g.God == go && g.IsPNE == pne)
-                                      .Return(g => g.As<Godina>())
+                                      .Where((GodinaNeo g) => g.God == go && g.IsPNE == pne)
+                                      .Return(g => g.As<GodinaNeo>())
                                       .ResultsAsync)
                                       .FirstOrDefault();
         if (ng == null)
         {
-            var god = new Godina
+            var god = new GodinaNeo
             {
                 ID = Guid.NewGuid(),
                 God = go,
@@ -30,7 +30,7 @@ public class GodinaService
             };
             ng = (await _client.Cypher.Create("(g:Godina $godina)")
                             .WithParam("godina", god)
-                            .Return(g => g.As<Godina>())
+                            .Return(g => g.As<GodinaNeo>())
                             .ResultsAsync)
                             .FirstOrDefault();
         }

@@ -1,11 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
 using Neo4jClient;
-using KrvNijeVoda.Back.Models;
+//using KrvNijeVoda.Back.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-
+using MongoDB.Driver;
 [Route("api")]
 [ApiController]
 public class BitkaController : ControllerBase
@@ -15,18 +15,19 @@ public class BitkaController : ControllerBase
     // private readonly LokacijaService _lokacijaService;
     // private readonly ZemljaService _zemljaService;
     // private readonly RatService _ratService;
-
-    public BitkaController(Neo4jService neo4jService, GodinaService godinaService /*, LokacijaService lokacijaService, RatService ratService, ZemljaService zemljaService*/)
+     private readonly IMongoCollection<DogadjajMongo> _dogadjajiCollection;
+    public BitkaController(Neo4jService neo4jService, GodinaService godinaService, MongoService mongoService /*, LokacijaService lokacijaService, RatService ratService, ZemljaService zemljaService*/)
     {
         _client = neo4jService.GetClient();
         _godinaService = godinaService;
+        _dogadjajiCollection = mongoService.GetCollection<DogadjajMongo>("Dogadjaji");
         // _lokacijaService = lokacijaService;
         // _ratService = ratService;
         // _zemljaService=zemljaService;
     }
 
     [HttpPost("CreateBitka")]
-    public async Task<IActionResult> CreateBitka([FromBody] Bitka bitka)
+    public async Task<IActionResult> CreateBitka([FromBody] BitkaDto bitka)
     {
         try
         {
@@ -35,8 +36,8 @@ public class BitkaController : ControllerBase
             //     return BadRequest("Polje 'Pobednik' je obavezno.");
 
             var bit = (await _client.Cypher.Match("(b:Dogadjaj:Bitka)")
-                                           .Where((Bitka b) => b.Ime == bitka.Ime)
-                                           .Return(b => b.As<Bitka>())
+                                           .Where((BitkaNeo b) => b.Ime == bitka.Ime)
+                                           .Return(b => b.As<BitkaNeo>())
                                            .ResultsAsync)
                                            .FirstOrDefault();
 
@@ -44,13 +45,12 @@ public class BitkaController : ControllerBase
             {
                 return BadRequest($"Bitka sa imenom {bitka.Ime} vec postoji u bazi!");
             }
-
+            var bitkaID = Guid.NewGuid();
             var query = _client.Cypher
-                .Create("(b:Dogadjaj:Bitka {ID: $id, Ime: $ime, Tip: 'Bitka', Tekst: $tekst, Pobednik: $pobednik, BrojZrtava: $brojZrtava})")
-                .WithParam("id", Guid.NewGuid())
+                .Create("(b:Dogadjaj:Bitka {ID: $id, Ime: $ime, Tip: 'Bitka', Pobednik: $pobednik, BrojZrtava: $brojZrtava})")
+                .WithParam("id", bitkaID)
                 .WithParam("ime", bitka.Ime)
                 .WithParam("pobednik", bitka.Pobednik)
-                .WithParam("tekst", bitka.Tekst)
                 .WithParam("brojZrtava", bitka.BrojZrtava);
                 //MOZE DA SE DODA DA SETUJE I LOKACIJU OVDE ODMAH NA "string" 
                 // DA AKO SE NE SETUJE NA NES NORMALNO OSTANE STRING OVAKO SE NE SECAM DA L OSTAJE NULL ILI STA 
@@ -61,7 +61,7 @@ public class BitkaController : ControllerBase
                     .Match("(z:Zemlja)")
                     .Where("toLower(z.Naziv) = toLower($naziv)")
                     .WithParam("naziv", bitka.Lokacija)
-                    .Return(z => z.As<Zemlja>())
+                    .Return(z => z.As<ZemljaNeo>())
                     .ResultsAsync)
                     .Any();
 
@@ -86,7 +86,7 @@ public class BitkaController : ControllerBase
                     .Match("(r:Dogadjaj:Rat)")
                     .Where("toLower(r.Ime) = toLower($ratIme)")
                     .WithParam("ratIme", bitka.Rat)
-                    .Return(r => r.As<Rat>())
+                    .Return(r => r.As<RatNeo>())
                     .ResultsAsync)
                     .Any();
 
@@ -117,6 +117,16 @@ public class BitkaController : ControllerBase
 
             await query.ExecuteWithoutResultsAsync();
 
+            if (!string.IsNullOrWhiteSpace(bitka.Tekst))
+            {
+                var dogadjajMongo = new DogadjajMongo
+                {
+                    ID =  bitkaID,
+                    Tekst = bitka.Tekst
+                };
+                await _dogadjajiCollection.InsertOneAsync(dogadjajMongo);
+            }
+
             return Ok($"Bitka '{bitka.Ime}' je uspešno dodata!");
         }
         catch (Exception ex)
@@ -133,8 +143,8 @@ public class BitkaController : ControllerBase
         {
             var bitka = (await _client.Cypher
                 .Match("(b:Dogadjaj:Bitka)")
-                .Where((Bitka b) => b.ID == id)
-                .Return(b => b.As<Bitka>())
+                .Where((BitkaNeo b) => b.ID == id)
+                .Return(b => b.As<BitkaNeo>())
                 .ResultsAsync).FirstOrDefault();
 
             if (bitka == null)
@@ -142,10 +152,10 @@ public class BitkaController : ControllerBase
 
             await _client.Cypher
                 .Match("(b:Dogadjaj:Bitka)")
-                .Where((Bitka b) => b.ID == id)
+                .Where((BitkaNeo b) => b.ID == id)
                 .DetachDelete("b")
                 .ExecuteWithoutResultsAsync();
-
+            await _dogadjajiCollection.DeleteOneAsync(d => d.ID == id);
             return Ok($"Bitka sa ID: {id} je uspešno obrisana!");
         }
         catch (Exception ex)
@@ -161,16 +171,16 @@ public class BitkaController : ControllerBase
         {
             var bitkaResult = (await _client.Cypher
                 .Match("(b:Dogadjaj:Bitka)")
-                .Where((Bitka b) => b.ID == id)
+                .Where((BitkaNeo b) => b.ID == id)
                 .OptionalMatch("(b)-[:DESIO_SE]->(g:Godina)")
                 //.OptionalMatch("(b)-[:DESIO_SE_U]->(z:Zemlja)")
                 //.OptionalMatch("(b)-[:BITKA_U_RATU]->(r:Dogadjaj:Rat)")
                 .Return((b, g/*, z, r*/) => new
                 {
-                    Bitka = b.As<Bitka>(),
+                    Bitka = b.As<BitkaNeo>(),
                     //Zemlja = z.As<Zemlja>(),
                     //RatID = r.As<Rat>().ID,
-                    Godina = g.As<Godina>()                    
+                    Godina = g.As<GodinaNeo>()                    
                 })
                 .ResultsAsync)
                 .FirstOrDefault();
@@ -178,20 +188,23 @@ public class BitkaController : ControllerBase
             if (bitkaResult == null)
                 return BadRequest($"Nije pronađena bitka sa ID: {id}");
 
-            var bitka = new Bitka
+            var mongoDoc = await _dogadjajiCollection.Find(d => d.ID == id).FirstOrDefaultAsync();
+             
+            var dto = new BitkaDto
             {
                 ID = bitkaResult.Bitka.ID,
                 Ime = bitkaResult.Bitka.Ime,
-                Tip = bitkaResult.Bitka.Tip,
-                Tekst = bitkaResult.Bitka.Tekst,
+                //Tip = bitkaResult.Bitka.Tip,
                 Pobednik = bitkaResult.Bitka.Pobednik,
                 BrojZrtava = bitkaResult.Bitka.BrojZrtava,
                 Rat = bitkaResult.Bitka.Rat,
                 Godina = bitkaResult.Godina,
-                Lokacija = bitkaResult.Bitka.Lokacija
+                Lokacija = bitkaResult.Bitka.Lokacija,
+                Tekst =  mongoDoc?.Tekst
             };
-
-            return Ok(bitka);
+           
+                
+            return Ok(dto);
         }
         catch (Exception ex)
         {
@@ -238,20 +251,20 @@ public class BitkaController : ControllerBase
     // }
 
     [HttpPut("UpdateBitka/{id}")]
-    public async Task<IActionResult> UpdateBitka(Guid id, [FromBody] Bitka updatedBitka)
+    public async Task<IActionResult> UpdateBitka(Guid id, [FromBody] BitkaDto updatedBitka)
     {
         try
         {
             var bitka = (await _client.Cypher
                                         .Match("(b:Dogadjaj:Bitka)")
-                                        .Where((Bitka b) => b.ID == id)
+                                        .Where((BitkaNeo b) => b.ID == id)
                                         .OptionalMatch("(b)-[:DESIO_SE]->(g1:Godina)")                  
                                         //.OptionalMatch("(b)-[:BITKA_U_RATU]->(r:Rat)")             
                                         .Return((b, g1/*, r*/) => new
                                         {
-                                            Bitka = b.As<Bitka>(),
+                                            Bitka = b.As<BitkaNeo>(),
                                             //Rat = r.As<Rat>(),
-                                            Godina = g1.As<Godina>()                                            
+                                            Godina = g1.As<GodinaNeo>()                                            
                                         })
                                         .ResultsAsync)
                                         .FirstOrDefault();
@@ -265,7 +278,7 @@ public class BitkaController : ControllerBase
                 .Where("toLower(b.Ime) = toLower($naziv) AND b.ID <> $id")
                 .WithParam("naziv", updatedBitka.Ime)
                 .WithParam("id", id)
-                .Return(b => b.As<Bitka>())
+                .Return(b => b.As<BitkaNeo>())
                 .ResultsAsync)
                 .Any();
 
@@ -276,12 +289,11 @@ public class BitkaController : ControllerBase
 
             var cypher = _client.Cypher
                 .Match("(b:Dogadjaj:Bitka)")
-                .Where((Bitka b) => b.ID == id)
-                .Set("b.Ime = $ime, b.Tekst = $tekst, b.Tip = 'Bitka', b.Pobednik = $pobednik, b.BrojZrtava = $brojZrtava, b.Lokacija = $lokacija, b.Rat = $rat")
+                .Where((BitkaNeo b) => b.ID == id)
+                .Set("b.Ime = $ime, b.Tip = 'Bitka', b.Pobednik = $pobednik, b.BrojZrtava = $brojZrtava, b.Lokacija = $lokacija, b.Rat = $rat")
                 .WithParams(new
                 {
                     ime = updatedBitka.Ime,
-                    tekst = updatedBitka.Tekst,
                     pobednik = updatedBitka.Pobednik,
                     lokacija = bitka.Bitka.Lokacija, //NAMERNO STARA DA BI OSTALA ONA AKO UNETA NE POSTOJI
                     rat = bitka.Bitka.Rat,//ISTO KAO ZA LOKACIJU 
@@ -294,7 +306,7 @@ public class BitkaController : ControllerBase
                             .Match("(z:Zemlja)")
                             .Where("toLower(z.Naziv) = toLower($naziv)")
                             .WithParam("naziv", updatedBitka.Lokacija)
-                            .Return(z => z.As<Zemlja>())
+                            .Return(z => z.As<ZemljaNeo>())
                             .ResultsAsync)
                             .Any();
 
@@ -343,7 +355,7 @@ public class BitkaController : ControllerBase
                 var ratPostoji = (await _client.Cypher.Match("(r:Dogadjaj:Rat)")
                                                       .Where("toLower(r.Ime) = toLower($imeRata)")
                                                       .WithParam("imeRata", updatedBitka.Rat)
-                                                      .Return(r => r.As<Rat>())
+                                                      .Return(r => r.As<RatNeo>())
                                                       .ResultsAsync)
                                                       .FirstOrDefault();
                 if (ratPostoji != null)//smislen unos
@@ -422,6 +434,14 @@ public class BitkaController : ControllerBase
             }
 
             await cypher.ExecuteWithoutResultsAsync();
+
+            if (!string.IsNullOrWhiteSpace(updatedBitka.Tekst))
+            {
+                var filter = Builders<DogadjajMongo>.Filter.Eq(d => d.ID, id);
+                var update = Builders<DogadjajMongo>.Update.Set(d => d.Tekst, updatedBitka.Tekst);
+                var result = await _dogadjajiCollection.UpdateOneAsync(filter, update);
+
+            }
 
             return Ok($"Bitka '{updatedBitka.Ime}' je uspešno ažurirana!");
         }

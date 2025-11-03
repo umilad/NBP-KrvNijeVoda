@@ -2,9 +2,10 @@ using Microsoft.AspNetCore.Mvc;
 using Neo4jClient;
 using System;
 using System.Threading.Tasks;
-using KrvNijeVoda.Back.Models;
+//using KrvNijeVoda.Back.Models;
 using System.Reflection.Metadata;
 using KrvNijeVoda.Back;
+using MongoDB.Driver;
 [Route("api")]
 [ApiController]
 public class VladarController : ControllerBase
@@ -14,18 +15,20 @@ public class VladarController : ControllerBase
     // private readonly LokacijaService _lokacijaService;
     // private readonly ZemljaService _zemljaService;
     // private readonly DinastijaService _dinastijaService;
-
-    public VladarController(Neo4jService neo4jService, GodinaService godinaService/*, LokacijaService lokacijaService, ZemljaService zemljaService, DinastijaService dinastijaService*/)
+    private readonly IMongoCollection<VladarMongo> _vladarCollection;
+    public VladarController(Neo4jService neo4jService, GodinaService godinaService, MongoService mongoService/*, LokacijaService lokacijaService, ZemljaService zemljaService, DinastijaService dinastijaService*/)
     {
         _client = neo4jService.GetClient();
         _godinaService = godinaService;
+        _vladarCollection = mongoService.GetCollection<VladarMongo>("Vladari");
         // _lokacijaService = lokacijaService;
         // _zemljaService = zemljaService;
         // _dinastijaService = dinastijaService;
+
     }
 
     [HttpPost("CreateVladar")]
-    public async Task<IActionResult> CreateVladar([FromBody] Vladar vladar)
+    public async Task<IActionResult> CreateVladar([FromBody] VladarDto vladar)
     {
         try
         {
@@ -35,7 +38,7 @@ public class VladarController : ControllerBase
                                                        .WithParam("titula", vladar.Titula)
                                                        .WithParam("ime", vladar.Ime)
                                                        .WithParam("prezime", vladar.Prezime)
-                                                       .Return(l => l.As<Vladar>())
+                                                       .Return(l => l.As<VladarNeo>())
                                                        .ResultsAsync)
                                                        .FirstOrDefault();
 
@@ -44,16 +47,14 @@ public class VladarController : ControllerBase
                 return BadRequest($"Vladar {vladar.Titula} {vladar.Ime} {vladar.Prezime} vec postoji u bazi sa ID: {postojeciVladar.ID}!");
 
             var vladarID = Guid.NewGuid();
-            var query = _client.Cypher.Create("(v:Licnost:Vladar {ID: $id, Titula: $titula, Ime: $ime, Prezime: $prezime, Pol: $pol, Slika: $slika, MestoRodjenja: $mestoRodjenja, Tekst: $tekst, Teritorija: $teritorija})")
+            var query = _client.Cypher.Create("(v:Licnost:Vladar {ID: $id, Titula: $titula, Ime: $ime, Prezime: $prezime, Pol: $pol, MestoRodjenja: $mestoRodjenja})")
                                       .WithParam("id", vladarID)
                                       .WithParam("titula", vladar.Titula)
                                       .WithParam("ime", vladar.Ime)
                                       .WithParam("prezime", vladar.Prezime)
                                       .WithParam("pol", vladar.Pol)
-                                      .WithParam("slika", vladar.Slika)
-                                      .WithParam("tekst", vladar.Tekst)
-                                      .WithParam("mestoRodjenja", vladar.MestoRodjenja)
-                                      .WithParam("teritorija", vladar.Teritorija);
+                                      .WithParam("mestoRodjenja", vladar.MestoRodjenja);
+                                      
 
             if (vladar.GodinaRodjenja != 0)
             {
@@ -103,7 +104,7 @@ public class VladarController : ControllerBase
                 var z = (await _client.Cypher.Match("(z:Zemlja)")
                                              .Where("toLower(z.Naziv) = toLower($naziv)")
                                              .WithParam("naziv", vladar.MestoRodjenja)
-                                             .Return(z => z.As<Zemlja>())
+                                             .Return(z => z.As<ZemljaNeo>())
                                              .ResultsAsync)
                                              .FirstOrDefault();
 
@@ -128,7 +129,7 @@ public class VladarController : ControllerBase
                     var din = (await _client.Cypher.Match("(d:Dinastija)")
                                                    .Where("toLower(d.Naziv) = toLower($naziv)")
                                                    .WithParam("naziv", vladar.Dinastija.Naziv)
-                                                   .Return(d => d.As<Dinastija>())
+                                                   .Return(d => d.As<DinastijaNeo>())
                                                    .ResultsAsync)
                                                    .FirstOrDefault();
 
@@ -147,6 +148,17 @@ public class VladarController : ControllerBase
             }
 
             await query.ExecuteWithoutResultsAsync();
+             if (!string.IsNullOrWhiteSpace(vladar.Tekst)||!string.IsNullOrWhiteSpace(vladar.Slika)|| !string.IsNullOrWhiteSpace(vladar.Teritorija))
+            {
+                var vladarMongo = new VladarMongo
+                {
+                    ID = Guid.Parse(vladarID.ToString()),
+                    Tekst = vladar.Tekst,
+                    Slika = vladar.Slika,
+                    Teritorija = vladar.Teritorija
+                };
+                await _vladarCollection.InsertOneAsync(vladarMongo);
+            }
             return Ok($"Uspesno dodata vladar sa id:{vladarID} u bazu!");
         }
         catch (Exception ex)
@@ -161,7 +173,7 @@ public class VladarController : ControllerBase
         try
         {
             var vl = (await _client.Cypher.Match("(v:Licnost:Vladar)")
-                                          .Where((Vladar v) => v.ID == id)
+                                          .Where((VladarNeo v) => v.ID == id)
                                           //   .OptionalMatch("(l)-[r:RODJEN]->(gr:Godina)")
                                           //   .OptionalMatch("(l)-[r2:UMRO]->(gs:Godina)")
                                           //   .OptionalMatch("(l)-[r3:RODJEN_U]->(m:Lokacija)-[:PRIPADA_ZEMLJI]->(z:Zemlja)")
@@ -180,8 +192,8 @@ public class VladarController : ControllerBase
                                           // }) 
                                           .Return((v, d) => new
                                           {
-                                              Vladar = v.As<Vladar>(),
-                                              Dinastija = d.As<Dinastija>()
+                                              Vladar = v.As<VladarNeo>(),
+                                              Dinastija = d.As<DinastijaNeo>()
                                           })
                                           //.Return(vl => vl.As<Vladar>())
                                           .ResultsAsync)
@@ -192,8 +204,8 @@ public class VladarController : ControllerBase
             {
                 return BadRequest($"Vladar sa ID: {id} nije pronadjen u bazi!");
             }
-
-            var result = new Vladar
+            var mongoDoc = await _vladarCollection.Find(d => d.ID == id).FirstOrDefaultAsync();
+            var dto = new VladarDto
             {
                 ID = vl.Vladar.ID,
                 Titula = vl.Vladar.Titula,
@@ -204,18 +216,20 @@ public class VladarController : ControllerBase
                 GodinaSmrti = vl.Vladar.GodinaSmrti,
                 GodinaSmrtiPNE = vl.Vladar.GodinaSmrtiPNE,
                 Pol = vl.Vladar.Pol,
-                Slika = vl.Vladar.Slika,
+                //Slika = vl.Vladar.Slika,
                 MestoRodjenja = vl.Vladar.MestoRodjenja,
-                Tekst = vl.Vladar.Tekst,
+                //Tekst = vl.Vladar.Tekst,
                 Dinastija = vl.Dinastija, // ?? new Dinastija() ne moze jer mora da ima naziv da bi kreirao novu zato sad ostavljam ovako 
-                Teritorija = vl.Vladar.Teritorija,
                 PocetakVladavineGod = vl.Vladar.PocetakVladavineGod,
                 PocetakVladavinePNE = vl.Vladar.PocetakVladavinePNE,
                 KrajVladavineGod = vl.Vladar.KrajVladavineGod,
-                KrajVladavinePNE = vl.Vladar.KrajVladavinePNE
+                KrajVladavinePNE = vl.Vladar.KrajVladavinePNE,
                 //Clanovi = item.Clanovi?.ToList() ?? new List<Licnost>()  // If no Licnost found, return empty list
+                Tekst = mongoDoc?.Tekst,
+                Slika = mongoDoc?.Slika,
+                Teritorija = mongoDoc.Teritorija
             };
-            return Ok(result);
+            return Ok(dto);
         }
         catch (Exception ex)
         {
@@ -224,17 +238,17 @@ public class VladarController : ControllerBase
     }
 
     [HttpPut("UpdateVladar/{id}")]
-    public async Task<IActionResult> UpdateVladar([FromBody] Vladar vladar, Guid id)
+    public async Task<IActionResult> UpdateVladar([FromBody] VladarDto vladar, Guid id)
     {
         //racunamo da mora da ima titulu, ime, prezime i od veza samo pocetak i kraj vladavine
         try {
             var vl = (await _client.Cypher.Match("(v:Licnost:Vladar)")
-                                          .Where((Vladar v) => v.ID == id)
+                                          .Where((VladarNeo v) => v.ID == id)
                                           .OptionalMatch("(v)-[:PRIPADA_DINASTIJI]->(d)")
                                           .Return((v, d) => new
                                           {
-                                            Dinastija = d.As<Dinastija>(),
-                                            Vladar = v.As<Vladar>()         
+                                            Dinastija = d.As<DinastijaNeo>(),
+                                            Vladar = v.As<VladarNeo>()         
                                           })
                                           .ResultsAsync)
                                           .FirstOrDefault();
@@ -247,17 +261,14 @@ public class VladarController : ControllerBase
             }
 
             var query = _client.Cypher.Match("(v:Licnost:Vladar)")
-                                      .Where((Vladar v) => v.ID == id)
+                                      .Where((VladarNeo v) => v.ID == id)
                                       .OptionalMatch("(v)-[r6:PRIPADA_DINASTIJI]->(d:Dinastija)")
-                                      .Set("v.Titula = $titula, v.Ime = $ime, v.Prezime = $prezime, v.Pol = $pol, v.Slika = $slika, v.MestoRodjenja = $mestoRodjenja, v.Tekst = $tekst, v.Teritorija = $teritorija")
+                                      .Set("v.Titula = $titula, v.Ime = $ime, v.Prezime = $prezime, v.Pol = $pol , v.MestoRodjenja = $mestoRodjenja")
                                       .WithParam("titula", vladar.Titula)
                                       .WithParam("ime", vladar.Ime)
                                       .WithParam("prezime", vladar.Prezime)
                                       .WithParam("pol", vladar.Pol)
-                                      .WithParam("slika", vladar.Slika)
-                                      .WithParam("tekst", vladar.Tekst)
-                                      .WithParam("mestoRodjenja", vl.Vladar.MestoRodjenja)
-                                      .WithParam("teritorija", vladar.Teritorija);
+                                      .WithParam("mestoRodjenja", vl.Vladar.MestoRodjenja);
 
             if (vladar.GodinaRodjenja != 0)
             {
@@ -329,7 +340,7 @@ public class VladarController : ControllerBase
                 var z = (await _client.Cypher.Match("(z:Zemlja)")
                                              .Where("toLower(z.Naziv) = toLower($n)")
                                              .WithParam("n", vladar.MestoRodjenja)
-                                             .Return(z => z.As<Zemlja>())
+                                             .Return(z => z.As<ZemljaNeo>())
                                              .ResultsAsync)
                                              .FirstOrDefault();
 
@@ -419,17 +430,17 @@ public class VladarController : ControllerBase
                                  .Create("(v)-[:VLADAO_DO]->(gk)");
                 }
             }
-///////////////////////DO OVDE JOS DINASTIJU NAPRAVI I PREKRSTI SE 
+            ///////////////////////DO OVDE JOS DINASTIJU NAPRAVI I PREKRSTI SE 
             if (vladar.Dinastija != null && !string.IsNullOrWhiteSpace(vladar.Dinastija.Naziv) || vladar.Dinastija.Naziv != "string")
             //napravi DINASTIJASERVICE
             {
                 var din = (await _client.Cypher.Match("(d:Dinastija)")
                                                .Where("toLower(d.Naziv) = toLower($naziv)")
                                                .WithParam("naziv", vladar.Dinastija.Naziv)
-                                               .Return(d => d.As<Dinastija>())
+                                               .Return(d => d.As<DinastijaNeo>())
                                                .ResultsAsync)
                                                .FirstOrDefault();
-                                                       
+
                 if (din != null)//postoji takva dinastija pa ima smisla da se proverava 
                 {
                     if (vl.Dinastija != null)//postoji vec neka u bazi 
@@ -460,9 +471,19 @@ public class VladarController : ControllerBase
                         //za setovanje parametara svih.Set("d.Dinastija")
                     }
                 }
-                
+
             }
 
+             if (!string.IsNullOrWhiteSpace(vladar.Tekst)|| !string.IsNullOrWhiteSpace(vladar.Slika) || !string.IsNullOrWhiteSpace(vladar.Teritorija))
+            {
+                var filter = Builders<VladarMongo>.Filter.Eq(d => d.ID, id);
+                var existingVladar = await _vladarCollection.Find(filter).FirstOrDefaultAsync();
+                var update = Builders<VladarMongo>.Update.Combine(
+                Builders<VladarMongo>.Update.Set(d => d.Tekst, vladar.Tekst),
+                Builders<VladarMongo>.Update.Set(d => d.Slika, vladar.Slika),
+                Builders<VladarMongo>.Update.Set(d => d.Teritorija, vladar.Teritorija));
+                var result = await _vladarCollection.UpdateOneAsync(filter, update);
+            }
             await query.ExecuteWithoutResultsAsync();
         
             return Ok($"Licnost sa id: {id} je uspesno promenjena!");
@@ -474,12 +495,12 @@ public class VladarController : ControllerBase
     }
 
     [HttpPut("UpdateVladarBezDinastije/{id}")]
-    public async Task<IActionResult> UpdateVladarBezDinastije([FromBody] Vladar vladar, Guid id)
+    public async Task<IActionResult> UpdateVladarBezDinastije([FromBody] VladarDto vladar, Guid id)
     {
         //racunamo da mora da ima titulu, ime, prezime i od veza samo pocetak i kraj vladavine
         try {
             var vl = (await _client.Cypher.Match("(v:Licnost:Vladar)")
-                                          .Where((Vladar v) => v.ID == id)
+                                          .Where((VladarNeo v) => v.ID == id)
                                           //   .OptionalMatch("(l)-[r:RODJEN]->(gr:Godina)")
                                           //   .OptionalMatch("(l)-[r2:UMRO]->(gs:Godina)")
                                           //   .OptionalMatch("(l)-[r3:RODJEN_U]->(m:Lokacija)-[:PRIPADA_ZEMLJI]->(z:Zemlja)")
@@ -496,7 +517,7 @@ public class VladarController : ControllerBase
                                           //     Kraj = gkv.As<Godina>(),
                                           //     Dinastija = d.As<Dinastija>()                                        
                                           // }) 
-                                          .Return(v => v.As<Vladar>())
+                                          .Return(v => v.As<VladarNeo>())
                                           .ResultsAsync)
                                           .FirstOrDefault();
         
@@ -513,7 +534,7 @@ public class VladarController : ControllerBase
                                                        .WithParam("ime", vladar.Ime)
                                                        .WithParam("prezime", vladar.Prezime)
                                                        .WithParam("id", id)
-                                                       .Return(l => l.As<Vladar>())
+                                                       .Return(l => l.As<VladarNeo>())
                                                        .ResultsAsync)
                                                        .FirstOrDefault();
 
@@ -523,17 +544,17 @@ public class VladarController : ControllerBase
 
 
             var query = _client.Cypher.Match("(v:Licnost:Vladar)")
-                                      .Where((Vladar v) => v.ID == id)
+                                      .Where((VladarNeo v) => v.ID == id)
                                       .OptionalMatch("(v)-[r6:PRIPADA_DINASTIJI]->(d:Dinastija)")
-                                      .Set("v.Titula = $titula, v.Ime = $ime, v.Prezime = $prezime, v.Pol = $pol, v.Slika = $slika, v.MestoRodjenja = $mestoRodjenja, v.Tekst = $tekst, v.Teritorija = $teritorija")
+                                      .Set("v.Titula = $titula, v.Ime = $ime, v.Prezime = $prezime, v.Pol = $pol, v.MestoRodjenja = $mestoRodjenja")
                                       .WithParam("titula", vladar.Titula)
                                       .WithParam("ime", vladar.Ime)
                                       .WithParam("prezime", vladar.Prezime)
                                       .WithParam("pol", vladar.Pol)
-                                      .WithParam("slika", vladar.Slika)
-                                      .WithParam("tekst", vladar.Tekst)
-                                      .WithParam("mestoRodjenja", vladar.MestoRodjenja)
-                                      .WithParam("teritorija", vladar.Teritorija);
+                                      //.WithParam("slika", vladar.Slika)
+                                      //.WithParam("tekst", vladar.Tekst)
+                                      .WithParam("mestoRodjenja", vladar.MestoRodjenja);
+                                     
 
             if (vladar.GodinaRodjenja != 0)
             {
@@ -617,7 +638,7 @@ public class VladarController : ControllerBase
                 var z = (await _client.Cypher.Match("(z:Zemlja)")
                                              .Where("toLower(z.Naziv) = toLower($naziv)")
                                              .WithParam("naziv", vladar.MestoRodjenja)
-                                             .Return(z => z.As<Zemlja>())
+                                             .Return(z => z.As<ZemljaNeo>())
                                              .ResultsAsync)
                                              .FirstOrDefault();
 
@@ -736,8 +757,8 @@ public class VladarController : ControllerBase
         try
         {
             var v = (await _client.Cypher.Match("(v:Licnost:Vladar)")
-                                         .Where((Vladar v) => v.ID == id)
-                                         .Return(v => v.As<Vladar>())
+                                         .Where((VladarNeo v) => v.ID == id)
+                                         .Return(v => v.As<VladarNeo>())
                                          .ResultsAsync)
                                          .FirstOrDefault();
 
@@ -747,7 +768,7 @@ public class VladarController : ControllerBase
             }
 
             await _client.Cypher.Match("(v:Licnost:Vladar)")
-                                .Where((Vladar v) => v.ID == id)
+                                .Where((VladarNeo v) => v.ID == id)
                                 .OptionalMatch("(v)-[r:RODJEN]->(gr:Godina)")
                                 .OptionalMatch("(v)-[r2:UMRO]->(gs:Godina)")
                                 .OptionalMatch("(v)-[r3:RODJEN_U]->(m:Zemlja)")
@@ -756,7 +777,7 @@ public class VladarController : ControllerBase
                                 .OptionalMatch("(v)-[r6:PRIPADA_DINASTIJI]->(d:Dinastija)")
                                 .Delete("r, r2, r3, r4, r5, r6, v")
                                 .ExecuteWithoutResultsAsync();
-
+            await _vladarCollection.DeleteOneAsync(d => d.ID == id);
             return Ok($"Vladar sa id:{id} uspesno obrisan iz baze!");
         }        
         catch (Exception ex)  

@@ -1,97 +1,139 @@
 using Microsoft.AspNetCore.Mvc;
 using Neo4jClient;
+using MongoDB.Driver;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
-using KrvNijeVoda.Back.Models;
-using System.Reflection.Metadata;
-using KrvNijeVoda.Back;
+//using KrvNijeVoda.Back.Models;
 
 [Route("api")]
 [ApiController]
 public class ZemljaController : ControllerBase
 {
-    private readonly IGraphClient _client;
+    private readonly IGraphClient _neo4jClient;
+    private readonly IMongoCollection<ZemljaMongo> _mongo;
 
-    public ZemljaController(Neo4jService neo4jService)
+    public ZemljaController(Neo4jService neo4jService, MongoService mongoService)
     {
-        _client = neo4jService.GetClient();
+        _neo4jClient = neo4jService.GetClient();
+        _mongo = mongoService.GetCollection<ZemljaMongo>("ZemljaDetalji");
     }
+
     [HttpPost("CreateZemlja")]
-    //broj stanovnika >0 front 
-    public async Task<IActionResult> CreateZemlja([FromBody] Zemlja zemlja)
+    public async Task<IActionResult> CreateZemlja([FromBody] ZemljaDto dto)
     {
         try
         {
-            var zem = (await _client.Cypher.Match("(z:Zemlja)")
-                                           .Where("toLower(z.Naziv) = toLower($naziv)")
-                                           .WithParam("naziv", zemlja.Naziv)
-                                           .Return(z => z.As<Zemlja>())
-                                           .ResultsAsync)
-                                           .FirstOrDefault();
-            if (zem != null)
+            
+            var exists = (await _neo4jClient.Cypher
+                .Match("(z:Zemlja)")
+                .Where("toLower(z.Naziv) = toLower($naziv)")
+                .WithParam("naziv", dto.Naziv)
+                .Return(z => z.As<ZemljaNeo>())
+                .ResultsAsync)
+                .FirstOrDefault();
+
+            if (exists != null)
+                return BadRequest($"Zemlja '{dto.Naziv}' već postoji u bazi!");
+
+            
+            var id = Guid.NewGuid();
+
+            await _neo4jClient.Cypher
+                .Create("(z:Zemlja {ID: $id, Naziv: $naziv, Trajanje: $trajanje})")
+                .WithParam("id", id)
+                .WithParam("naziv", dto.Naziv)
+                .WithParam("trajanje", dto.Trajanje)
+                .ExecuteWithoutResultsAsync();
+
+            // Mongo
+            var mongo = new ZemljaMongo
             {
-                return BadRequest($"Zemlja {zemlja.Naziv} već postoji u bazi!");
-            }
+                ID = id,
+                Grb = dto.Grb,
+                BrojStanovnika = dto.BrojStanovnika
+            };
+            await _mongo.InsertOneAsync(mongo);
 
-            await _client.Cypher.Create("(z:Zemlja {ID: $id, Naziv: $naziv, Trajanje: $trajanje, Grb: $grb, BrojStanovnika: $brojstanovnika})")
-                                .WithParam("naziv", zemlja.Naziv)
-                                .WithParam("trajanje", zemlja.Trajanje)
-                                .WithParam("grb", zemlja.Grb)
-                                .WithParam("brojstanovnika", zemlja.BrojStanovnika)
-                                .WithParam("id", Guid.NewGuid())
-                                .ExecuteWithoutResultsAsync();
-
-            return Ok($"Zemlja {zemlja.Naziv} je uspešno dodata u bazu!");
+            return Ok($"Zemlja '{dto.Naziv}' uspešno dodata!");
         }
         catch (Exception ex)
         {
-            return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
+            return StatusCode(500, $"Greška: {ex.Message}");
         }
     }
+
     [HttpGet("GetZemlja/{id}")]
     public async Task<IActionResult> GetZemlja(Guid id)
     {
         try
         {
-            var zemlja = (await _client.Cypher.Match("(z:Zemlja)")
-                                            .Where((Zemlja z) => z.ID == id)
-                                            .Return(z => z.As<Zemlja>())
-                                            .ResultsAsync)
-                                            .FirstOrDefault();
-            if (zemlja == null)
-            {
-                return NotFound($"Zemlja sa ID: {id} ne postoji u bazi!");
-            }
+            // Neo4j
+            var neo = (await _neo4jClient.Cypher
+                .Match("(z:Zemlja)")
+                .Where((ZemljaNeo z) => z.ID == id)
+                .Return(z => z.As<ZemljaNeo>())
+                .ResultsAsync)
+                .FirstOrDefault();
 
-            return Ok(zemlja);
+            if (neo == null)
+                return NotFound($"Zemlja sa ID {id} ne postoji u Neo4j bazi!");
+
+            // Mongo
+            var mongo = await _mongo.Find(m => m.ID == id).FirstOrDefaultAsync();
+
+            var dto = new ZemljaDto
+            {
+                Naziv = neo.Naziv,
+                Trajanje = neo.Trajanje,
+                Grb = mongo?.Grb,
+                BrojStanovnika = mongo?.BrojStanovnika
+            };
+
+            return Ok(dto);
         }
         catch (Exception ex)
         {
-            return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
+            return StatusCode(500, $"Greška: {ex.Message}");
         }
     }
 
-    [HttpGet("GetZemljaPoNazivu/{naziv}")]
-    public async Task<IActionResult> GetZemlja(string naziv)
+    [HttpPut("UpdateZemlja/{id}")]
+    public async Task<IActionResult> UpdateZemlja(Guid id, [FromBody] ZemljaDto dto)
     {
         try
         {
-            var zemlja = (await _client.Cypher.Match("(z:Zemlja)")
-                                            .Where("toLower(z.Naziv) = toLower($naziv)")
-                                            .WithParam("naziv", naziv)
-                                            .Return(z => z.As<Zemlja>())
-                                            .ResultsAsync)
-                                            .FirstOrDefault();
-            if (zemlja == null)
-            {
-                return NotFound($"Zemlja sa nazivom {naziv} ne postoji u bazi!");
-            }
+        
+            var exists = (await _neo4jClient.Cypher
+                .Match("(z:Zemlja)")
+                .Where((ZemljaNeo z) => z.ID == id)
+                .Return(z => z.As<ZemljaNeo>())
+                .ResultsAsync)
+                .FirstOrDefault();
 
-            return Ok(zemlja);
+            if (exists == null)
+                return NotFound($"Zemlja sa ID: {id} ne postoji!");
+
+            
+            await _neo4jClient.Cypher
+                .Match("(z:Zemlja)")
+                .Where((ZemljaNeo z) => z.ID == id)
+                .Set("z.Naziv = $naziv, z.Trajanje = $trajanje")
+                .WithParam("naziv", dto.Naziv)
+                .WithParam("trajanje", dto.Trajanje)
+                .ExecuteWithoutResultsAsync();
+
+            
+            var update = Builders<ZemljaMongo>.Update
+                .Set(m => m.Grb, dto.Grb)
+                .Set(m => m.BrojStanovnika, dto.BrojStanovnika);
+            await _mongo.UpdateOneAsync(m => m.ID == id, update);
+
+            return Ok($"Zemlja sa ID: {id} je uspešno ažurirana!");
         }
         catch (Exception ex)
         {
-            return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
+            return StatusCode(500, $"Greška: {ex.Message}");
         }
     }
 
@@ -100,104 +142,57 @@ public class ZemljaController : ControllerBase
     {
         try
         {
-            var zemlja = (await _client.Cypher.Match("(z:Zemlja)")
-                                            .Where((Zemlja z) => z.ID == id)
-                                            .Return(z => z.As<Zemlja>())
-                                            .ResultsAsync)
-                                            .FirstOrDefault();
-            if (zemlja == null)
-            {
-                return NotFound($"Zemlja sa ID: {id} ne postoji u bazi!");
-            }
-
-            await _client.Cypher.Match("(z:Zemlja)")
-                                .Where((Zemlja z) => z.ID == id)
-                                .DetachDelete("z")
-                                .ExecuteWithoutResultsAsync();
-
-            return Ok($"Zemlja sa ID: {id} je uspešno obrisana iz baze!");
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
-        }
-    }
-
-    [HttpDelete("DeleteZemljaPoNazivu/{naziv}")]
-    public async Task<IActionResult> DeleteZemlja(string naziv)
-    {
-        try
-        {
-            var zemlja = (await _client.Cypher.Match("(z:Zemlja)")
-                                            .Where("toLower(z.Naziv) = toLower($naziv)")
-                                            .WithParam("naziv", naziv)
-                                            .Return(z => z.As<Zemlja>())
-                                            .ResultsAsync)
-                                            .FirstOrDefault();
-            if (zemlja == null)
-            {
-                return NotFound($"Zemlja sa nazivom {naziv} ne postoji u bazi!");
-            }
-
-            await _client.Cypher.Match("(z:Zemlja)")
-                                .Where("toLower(z.Naziv) = toLower($naziv)")
-                                .WithParam("naziv", naziv)
-                                .DetachDelete("z")
-                                .ExecuteWithoutResultsAsync();
-
-            return Ok($"Zemlja sa nazivom {naziv} je uspešno obrisana iz baze!");
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
-        }
-    }
-    
-    [HttpPut("UpdateZemlja/{id}")]
-    public async Task<IActionResult> UpdateZemlja(Guid id, [FromBody] Zemlja updatedZemlja)
-    {
-        try
-        {
-            var zemlja = (await _client.Cypher.Match("(z:Zemlja)")
-                                            .Where((Zemlja z) => z.ID == id)
-                                            .Return(z => z.As<Zemlja>())
-                                            .ResultsAsync)
-                                            .FirstOrDefault();
-            if (zemlja == null)
-            {
-                return NotFound($"Zemlja sa ID {id} ne postoji u bazi!");
-            }
             
-            //ako naziv ostaje isti to je ta ista zemlja 
-            var duplikat = (await _client.Cypher
+            await _neo4jClient.Cypher
                 .Match("(z:Zemlja)")
-                .Where("toLower(z.Naziv) = toLower($naziv) AND z.ID <> $id")
-                .WithParam("naziv", updatedZemlja.Naziv)
-                .WithParam("id", id)
-                .Return(z => z.As<Zemlja>())
-                .ResultsAsync)
-                .Any();
+                .Where((ZemljaNeo z) => z.ID == id)
+                .DetachDelete("z")
+                .ExecuteWithoutResultsAsync();
 
-            if (duplikat)
-            {
-                return BadRequest($"Zemlja sa nazivom '{updatedZemlja.Naziv}' već postoji u bazi!");
-            }
-            
+           
+            await _mongo.DeleteOneAsync(m => m.ID == id);
 
-            await _client.Cypher.Match("(z:Zemlja)")
-                                .Where((Zemlja z) => z.ID == id)
-                                .Set("z.Naziv = $naziv, z.Trajanje = $trajanje, z.Grb = $grb, z.BrojStanovnika = $brojstanovnika")
-                                .WithParam("naziv", updatedZemlja.Naziv)
-                                .WithParam("trajanje", updatedZemlja.Trajanje)
-                                .WithParam("grb", updatedZemlja.Grb)
-                                .WithParam("brojstanovnika", updatedZemlja.BrojStanovnika)
-                                .ExecuteWithoutResultsAsync();
-
-            return Ok($"Zemlja sa ID: {id} je uspešno ažurirana.");
+            return Ok($"Zemlja sa ID: {id} je obrisana iz obe baze!");
         }
-        catch (Exception ex) 
+        catch (Exception ex)
         {
-            return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
+            return StatusCode(500, $"Greška: {ex.Message}");
+        }
+    }
+
+    [HttpGet("GetZemljaPoNazivu/{naziv}")]
+    public async Task<IActionResult> GetZemljaPoNazivu(string naziv)
+    {
+        try
+        {
+            
+            var neo = (await _neo4jClient.Cypher
+                .Match("(z:Zemlja)")
+                .Where("toLower(z.Naziv) = toLower($naziv)")
+                .WithParam("naziv", naziv)
+                .Return(z => z.As<ZemljaNeo>())
+                .ResultsAsync)
+                .FirstOrDefault();
+
+            if (neo == null)
+                return NotFound($"Zemlja sa nazivom {naziv} ne postoji!");
+
+            
+            var mongo = await _mongo.Find(m => m.ID == neo.ID).FirstOrDefaultAsync();
+
+            var dto = new ZemljaDto
+            {
+                Naziv = neo.Naziv,
+                Trajanje = neo.Trajanje,
+                Grb = mongo?.Grb,
+                BrojStanovnika = mongo?.BrojStanovnika
+            };
+
+            return Ok(dto);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Greška: {ex.Message}");
         }
     }
 }

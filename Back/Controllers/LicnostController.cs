@@ -2,10 +2,10 @@ using Microsoft.AspNetCore.Mvc;
 using Neo4jClient;
 using System;
 using System.Threading.Tasks;
-using KrvNijeVoda.Back.Models;
+//using KrvNijeVoda.Back.Models;
 using System.Reflection.Metadata;
 using KrvNijeVoda.Back;
-using KrvNijeVoda.Models;
+using MongoDB.Driver;
 [Route("api")]
 [ApiController]
 public class LicnostController : ControllerBase
@@ -14,17 +14,18 @@ public class LicnostController : ControllerBase
     private readonly GodinaService _godinaService;
     // private readonly LokacijaService _lokacijaService;
     // private readonly ZemljaService _zemljaService;
-
-    public LicnostController(Neo4jService neo4jService, GodinaService godinaService/*, LokacijaService lokacijaService, ZemljaService zemljaService*/)
+    private readonly IMongoCollection<LicnostMongo> _licnostCollection;
+    public LicnostController(Neo4jService neo4jService, GodinaService godinaService, MongoService mongoService  /*, LokacijaService lokacijaService, ZemljaService zemljaService*/)
     {
         _client = neo4jService.GetClient();
         _godinaService = godinaService;
+        _licnostCollection = mongoService.GetCollection<LicnostMongo>("Licnosti");
         // _lokacijaService = lokacijaService;
         // _zemljaService = zemljaService;
     }
 
     [HttpPost("CreateLicnost")]
-    public async Task<IActionResult> CreateLicnost([FromBody] Licnost licnost)
+    public async Task<IActionResult> CreateLicnost([FromBody] LicnostDto licnost)
     {
         try
         {
@@ -33,22 +34,21 @@ public class LicnostController : ControllerBase
                                                         .WithParam("titula", licnost.Titula)
                                                         .WithParam("ime", licnost.Ime)
                                                         .WithParam("prezime", licnost.Prezime)
-                                                        .Return(l => l.As<Licnost>())
+                                                        .Return(l => l.As<LicnostNeo>())
                                                         .ResultsAsync)
                                                         .FirstOrDefault();
 
             if (postojecaLicnost != null)
                 return BadRequest($"Licnost {licnost.Titula} {licnost.Ime} {licnost.Prezime} vec postoji u bazi sa ID: {postojecaLicnost.ID}!");
 
-            Guid licnostID = Guid.NewGuid();
-            var query = _client.Cypher.Create("(l:Licnost {ID: $id, Titula: $titula, Ime: $ime, Prezime: $prezime, Pol: $pol, Slika: $slika, Tekst: $tekst})")
+            var licnostID = Guid.NewGuid();
+            var query = _client.Cypher.Create("(l:Licnost {ID: $id, Titula: $titula, Ime: $ime, Prezime: $prezime, Pol: $pol})")
                                 .WithParam("id", licnostID)
                                 .WithParam("titula", licnost.Titula)
                                 .WithParam("ime", licnost.Ime)
                                 .WithParam("prezime", licnost.Prezime)
-                                .WithParam("pol", licnost.Pol)
-                                .WithParam("slika", licnost.Slika)
-                                .WithParam("tekst", licnost.Tekst); 
+                                .WithParam("pol", licnost.Pol);
+                                
 
             if (licnost.GodinaRodjenja != 0)
             {
@@ -76,7 +76,7 @@ public class LicnostController : ControllerBase
                 var z = (await _client.Cypher.Match("(z:Zemlja)")
                                              .Where("toLower(z.Naziv) = toLower($naziv)")
                                              .WithParam("naziv", licnost.MestoRodjenja)
-                                             .Return(z => z.As<Zemlja>())
+                                             .Return(z => z.As<ZemljaNeo>())
                                              .ResultsAsync)
                                              .FirstOrDefault();
 
@@ -94,8 +94,21 @@ public class LicnostController : ControllerBase
             }
             //DODAJ DA SE SETUJE GORE AKO NE OSTAJE SAM PO SEBI STRING ILI NULL
 
+
             await query.ExecuteWithoutResultsAsync();
 
+            if (!string.IsNullOrWhiteSpace(licnost.Tekst) || !string.IsNullOrWhiteSpace(licnost.Slika))
+            {
+            var licnostMongo = new LicnostMongo
+            {
+                ID = Guid.Parse(licnostID.ToString()),
+                Tekst = licnost.Tekst,
+                Slika = licnost.Slika
+            };
+            await _licnostCollection.InsertOneAsync(licnostMongo);
+            }
+
+            
             return Ok($"Uspesno dodata licnost sa ID:{licnostID} u bazu!");
         }
         catch (Exception ex)
@@ -110,7 +123,7 @@ public class LicnostController : ControllerBase
         try
         {
             var lic = (await _client.Cypher.Match("(l:Licnost)")
-                                           .Where((Licnost l) => l.ID == id)
+                                           .Where((LicnostNeo l) => l.ID == id)
                                            //.OptionalMatch("(l)-[r:RODJEN]->(gr:Godina)")
                                            //.OptionalMatch("(l)-[r2:UMRO]->(gs:Godina)")
                                            //.OptionalMatch("(l)-[r3:RODJEN_U]->(m:Lokacija)-[:PRIPADA_ZEMLJI]->(z:Zemlja)")
@@ -121,7 +134,7 @@ public class LicnostController : ControllerBase
                                            //        Mesto = m.As<Lokacija>(),
                                            //        Zemlja = z.As<Zemlja>()
                                            //    })
-                                           .Return(l => l.As<Licnost>())
+                                           .Return(l => l.As<LicnostNeo>())
                                            .ResultsAsync)
                                            .FirstOrDefault();
 
@@ -129,10 +142,10 @@ public class LicnostController : ControllerBase
             {
                 return BadRequest($"Licnost sa ID: {id} nije pronadjena u bazi!");
             }
-
+            var mongoDoc = await _licnostCollection.Find(d => d.ID == id).FirstOrDefaultAsync();
             // if (lic.Mesto != null)
             //     lic.Mesto.PripadaZemlji = lic.Zemlja ?? new Zemlja();
-            var result = new Licnost
+            var dto = new LicnostDto
             {
                 ID = lic.ID,
                 Titula = lic.Titula,
@@ -143,12 +156,12 @@ public class LicnostController : ControllerBase
                 GodinaSmrti = lic.GodinaSmrti,
                 GodinaSmrtiPNE = lic.GodinaSmrtiPNE,
                 Pol = lic.Pol,
-                Slika = lic.Slika,
+                Slika = mongoDoc?.Slika,
                 MestoRodjenja = lic.MestoRodjenja ?? "",
-                Tekst = lic.Tekst
+                Tekst = mongoDoc?.Tekst
             };
 
-            return Ok(result);
+            return Ok(dto);
         }
         catch (Exception ex)
         {
@@ -157,12 +170,12 @@ public class LicnostController : ControllerBase
     }
     
     [HttpPut("UpdateLicnost/{id}")]
-    public async Task<IActionResult> UpdateLicnost([FromBody] Licnost licnost, Guid id)
+    public async Task<IActionResult> UpdateLicnost([FromBody] LicnostDto licnost, Guid id)
     {
         try {
             var lic = (await _client.Cypher.Match("(l:Licnost)")
-                                           .Where((Licnost l) => l.ID == id)
-                                           .Return(l => l.As<Licnost>())
+                                           .Where((LicnostNeo l) => l.ID == id)
+                                           .Return(l => l.As<LicnostNeo>())
                                            .ResultsAsync)
                                            .FirstOrDefault();
         
@@ -177,7 +190,7 @@ public class LicnostController : ControllerBase
                                                         .WithParam("ime", licnost.Ime)
                                                         .WithParam("prezime", licnost.Prezime)
                                                         .WithParam("id", id)
-                                                        .Return(l => l.As<Licnost>())
+                                                        .Return(l => l.As<LicnostNeo>())
                                                         .ResultsAsync)
                                                         .FirstOrDefault();
 
@@ -186,14 +199,12 @@ public class LicnostController : ControllerBase
 
 
             var query = _client.Cypher.Match("(l:Licnost)")
-                                      .Where((Licnost l) => l.ID == id)
-                                      .Set("l.Titula = $titula, l.Ime = $ime, l.Prezime = $prezime, l.Pol = $pol, l.Slika = $slika, l.Tekst = $tekst")
+                                      .Where((LicnostNeo l) => l.ID == id)
+                                      .Set("l.Titula = $titula, l.Ime = $ime, l.Prezime = $prezime, l.Pol = $pol")
                                       .WithParam("titula", licnost.Titula)
                                       .WithParam("ime", licnost.Ime)
                                       .WithParam("prezime", licnost.Prezime)
-                                      .WithParam("pol", licnost.Pol)
-                                      .WithParam("slika", licnost.Slika)
-                                      .WithParam("tekst", licnost.Tekst);
+                                      .WithParam("pol", licnost.Pol);
 
             if (licnost.GodinaRodjenja != 0)//uneta godina
             {
@@ -280,7 +291,7 @@ public class LicnostController : ControllerBase
                 var z = (await _client.Cypher.Match("(z:Zemlja)")
                                              .Where("toLower(z.Naziv) = toLower($naziv)")
                                              .WithParam("naziv", licnost.MestoRodjenja)
-                                             .Return(z => z.As<Zemlja>())
+                                             .Return(z => z.As<ZemljaNeo>())
                                              .ResultsAsync)
                                              .FirstOrDefault();
 
@@ -321,7 +332,17 @@ public class LicnostController : ControllerBase
             }
             //DODAJ GORE DA SETUJE NA STARO MESTO 
             await query.ExecuteWithoutResultsAsync();
-        
+
+             if (!string.IsNullOrWhiteSpace(licnost.Tekst) || !string.IsNullOrWhiteSpace(licnost.Slika))
+            {
+                var filter = Builders<LicnostMongo>.Filter.Eq(d => d.ID, id);
+                var update = Builders<LicnostMongo>.Update.Combine(
+                Builders<LicnostMongo>.Update.Set(d => d.Tekst, licnost.Tekst),
+                Builders<LicnostMongo>.Update.Set(d => d.Slika, licnost.Slika));
+                var result = await _licnostCollection.UpdateOneAsync(filter, update);
+
+            }
+            
             return Ok($"Licnost sa id: {id} je uspesno promenjena!");
         }
         catch (Exception ex)  
@@ -336,8 +357,8 @@ public class LicnostController : ControllerBase
         try
         {
             var lic = (await _client.Cypher.Match("(l:Licnost)")
-                                           .Where((Licnost l) => l.ID == id)
-                                           .Return(l => l.As<Licnost>())
+                                           .Where((LicnostNeo l) => l.ID == id)
+                                           .Return(l => l.As<LicnostNeo>())
                                            .ResultsAsync)
                                            .FirstOrDefault();
 
@@ -347,13 +368,13 @@ public class LicnostController : ControllerBase
             }
 
             await _client.Cypher.Match("(l:Licnost)")
-                                .Where((Licnost l) => l.ID == id)
+                                .Where((LicnostNeo l) => l.ID == id)
                                 .OptionalMatch("(l)-[r:RODJEN]->(gr:Godina)")
                                 .OptionalMatch("(l)-[r2:UMRO]->(gs:Godina)")
                                 .OptionalMatch("(l)-[r3:RODJEN_U]->(m:Zemlja)")
                                 .Delete("r, r2, r3, l")
                                 .ExecuteWithoutResultsAsync();
-
+             await _licnostCollection.DeleteOneAsync(d => d.ID == id);
             return Ok($"Licnost sa id:{id} uspesno obrisana iz baze!");
         }        
         catch (Exception ex)  

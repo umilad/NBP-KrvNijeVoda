@@ -1,5 +1,5 @@
 using Neo4jClient;
-using KrvNijeVoda.Back.Models;
+//using KrvNijeVoda.Back.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http.HttpResults;
 public class ZemljaService

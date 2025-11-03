@@ -2,7 +2,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddSingleton<Neo4jService>(
-    new Neo4jService("neo4j+s://c7e5bc44.databases.neo4j.io", "neo4j", "330rVzjaV_Ewo95Oh2Dy18Y5hRlgcsxeRZviq2msw5Q"));
+    new Neo4jService("neo4j+s://8bb87af4.databases.neo4j.io", "neo4j", "LP_jKZYCWGDICIaCavzhEOfNlfcr6A1k9-TYO15eHb0"));
 builder.Services.AddSingleton<MongoService>(sp =>
         new MongoService("mongodb+srv://anitaal1711_db_user:DZptn5BLaswBcmDk@krvnijevodadb.4kkb5s5.mongodb.net/", "KrvNijeVodaDB"));
 
