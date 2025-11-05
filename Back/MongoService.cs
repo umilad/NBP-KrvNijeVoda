@@ -12,4 +12,6 @@ public class MongoService//extenduje IService kod njih
 
     public IMongoCollection<T> GetCollection<T>(string name) =>
         _db.GetCollection<T>(name);
+
+    public IMongoCollection<UserMongo> Users => _db.GetCollection<UserMongo>("Users");
 }

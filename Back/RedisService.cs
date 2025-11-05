@@ -16,9 +16,9 @@ public class RedisService
 
             // Connect to Redis
             var muxer = ConnectionMultiplexer.Connect( new ConfigurationOptions{
-                EndPoints= { {"redis-12982.c300.eu-central-1-1.ec2.redns.redis-cloud.com", 12982} },
+                EndPoints= { {"redis-13125.c311.eu-central-1-1.ec2.redns.redis-cloud.com", 13125} },
                 User="default",
-                Password="9BoltGO34yWtZwsJIBVKOSYCU2D0JdnG"
+                Password="olHTtzdeV5iMAuV081w4jWAwRZIRiLkR"
             }
         );
 
@@ -59,6 +59,19 @@ public class RedisService
         var result = await _db.StringGetAsync("foo");
         Console.WriteLine($"Redis test value: {result}"); // shows bar in console
     }
+
+    public async Task<bool> DeleteAsync(string key)
+{
+    if (_db == null) return false;
+    return await _db.KeyDeleteAsync(key);
+}
+
+    public async Task<bool> ExistsAsync(string key)
+    {
+        if (_db == null) return false;
+        return await _db.KeyExistsAsync(key);
+    }
+
 }
 
 
