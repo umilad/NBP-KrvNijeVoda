@@ -1,4 +1,4 @@
-import { Link, NavLink } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import Searchbar from './Searchbar.tsx';
 
 export default function Navbar() {
@@ -65,13 +65,15 @@ export default function Navbar() {
                 <Searchbar />
                 </div>
 
-                <div className="relative h-full w-20">
-                <Link 
-                    to="/login"
-                    className="absolute start-4 h-full w-15 flex items-center justify-center rounded-full bg-[#e6cda5f0] text-[#3f2b0af0] px-4 py-2 hover:bg-[#3f2b0af0] hover:text-white transition duration-300"
-                >
-                    Log in 
-                </Link>
+                <div className="relative h-full w-23">
+                <NavLink 
+                    to="/prijava" //rounded-full sam sklonila
+                    className={({isActive}) =>
+                        `absolute start-4 h-full w-20 flex items-center justify-center
+                        ${isActive ? "bg-[#e6cda5f0] text-[#3f2b0af0]" : "hover:bg-[#e6cda5f0] hover:text-[#3f2b0af0] transition duration-300"}`
+                    }>
+                    Prijavi se 
+                </NavLink>
                 </div>
 
             </div>

@@ -4,6 +4,8 @@ import Home from './pages/Home.tsx';
 import Licnosti from './pages/Licnosti.tsx';
 import Dogadjaji from './pages/Dogadjaji.tsx';
 import Dinastije from './pages/Dinastije.tsx';
+import Login from './pages/Login.tsx';
+import Registracija from './pages/Registracija.tsx';
 
 import './App.css'
 /*
@@ -31,6 +33,8 @@ function App() {
           <Route path="/licnosti" element={<Licnosti />} />
           <Route path="/dogadjaji" element={<Dogadjaji />} />
           <Route path="/dinastije" element={<Dinastije />} />
+          <Route path="/prijava" element={<Login/>} />
+          <Route path="/registracija" element={<Registracija/>} />
         </Routes>
         
       </div>
