@@ -3,6 +3,8 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi.Models;
 using System.IdentityModel.Tokens.Jwt;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,22 +15,21 @@ builder.Services.AddSingleton<MongoService>(sp =>
         new MongoService("mongodb+srv://anitaal1711_db_user:DZptn5BLaswBcmDk@krvnijevodadb.4kkb5s5.mongodb.net/", "KrvNijeVodaDB"));
 
 new MongoService("mongodb://localhost:27017", "KrvNijeVodaDB");
-var redisService = new RedisService(
-    "redis-13125.c311.eu-central-1-1.ec2.redns.redis-cloud.com",
-    13125,
-    "default",
-    "olHTtzdeV5iMAuV081w4jWAwRZIRiLkR"
+builder.Services.AddSingleton<RedisService>(sp =>
+    new RedisService(
+        "redis-13125.c311.eu-central-1-1.ec2.redns.redis-cloud.com",
+        13125,
+        "default",
+        "olHTtzdeV5iMAuV081w4jWAwRZIRiLkR"
+    )
 );
-
-builder.Services.AddSingleton(redisService);
-
 
 
 builder.Services.AddScoped<GodinaService>();
 builder.Services.AddScoped<ZemljaService>();
 builder.Services.AddScoped<RatService>();
 builder.Services.AddScoped<DinastijaService>();
-builder.Services.AddSingleton<TokenService>();
+builder.Services.AddScoped<TokenService>();
 //builder.Services.AddScoped<LokacijaService>();
 
 builder.Services.AddCors(options =>
@@ -43,42 +44,82 @@ builder.Services.AddCors(options =>
 
 var key = Encoding.ASCII.GetBytes(builder.Configuration["Jwt:Secret"]);
 
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(key),
-        ValidateIssuer = false,
-        ValidateAudience = false
-    };
 
-    options.Events = new JwtBearerEvents
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
     {
-        OnTokenValidated = async context =>
+        options.TokenValidationParameters = new TokenValidationParameters
         {
-            var redis = context.HttpContext.RequestServices.GetRequiredService<RedisService>();
-            var token = context.SecurityToken as JwtSecurityToken;
-            if (token == null)
-            {
-                context.Fail("Invalid token");
-                return;
-            }
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(key),
+            ValidateIssuer = false,
+            ValidateAudience = false
+        };
 
-            // Check if token exists in Redis
-            var exists = await redis.ExistsAsync(token.RawData); // only token string
-            if (!exists)
+      options.Events = new JwtBearerEvents
+{
+    OnMessageReceived = context =>
+    {
+        string token = null;
+
+        // 1️⃣ Check Authorization header first
+        var authHeader = context.HttpContext.Request.Headers["Authorization"].FirstOrDefault();
+        if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer "))
+        {
+            token = authHeader.Substring("Bearer ".Length).Trim();
+            Console.WriteLine("Token taken from Authorization header");
+        }
+        else
+        {
+            // 2️⃣ If no header, check cookie
+            token = context.HttpContext.Request.Cookies["jwt"];
+            if (!string.IsNullOrEmpty(token))
             {
-                context.Fail("Token not found in Redis (logged out?)");
+                // Remove extra quotes and spaces
+                token = token.Trim();
+                Console.WriteLine("Token taken from cookie");
             }
         }
-    };
-});
+
+        if (!string.IsNullOrEmpty(token))
+        {
+            Console.WriteLine($"Using token (length {token.Length}): '{token}'");
+            Console.WriteLine($"Number of dots: {token.Count(c => c == '.')}");
+
+            context.Token = token;
+        }
+        else
+        {
+            Console.WriteLine("No token found in header or cookie.");
+        }
+
+        return Task.CompletedTask;
+    },
+
+    OnAuthenticationFailed = context =>
+    {
+        Console.WriteLine($"Authentication failed: {context.Exception.GetType().Name}: {context.Exception.Message}");
+        return Task.CompletedTask;
+    },
+
+    OnChallenge = context =>
+    {
+        Console.WriteLine("OnChallenge called:");
+        Console.WriteLine($"Error: {context.Error}");
+        Console.WriteLine($"ErrorDescription: {context.ErrorDescription}");
+        return Task.CompletedTask;
+    },
+
+    OnForbidden = context =>
+    {
+        Console.WriteLine("Forbidden request");
+        return Task.CompletedTask;
+    }
+};
+
+
+    });
+
 
 builder.Services.AddAuthorization();
 
@@ -126,11 +167,7 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-    await redisService.SetAsync("test-key", "hello world");
 
-    var value = await redisService.GetAsync("test-key");
-
-    Console.WriteLine($"Redis returned: {value}");
 }
 
 // class Program

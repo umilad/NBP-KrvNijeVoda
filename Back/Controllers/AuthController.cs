@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using System.Reflection.Metadata;
 using KrvNijeVoda.Back;
 using MongoDB.Driver;
+using Microsoft.AspNetCore.Authorization;
+
 [ApiController]
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
@@ -22,6 +24,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("register")]
+    [AllowAnonymous]
     public async Task<IActionResult> Register([FromBody] LoginDto dto)
     {
         var existing = await _mongoService.Users.Find(u => u.Username == dto.Username).FirstOrDefaultAsync();
@@ -39,19 +42,28 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
-    public async Task<IActionResult> Login([FromBody] LoginDto dto)
+[AllowAnonymous]
+public async Task<IActionResult> Login([FromBody] LoginDto dto)
+{
+    var user = await _mongoService.Users.Find(u => u.Username == dto.Username).FirstOrDefaultAsync();
+    if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
+        return Unauthorized();
+
+    // 1️⃣ Generiši token
+    var token = _tokenService.GenerateToken(user.Username, user.Role);
+
+
+    // 2️⃣ Postavi cookie
+    Response.Cookies.Append("jwt", token, new CookieOptions
     {
-        var user = await _mongoService.Users.Find(u => u.Username == dto.Username).FirstOrDefaultAsync();
-        if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
-            return Unauthorized();
+        HttpOnly = true,
+        Secure = false,               // za lokalni HTTP
+        SameSite = SameSiteMode.Lax,  
+        Expires = DateTime.UtcNow.AddHours(2)
+    });
 
-        var token = _tokenService.GenerateToken(user.Username, user.Role);
-
-        // Store token in Redis for 2 hours
-        await _redisService.SetAsync(token, user.Id, TimeSpan.FromHours(2));
-
-        return Ok(new { token });
-    }
+    return Ok(new { token });
+}
 
     [HttpPost("logout")]
     public async Task<IActionResult> Logout()
