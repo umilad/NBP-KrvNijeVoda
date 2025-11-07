@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 //using KrvNijeVoda.Back.Models;
 using System.Reflection.Metadata;
 using KrvNijeVoda.Back;
+using Microsoft.AspNetCore.Authorization;
 
 [Route("api")]
 [ApiController]
@@ -112,6 +113,7 @@ public async Task<IActionResult> ExportDatabaseAsCypherString()
             return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
         }
     }
+    [Authorize(Roles = "admin")]
     [HttpGet("GetGodina/{id}")]
     public async Task<IActionResult> GetGodina(Guid id)
     {
