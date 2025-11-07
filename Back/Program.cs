@@ -3,12 +3,11 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi.Models;
 using System.IdentityModel.Tokens.Jwt;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
+var config = builder.Configuration;
 
-// Add services to the container.
 builder.Services.AddSingleton<Neo4jService>(
     new Neo4jService("neo4j+s://8bb87af4.databases.neo4j.io", "neo4j", "LP_jKZYCWGDICIaCavzhEOfNlfcr6A1k9-TYO15eHb0"));
 builder.Services.AddSingleton<MongoService>(sp =>
@@ -36,7 +35,7 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins("http://localhost:3000") // Your frontend address
+        policy.WithOrigins("http://localhost:3000")
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
@@ -44,91 +43,58 @@ builder.Services.AddCors(options =>
 
 var key = Encoding.ASCII.GetBytes(builder.Configuration["Jwt:Secret"]);
 
-
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(key),
-            ValidateIssuer = false,
-            ValidateAudience = false
-        };
-
-      options.Events = new JwtBearerEvents
+builder.Services.AddAuthentication(options =>
 {
-    OnMessageReceived = context =>
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.IncludeErrorDetails = true;
+
+    options.TokenValidationParameters = new TokenValidationParameters
     {
-        string token = null;
+        ValidIssuer = config["Jwt:Issuer"],
+        ValidAudience = config["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["Jwt:Secret"]!)),
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ClockSkew = TimeSpan.Zero,
 
-        // 1️⃣ Check Authorization header first
-        var authHeader = context.HttpContext.Request.Headers["Authorization"].FirstOrDefault();
-        if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer "))
-        {
-            token = authHeader.Substring("Bearer ".Length).Trim();
-            Console.WriteLine("Token taken from Authorization header");
-        }
-        else
-        {
-            // 2️⃣ If no header, check cookie
-            token = context.HttpContext.Request.Cookies["jwt"];
-            if (!string.IsNullOrEmpty(token))
-            {
-                // Remove extra quotes and spaces
-                token = token.Trim();
-                Console.WriteLine("Token taken from cookie");
-            }
-        }
+        RoleClaimType = ClaimTypes.Role,
+        NameClaimType = JwtRegisteredClaimNames.Sub
+    };
 
-        if (!string.IsNullOrEmpty(token))
-        {
-            Console.WriteLine($"Using token (length {token.Length}): '{token}'");
-            Console.WriteLine($"Number of dots: {token.Count(c => c == '.')}");
-
-            context.Token = token;
-        }
-        else
-        {
-            Console.WriteLine("No token found in header or cookie.");
-        }
-
-        return Task.CompletedTask;
-    },
-
-    OnAuthenticationFailed = context =>
+    options.Events = new JwtBearerEvents
     {
-        Console.WriteLine($"Authentication failed: {context.Exception.GetType().Name}: {context.Exception.Message}");
-        return Task.CompletedTask;
-    },
+        OnAuthenticationFailed = context =>
+        {
+            Console.WriteLine("JWT failed: " + context.Exception.Message);
+            return Task.CompletedTask;
+        },
+        OnTokenValidated = context =>
+        {
+            Console.WriteLine("JWT validated for: " + context.Principal.Identity.Name);
+            foreach(var c in context.Principal.Claims)
+                Console.WriteLine($"{c.Type}: {c.Value}");
+            return Task.CompletedTask;
+        }
+    };
 
-    OnChallenge = context =>
-    {
-        Console.WriteLine("OnChallenge called:");
-        Console.WriteLine($"Error: {context.Error}");
-        Console.WriteLine($"ErrorDescription: {context.ErrorDescription}");
-        return Task.CompletedTask;
-    },
+});
 
-    OnForbidden = context =>
-    {
-        Console.WriteLine("Forbidden request");
-        return Task.CompletedTask;
-    }
-};
-
-
-    });
-
-
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy(IdentityData.AdminPolicyName, p =>
+    p.RequireRole(IdentityData.AdminRoleName));
+});
 
 
 
 builder.Services.AddControllers();
-// builder.Services.AddControllers();
-
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -162,31 +128,18 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    await redisService.SetAsync("test-key", "hello world");
 
+    var value = await redisService.GetAsync("test-key");
+
+    Console.WriteLine($"Redis returned: {value}");
 }
 
-// class Program
-// {
-//     static void Main(string[] args)
-//     {
-// var redisService = new RedisService();
-// redisService.run();
-//     }
-// }
-// var redisService = new RedisService(
-//     "redis-12982.c300.eu-central-1-1.ec2.redns.redis-cloud.com",
-//     12982,
-//     "default",
-//     "9BoltGO34yWtZwsJIBVKOSYCU2D0JdnG"
-// );
 
-// Optional: Run the test once
-//redisService.RunTest(); // or await redisService.RunTestAsync() if async
 
 app.UseHttpsRedirection();
 
