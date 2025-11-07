@@ -8,7 +8,6 @@ using System.Security.Claims;
 var builder = WebApplication.CreateBuilder(args);
 var config = builder.Configuration;
 
-// Add services to the container.
 builder.Services.AddSingleton<Neo4jService>(
     new Neo4jService("neo4j+s://8bb87af4.databases.neo4j.io", "neo4j", "LP_jKZYCWGDICIaCavzhEOfNlfcr6A1k9-TYO15eHb0"));
 builder.Services.AddSingleton<MongoService>(sp =>
@@ -37,7 +36,7 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins("http://localhost:3000") // Your frontend address
+        policy.WithOrigins("http://localhost:3000")
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
@@ -66,11 +65,9 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ClockSkew = TimeSpan.Zero,
 
-        RoleClaimType = ClaimTypes.Role,   // tells ASP.NET Core to look for this claim as the role
-        NameClaimType = JwtRegisteredClaimNames.Sub // optional
+        RoleClaimType = ClaimTypes.Role,
+        NameClaimType = JwtRegisteredClaimNames.Sub
     };
-    
-    //options.TokenValidationParameters.RoleClaimType = "role";
 
     options.Events = new JwtBearerEvents
     {
@@ -132,7 +129,6 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

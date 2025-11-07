@@ -2,10 +2,10 @@ using Microsoft.AspNetCore.Mvc;
 using Neo4jClient;
 using System;
 using System.Threading.Tasks;
-//using KrvNijeVoda.Back.Models;
 using System.Reflection.Metadata;
 using KrvNijeVoda.Back;
 using MongoDB.Driver;
+//using KrvNijeVoda.Back.Models.Dto;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -22,40 +22,50 @@ public class AuthController : ControllerBase
         _tokenService = tokenService;
     }
 
-    // [HttpPost("register")]
-    // public async Task<IActionResult> Register([FromBody] LoginDto dto)
-    // {
-    //     var existing = await _mongoService.Users.Find(u => u.Username == dto.Username).FirstOrDefaultAsync();
-    //     if (existing != null) return BadRequest("Username already exists");
+    [HttpPost("register")]
+    public async Task<IActionResult> Register([FromBody] RegisterDto dto)
+    {
+        var existing = await _mongoService.Users.Find(u => u.Username == dto.Username).FirstOrDefaultAsync();
+        if (existing != null) return BadRequest("Username already exists");
 
-    //     var user = new UserMongo
-    //     {
-    //         Username = dto.Username,
-    //         PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-    //         Role = "User" // default role       
-    //     };
+        //var role = dto.CustomClaims?.Role ?? "user";
 
-    //     await _mongoService.Users.InsertOneAsync(user);
-    //     return Ok("User registered");
-    // }
+        var user = new UserMongo
+        {
+            Username = dto.Username,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
+            Role = dto.CustomClaims.Role,
+            FirstName = dto.FirstName,
+            LastName = dto.LastName
+        };
 
-    
-    // [HttpPost("login")]
-    // public async Task<IActionResult> Login([FromBody] LoginDto dto)
-    // {
-    //     var user = await _mongoService.Users.Find(u => u.Username == dto.Username).FirstOrDefaultAsync();
-    //     if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
-    //         return Unauthorized();
+        await _mongoService.Users.InsertOneAsync(user);
+        return Ok("User registered");
+    }
 
-    //     var token = _tokenService.GenerateToken(user.Username, user.Role);
+    [HttpPost("login")]
+    public async Task<IActionResult> Login([FromBody] LoginDto loginRequest)
+    {
+        if (loginRequest == null)
+            return BadRequest("Invalid login request");
 
-    //     // Store token in Redis for 2 hours
-    //     await _redisService.SetAsync(token, user.Id, TimeSpan.FromHours(2));
+            var user = await _mongoService.Users.Find(u => u.Username == loginRequest.Username).FirstOrDefaultAsync();
 
-    //     return Ok(new { token });
-    // }
+        if (user == null || !BCrypt.Net.BCrypt.Verify(loginRequest.Password, user.PasswordHash))
+            return Unauthorized("Invalid username or password");
 
+        var jwt = _tokenService.GenerateToken(loginRequest);
 
+        await _redisService.SetAsync(jwt, user.Id, TimeSpan.FromHours(2));
+
+        return Ok(new
+        {
+            token = jwt,
+            expiresIn = _tokenService.TokenLifetime.TotalSeconds
+        });
+    }
+
+    //nije napravljeno 
     [HttpPost("logout")]
     public async Task<IActionResult> Logout()
     {
