@@ -3,8 +3,10 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi.Models;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
+var config = builder.Configuration;
 
 // Add services to the container.
 builder.Services.AddSingleton<Neo4jService>(
@@ -47,47 +49,56 @@ builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
 })
 .AddJwtBearer(options =>
 {
+    options.IncludeErrorDetails = true;
+
     options.TokenValidationParameters = new TokenValidationParameters
     {
+        ValidIssuer = config["Jwt:Issuer"],
+        ValidAudience = config["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["Jwt:Secret"]!)),
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(key),
-        ValidateIssuer = false,
-        ValidateAudience = false
+        ClockSkew = TimeSpan.Zero,
+
+        RoleClaimType = ClaimTypes.Role,   // tells ASP.NET Core to look for this claim as the role
+        NameClaimType = JwtRegisteredClaimNames.Sub // optional
     };
+    
+    //options.TokenValidationParameters.RoleClaimType = "role";
 
     options.Events = new JwtBearerEvents
     {
-        OnTokenValidated = async context =>
+        OnAuthenticationFailed = context =>
         {
-            var redis = context.HttpContext.RequestServices.GetRequiredService<RedisService>();
-            var token = context.SecurityToken as JwtSecurityToken;
-            if (token == null)
-            {
-                context.Fail("Invalid token");
-                return;
-            }
-
-            // Check if token exists in Redis
-            var exists = await redis.ExistsAsync(token.RawData); // only token string
-            if (!exists)
-            {
-                context.Fail("Token not found in Redis (logged out?)");
-            }
+            Console.WriteLine("JWT failed: " + context.Exception.Message);
+            return Task.CompletedTask;
+        },
+        OnTokenValidated = context =>
+        {
+            Console.WriteLine("JWT validated for: " + context.Principal.Identity.Name);
+            foreach(var c in context.Principal.Claims)
+                Console.WriteLine($"{c.Type}: {c.Value}");
+            return Task.CompletedTask;
         }
     };
+
 });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy(IdentityData.AdminPolicyName, p =>
+    p.RequireRole(IdentityData.AdminRoleName));
+});
 
 
 
 builder.Services.AddControllers();
-// builder.Services.AddControllers();
-
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -133,23 +144,7 @@ if (app.Environment.IsDevelopment())
     Console.WriteLine($"Redis returned: {value}");
 }
 
-// class Program
-// {
-//     static void Main(string[] args)
-//     {
-// var redisService = new RedisService();
-// redisService.run();
-//     }
-// }
-// var redisService = new RedisService(
-//     "redis-12982.c300.eu-central-1-1.ec2.redns.redis-cloud.com",
-//     12982,
-//     "default",
-//     "9BoltGO34yWtZwsJIBVKOSYCU2D0JdnG"
-// );
 
-// Optional: Run the test once
-//redisService.RunTest(); // or await redisService.RunTestAsync() if async
 
 app.UseHttpsRedirection();
 

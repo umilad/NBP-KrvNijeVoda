@@ -12,23 +12,23 @@ public class TokenService
         _config = config;
     }
 
-    public string GenerateToken(string username, string role)
-    {
-        var key = Encoding.ASCII.GetBytes(_config["Jwt:Secret"]);
+    // public string GenerateToken(string username, string role)
+    // {
+    //     var key = Encoding.ASCII.GetBytes(_config["Jwt:Secret"]);
 
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var tokenDescriptor = new SecurityTokenDescriptor
-        {
-            Subject = new ClaimsIdentity(new[] { new Claim(ClaimTypes.Name, username),
-                                                new Claim(ClaimTypes.Role, role) }),
-            Expires = DateTime.UtcNow.AddHours(2),
-            SigningCredentials = new SigningCredentials(
-                new SymmetricSecurityKey(key),
-                SecurityAlgorithms.HmacSha256Signature
-            )
-        };
+    //     var tokenHandler = new JwtSecurityTokenHandler();
+    //     var tokenDescriptor = new SecurityTokenDescriptor
+    //     {
+    //         Subject = new ClaimsIdentity(new[] { new Claim(ClaimTypes.Name, username),
+    //                                             new Claim(ClaimTypes.Role, role) }),
+    //         Expires = DateTime.UtcNow.AddHours(2),
+    //         SigningCredentials = new SigningCredentials(
+    //             new SymmetricSecurityKey(key),
+    //             SecurityAlgorithms.HmacSha256Signature
+    //         )
+    //     };
 
-        var token = tokenHandler.CreateToken(tokenDescriptor);
-        return tokenHandler.WriteToken(token);
-    }
+    //     var token = tokenHandler.CreateToken(tokenDescriptor);
+    //     return tokenHandler.WriteToken(token);
+    // }
 }

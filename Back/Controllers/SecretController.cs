@@ -16,20 +16,30 @@ public class SecretController : ControllerBase
         return Ok($"Hello {username} ({role}) - any authenticated user");
     }
 
-    [HttpGet("admin")]
-    [Authorize(Roles = "Admin")]
-    public IActionResult Admin()
+    [HttpGet("getadminrole")]
+    [Authorize(Roles = "admin")]
+    public IActionResult AdminRole()
     {
         var username = User.Identity?.Name;
         return Ok($"Hello {username}, only admins can see this!");
     }
 
     [HttpGet("user")]
-    [Authorize(Roles = "User")]
+    [Authorize(Roles = "user")]
     public IActionResult UserSecret()
     {
         var username = User.Identity?.Name;
         return Ok($"Hello {username}, only users can see this!");
     }
+
+    [HttpGet("admin")]
+    [Authorize(Policy = IdentityData.AdminPolicyName)]
+    public IActionResult AdminPolicy()
+    {
+        var username = User.Identity?.Name;
+        return Ok($"Hello {username}, only admins can see this!");
+    }
+
+
 }
 
