@@ -132,14 +132,7 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-    await redisService.SetAsync("test-key", "hello world");
-
-    var value = await redisService.GetAsync("test-key");
-
-    Console.WriteLine($"Redis returned: {value}");
 }
-
-
 
 app.UseHttpsRedirection();
 
