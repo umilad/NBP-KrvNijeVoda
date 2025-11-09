@@ -1,7 +1,9 @@
+using System.Text.Json.Serialization;
 
     public class DogadjajDto
     {
         public Guid? ID { get; set; } // nullable kod kreiranja
+         [JsonConverter(typeof(JsonStringEnumConverter))]
         public TipDogadjaja Tip { get; set; }
         public required string Ime { get; set; }
         public GodinaNeo? Godina { get; set; }  // veza ka čvoru Godina u Neo4j

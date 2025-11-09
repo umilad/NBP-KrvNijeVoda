@@ -72,6 +72,28 @@ public class RedisService
         return await _db.KeyExistsAsync(key);
     }
 
+    public async Task AddVisitedPageAsync(string token, string page)
+{
+    if (_db == null) return;
+    await _db.ListRightPushAsync($"{token}:history", page);
+    await _db.KeyExpireAsync($"{token}:history", TimeSpan.FromHours(2)); // koliko traje token
+}
+
+// Vrati listu stranica za dati token
+public async Task<List<string>> GetVisitedPagesAsync(string token)
+{
+    if (_db == null) return new List<string>();
+    var values = await _db.ListRangeAsync($"{token}:history");
+    return values.Select(v => v.ToString()).ToList();
+}
+
+// Obriši istoriju kad se token obriše
+public async Task DeleteHistoryAsync(string token)
+{
+    if (_db == null) return;
+    await _db.KeyDeleteAsync($"{token}:history");
+}
+
 }
 
 

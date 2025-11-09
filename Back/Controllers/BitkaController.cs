@@ -180,7 +180,7 @@ public class BitkaController : ControllerBase
                     Bitka = b.As<BitkaNeo>(),
                     //Zemlja = z.As<Zemlja>(),
                     //RatID = r.As<Rat>().ID,
-                    Godina = g.As<GodinaNeo>()                    
+                    Godina = g.As<GodinaNeo>()
                 })
                 .ResultsAsync)
                 .FirstOrDefault();
@@ -189,7 +189,7 @@ public class BitkaController : ControllerBase
                 return BadRequest($"Nije pronađena bitka sa ID: {id}");
 
             var mongoDoc = await _dogadjajiCollection.Find(d => d.ID == id).FirstOrDefaultAsync();
-             
+
             var dto = new BitkaDto
             {
                 ID = bitkaResult.Bitka.ID,
@@ -200,10 +200,10 @@ public class BitkaController : ControllerBase
                 Rat = bitkaResult.Bitka.Rat,
                 Godina = bitkaResult.Godina,
                 Lokacija = bitkaResult.Bitka.Lokacija,
-                Tekst =  mongoDoc?.Tekst
+                Tekst = mongoDoc?.Tekst
             };
-           
-                
+
+
             return Ok(dto);
         }
         catch (Exception ex)
@@ -211,6 +211,54 @@ public class BitkaController : ControllerBase
             return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
         }
     }
+
+[HttpGet("GetAllBitke")]
+public async Task<IActionResult> GetAllBitke()
+{
+    try
+    {
+        // 1. Dohvatanje svih bitki iz Neo4j
+        var neoResults = (await _client.Cypher
+            .Match("(b:Dogadjaj:Bitka)")
+            .OptionalMatch("(b)-[:DESIO_SE]->(g:Godina)")
+            .Return((b, g) => new
+            {
+                BitkaData = b.As<BitkaNeo>(),
+                GodinaData = g.As<GodinaNeo>()  // bez ternarnog operatora
+            })
+            .ResultsAsync)
+            .ToList();
+
+        if (!neoResults.Any())
+            return NotFound("Nije pronađena nijedna bitka u bazi!");
+
+        // 2. Dohvatanje teksta iz MongoDB
+        var ids = neoResults.Select(r => r.BitkaData.ID).ToList();
+        var mongoList = await _dogadjajiCollection.Find(d => ids.Contains(d.ID)).ToListAsync();
+
+        // 3. Kombinovanje u DTO
+        var result = neoResults.Select(r =>
+        {
+            var mongo = mongoList.FirstOrDefault(m => m.ID == r.BitkaData.ID);
+            return new BitkaDto
+            {
+                ID = r.BitkaData.ID,
+                Ime = r.BitkaData.Ime,
+                Pobednik = r.BitkaData.Pobednik,
+                BrojZrtava = r.BitkaData.BrojZrtava,
+                Lokacija = r.BitkaData.Lokacija,
+                Godina = r.GodinaData,  // može biti null
+                Tekst = mongo?.Tekst
+            };
+        }).ToList();
+
+        return Ok(result);
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
+    }
+}
 
     // OVU NISAM GLEDALA
     // [HttpGet("GetRatForBitka/{bitkaId}")]

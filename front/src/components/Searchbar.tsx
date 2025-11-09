@@ -1,8 +1,10 @@
 import { useLocation } from "react-router-dom";
-import { useMemo } from 'react';
+import { useMemo } from "react";
+import { useSearch } from "./SearchContext";
 
 export default function SearchBar() {
     const location = useLocation();
+    const { query, setQuery } = useSearch();
 
     const placeholder = useMemo(() => {
         if (location.pathname.startsWith("/licnosti")) return "Pretraži ličnosti...";
@@ -10,9 +12,6 @@ export default function SearchBar() {
         if (location.pathname.startsWith("/dogadjaj")) return "Pretraži događaje...";
         if (location.pathname.startsWith("/dinastije")) return "Pretraži dinastije...";        
         if (location.pathname.startsWith("/dinastija")) return "Pretraži dinastije...";
-        if (location.pathname.startsWith("/prijava")) return "Pretraži...";
-        if (location.pathname.startsWith("/registracija")) return "Pretraži...";
-        if (location.pathname.startsWith("/")) return "Pretraži godine...";
         return "Pretraži...";
     }, [location.pathname]);
 
@@ -22,10 +21,12 @@ export default function SearchBar() {
 
     return (
         <input
-        type="text"
-        className="absolute start-8 w-50 h-full px-4 py-2 border-none focus:outline-none "
-        placeholder={placeholder}
-        disabled={isDisabled}
+            type="text"
+            className="absolute start-8 w-50 h-full px-4 py-2 border-none focus:outline-none"
+            placeholder={placeholder}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            disabled={isDisabled}
         />
     );
 }

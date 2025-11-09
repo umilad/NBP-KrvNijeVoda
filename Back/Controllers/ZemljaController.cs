@@ -16,7 +16,7 @@ public class ZemljaController : ControllerBase
     public ZemljaController(Neo4jService neo4jService, MongoService mongoService)
     {
         _neo4jClient = neo4jService.GetClient();
-        _mongo = mongoService.GetCollection<ZemljaMongo>("ZemljaDetalji");
+        _mongo = mongoService.GetCollection<ZemljaMongo>("Zemlje");
     }
 
     [HttpPost("CreateZemlja")]
@@ -84,6 +84,7 @@ public class ZemljaController : ControllerBase
 
             var dto = new ZemljaDto
             {
+                ID = neo.ID,
                 Naziv = neo.Naziv,
                 Trajanje = neo.Trajanje,
                 Grb = mongo?.Grb,
@@ -97,6 +98,48 @@ public class ZemljaController : ControllerBase
             return StatusCode(500, $"Greška: {ex.Message}");
         }
     }
+[HttpGet("GetAllZemlje")]
+public async Task<IActionResult> GetAllZemlje()
+{
+    try
+    {
+        // 1. Dohvatanje iz Neo4j (bez Grba i BrojaStanovnika)
+        var zemlje = (await _neo4jClient.Cypher
+            .Match("(z:Zemlja)")
+            .Return(z => z.As<ZemljaNeo>())
+            .ResultsAsync)
+            .ToList();
+
+        if (!zemlje.Any())
+            return NotFound("Nije pronađena nijedna zemlja u bazi!");
+
+        // 2. Dohvatanje dodatnih podataka iz Mongo (Grb, BrojStanovnika)
+        var ids = zemlje.Select(z => z.ID).ToList();
+        var mongoList = await _mongo.Find(m => ids.Contains(m.ID)).ToListAsync();
+
+        // 3. Kombinovanje Neo4j i Mongo podataka u DTO
+        var result = zemlje.Select(z =>
+        {
+            var mongo = mongoList.FirstOrDefault(m => m.ID == z.ID);
+            return new ZemljaDto
+            {
+                ID = z.ID,
+                Naziv = z.Naziv,
+                Trajanje = z.Trajanje,
+                Grb = mongo?.Grb,
+                BrojStanovnika = mongo?.BrojStanovnika
+            };
+        }).ToList();
+
+        return Ok(result);
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(500, $"Došlo je do greške: {ex.Message}");
+    }
+}
+
+
 
     [HttpPut("UpdateZemlja/{id}")]
     public async Task<IActionResult> UpdateZemlja(Guid id, [FromBody] ZemljaDto dto)
@@ -182,6 +225,7 @@ public class ZemljaController : ControllerBase
 
             var dto = new ZemljaDto
             {
+                ID= neo.ID,
                 Naziv = neo.Naziv,
                 Trajanje = neo.Trajanje,
                 Grb = mongo?.Grb,

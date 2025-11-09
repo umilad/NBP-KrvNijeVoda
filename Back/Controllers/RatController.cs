@@ -200,14 +200,74 @@ public class RatController : ControllerBase
                 Tekst = mongoDoc?.Tekst
             };
 
-        return Ok(dto);
-                
+            return Ok(dto);
+
         }
         catch (Exception ex)
         {
             return StatusCode(500, $"Greška prilikom rada sa Neo4j bazom: {ex.Message}");
         }
     }
+
+    [HttpGet("GetAllRatovi")]
+    public async Task<IActionResult> GetAllRatovi()
+    {
+        try
+        {
+            // 1. Dohvatanje svih ratova iz Neo4j
+            var ratovi = (await _client.Cypher
+                .Match("(r:Dogadjaj:Rat)")
+                .OptionalMatch("(r)-[:DESIO_SE]->(g:Godina)")
+                .OptionalMatch("(r)-[:RAT_TRAJAO_DO]->(gdo:Godina)")
+                .OptionalMatch("(b:Dogadjaj:Bitka)-[:BITKA_U_RATU]->(r)")
+                .With("r, g, gdo, collect(b.Ime) as imenaBitki")
+                .Return((r, g, gdo, imenaBitki) => new
+                {
+                    Rat = r.As<RatNeo>(),
+                    GodinaOd = g.As<GodinaNeo>(),
+                    GodinaDo = gdo.As<GodinaNeo>(),
+                    ImenaBitki = imenaBitki.As<List<string>>()
+                })
+                .ResultsAsync)
+                .ToList();
+
+            if (!ratovi.Any())
+                return NotFound("Nije pronađen nijedan rat u bazi!");
+
+            // 2. Dohvatanje teksta iz MongoDB
+            var ids = ratovi.Select(r => r.Rat.ID).ToList();
+            var mongoList = await _dogadjajiCollection.Find(d => ids.Contains(d.ID)).ToListAsync();
+
+            // 3. Kombinovanje u DTO
+            var result = ratovi.Select(r =>
+            {
+                var mongo = mongoList.FirstOrDefault(m => m.ID == r.Rat.ID);
+                r.Rat.Godina = r.GodinaOd;
+                r.Rat.GodinaDo = r.GodinaDo;
+                r.Rat.Bitke = r.ImenaBitki ?? new List<string>();
+
+                return new RatDto
+                {
+                    ID = r.Rat.ID,
+                    Ime = r.Rat.Ime,
+                    Tip = r.Rat.Tip,
+                    Lokacija = r.Rat.Lokacija,
+                    Godina = r.Rat.Godina,
+                    GodinaDo = r.Rat.GodinaDo,
+                    Pobednik = r.Rat.Pobednik,
+                    Bitke = r.Rat.Bitke,
+                    Tekst = mongo?.Tekst
+                };
+            }).ToList();
+
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Greška prilikom rada sa Neo4j bazom: {ex.Message}");
+        }
+    }
+
     //NISAM GLEDALA
     [HttpGet("GetBitkeZaRat/{ratID}")]
     public async Task<IActionResult> GetBitkeZaRat(Guid ratID)

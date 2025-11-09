@@ -143,11 +143,12 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseCors();
+//app.UseCors();
 app.UseCors("AllowFrontend");
 
 app.UseAuthentication();
 app.UseAuthorization();
+//app.UseMiddleware<RequestTrackingMiddleware>();
 
 
 
