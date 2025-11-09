@@ -258,21 +258,21 @@ public class BitkaController : ControllerBase
             var bitka = (await _client.Cypher
                                         .Match("(b:Dogadjaj:Bitka)")
                                         .Where((BitkaNeo b) => b.ID == id)
-                                        .OptionalMatch("(b)-[:DESIO_SE]->(g1:Godina)")                  
+                                        .OptionalMatch("(b)-[:DESIO_SE]->(g1:Godina)")
                                         //.OptionalMatch("(b)-[:BITKA_U_RATU]->(r:Rat)")             
                                         .Return((b, g1/*, r*/) => new
                                         {
                                             Bitka = b.As<BitkaNeo>(),
                                             //Rat = r.As<Rat>(),
-                                            Godina = g1.As<GodinaNeo>()                                            
+                                            Godina = g1.As<GodinaNeo>()
                                         })
                                         .ResultsAsync)
                                         .FirstOrDefault();
 
             if (bitka == null)
                 return NotFound($"Bitka sa ID: {id} nije pronađena!");
-            
-             //ako naziv ostaje isti to je ta ista 
+
+            //ako naziv ostaje isti to je ta ista 
             var duplikat = (await _client.Cypher
                 .Match("(b:Dogadjaj:Bitka)")
                 .Where("toLower(b.Ime) = toLower($naziv) AND b.ID <> $id")
@@ -423,7 +423,7 @@ public class BitkaController : ControllerBase
                         .Match("(g:Godina {ID: $godinaId})")
                         .WithParam("godinaId", godina.ID)
                         .Create("(b)-[:DESIO_SE]->(g)");
-                }                
+                }
             }
             else
             {
@@ -450,4 +450,56 @@ public class BitkaController : ControllerBase
             return StatusCode(500, $"Došlo je do greške pri radu sa bazom: {ex.Message}");
         }
     }
+    
+    // [HttpGet("GetAllBitke")]
+    // public async Task<IActionResult> GetAllBitke()
+    // {
+    //     try
+    //     {
+    //         var bitke = (await _client.Cypher
+    //             .Match("(b:Dogadjaj:Bitka)")
+    //             //.Where("NOT (b:Dogadjaj OR b:Dogadjaj:Rat)")
+    //             .OptionalMatch("(b)-[:DESIO_SE]->(g:Godina)")
+    //             //.OptionalMatch("(b)-[:DESIO_SE_U]->(z:Zemlja)")
+    //             //.OptionalMatch("(b)-[:BITKA_U_RATU]->(r:Dogadjaj:Rat)")
+    //             .Return((b, g/*, z, r*/) => new
+    //             {
+    //                 Bitka = b.As<BitkaNeo>(),
+    //                 //Zemlja = z.As<Zemlja>(),
+    //                 //RatID = r.As<Rat>().ID,
+    //                 Godina = g.As<GodinaNeo>()                    
+    //             })
+    //             .ResultsAsync)
+    //             .ToList();
+
+    //         if (!bitke.Any())
+    //             return BadRequest($"Nije pronađena nijedna bitka u bazi!");
+
+    //         var ids = bitke.Select(b => b.Bitka.ID).ToList();
+    //         var mongoList = await _dogadjajiCollection.Find(m => ids.Contains(m.ID)).ToListAsync();
+
+    //         var result = bitke.Select(b =>
+    //         {
+    //             var mongo = mongoList.FirstOrDefault(m => m.ID == b.Bitka.ID);
+    //             return new BitkaDto
+    //             {
+    //                 ID = b.Bitka.ID,
+    //                 Ime = b.Bitka.Ime,
+    //                 //Tip = bitkaResult.Bitka.Tip,
+    //                 Pobednik = b.Bitka.Pobednik,
+    //                 BrojZrtava = b.Bitka.BrojZrtava,
+    //                 Rat = b.Bitka.Rat,
+    //                 Godina = b.Godina,
+    //                 Lokacija = b.Bitka.Lokacija,
+    //                 Tekst = mongo?.Tekst
+    //             };
+    //         }).ToList();          
+                
+    //         return Ok(result);
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
+    //     }
+    // }
 }

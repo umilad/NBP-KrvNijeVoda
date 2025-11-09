@@ -286,10 +286,46 @@ public class DinastijaController : ControllerBase
             await _dinastijaCollection.DeleteOneAsync(d => d.ID == id);
             return Ok($"Dinastija sa ID: {id} je uspesno obrisana iz baze!");
         }
-        
-        catch (Exception ex)  
+
+        catch (Exception ex)
         {
             return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
+        }
+    }
+    
+    [HttpGet("GetAllDinastije")]
+    public async Task<IActionResult> GetAllDinastije()
+    {
+        try
+        {
+            var dinastije = (await _client.Cypher.Match("(d:Dinastija)")
+                                           .Return(d => d.As<DinastijaNeo>())
+                                           .ResultsAsync)
+                                           .ToList();
+            if (!dinastije.Any())
+                return NotFound("Nije pronađena nijedna dinastija u bazi");
+
+            var ids = dinastije.Select(d => d.ID).ToList();
+            var mongoList = await _dinastijaCollection.Find(m => ids.Contains(m.ID)).ToListAsync();
+            var result = dinastije.Select(din =>
+            {
+                var mongo = mongoList.FirstOrDefault(m => m.ID == din.ID);
+                return new DinastijaDto
+                {
+                    ID = din.ID,
+                    Naziv = din.Naziv,
+                    PocetakVladavineGod = din.PocetakVladavineGod,
+                    PocetakVladavinePNE = din.PocetakVladavinePNE,
+                    KrajVladavineGod = din.KrajVladavineGod,
+                    KrajVladavinePNE = din.KrajVladavinePNE,
+                    Slika = mongo?.Slika
+                };
+            });
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Došlo je do greške: {ex.Message}");
         }
     }
 

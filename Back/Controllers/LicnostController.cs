@@ -374,12 +374,69 @@ public class LicnostController : ControllerBase
                                 .OptionalMatch("(l)-[r3:RODJEN_U]->(m:Zemlja)")
                                 .Delete("r, r2, r3, l")
                                 .ExecuteWithoutResultsAsync();
-             await _licnostCollection.DeleteOneAsync(d => d.ID == id);
+            await _licnostCollection.DeleteOneAsync(d => d.ID == id);
             return Ok($"Licnost sa id:{id} uspesno obrisana iz baze!");
-        }        
-        catch (Exception ex)  
+        }
+        catch (Exception ex)
         {
             return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
+        }
+    }
+    
+    [HttpGet("GetAllLicnosti")]
+    public async Task<IActionResult> GetAllLicnosti()
+    {
+        try
+        {
+            var licnosti = (await _client.Cypher.Match("(l:Licnost)")
+                                           .Where("NOT l:Vladar")
+                                           //.OptionalMatch("(l)-[r:RODJEN]->(gr:Godina)")
+                                           //.OptionalMatch("(l)-[r2:UMRO]->(gs:Godina)")
+                                           //.OptionalMatch("(l)-[r3:RODJEN_U]->(m:Lokacija)-[:PRIPADA_ZEMLJI]->(z:Zemlja)")
+                                           //    .Return((l, gr, gs, m, z) => new {
+                                           //        Licnost = l.As<Licnost>(),
+                                           //        Rodjen = gr.As<Godina>(),
+                                           //        Umro = gs.As<Godina>(),
+                                           //        Mesto = m.As<Lokacija>(),
+                                           //        Zemlja = z.As<Zemlja>()
+                                           //    })
+                                           .Return(l => l.As<LicnostNeo>())
+                                           .ResultsAsync)
+                                           .ToList();
+
+            if (!licnosti.Any())
+            {
+                return BadRequest($"Nije pronađena nijedna ličnost u bazi!");
+            }
+            var ids = licnosti.Select(l => l.ID).ToList();
+            var mongoList = await _licnostCollection.Find(m => ids.Contains(m.ID)).ToListAsync();
+            // if (lic.Mesto != null)
+            //     lic.Mesto.PripadaZemlji = lic.Zemlja ?? new Zemlja();
+            var result = licnosti.Select(l =>
+            {
+                var mongo = mongoList.FirstOrDefault(m => m.ID == l.ID);
+                return new LicnostDto
+                {
+                    ID = l.ID,
+                    Titula = l.Titula,
+                    Ime = l.Ime,
+                    Prezime = l.Prezime,
+                    GodinaRodjenja = l.GodinaRodjenja,
+                    GodinaRodjenjaPNE = l.GodinaRodjenjaPNE,
+                    GodinaSmrti = l.GodinaSmrti,
+                    GodinaSmrtiPNE = l.GodinaSmrtiPNE,
+                    Pol = l.Pol,
+                    Slika = mongo?.Slika,
+                    MestoRodjenja = l.MestoRodjenja ?? "",
+                    Tekst = mongo?.Tekst
+                };
+            }).ToList();
+
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Došlo je do greške: {ex.Message}");
         }
     }
 

@@ -39,6 +39,13 @@ builder.Services.AddCors(options =>
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
+    options.AddPolicy("AllowFrontend",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:5173") //frontend
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
 });
 
 var key = Encoding.ASCII.GetBytes(builder.Configuration["Jwt:Secret"]);
@@ -137,6 +144,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseCors();
+app.UseCors("AllowFrontend");
 
 app.UseAuthentication();
 app.UseAuthorization();

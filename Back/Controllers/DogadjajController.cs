@@ -112,48 +112,49 @@ public async Task<IActionResult> CreateDogadjaj([FromBody] DogadjajDto dogadjaj)
 
 
     [HttpGet("GetDogadjaj/{id}")]
-public async Task<IActionResult> GetDogadjaj(Guid id)
-{
-    try
+    public async Task<IActionResult> GetDogadjaj(Guid id)
     {
-        // 1. Dohvatanje iz Neo4j (bez Teksta)
-        var dog = (await _client.Cypher
-            .Match("(d:Dogadjaj)")
-            .Where((DogadjajNeo d) => d.ID == id)
-            .OptionalMatch("(d)-[:DESIO_SE]->(g:Godina)")
-            //.OptionalMatch("(d)-[:DESIO_SE_U]->(z:Zemlja)")
-            .Return((d, g) => new
-            {
-                Dogadjaj = d.As<DogadjajNeo>(),
-                Godina = g.As<GodinaNeo>()
-            })
-            .ResultsAsync)
-            .FirstOrDefault();
-
-        if (dog == null)
-            return NotFound($"Nije pronađen nijedan događaj sa ID: {id}");
-
-        // 2. Dohvatanje Teksta iz Mongo
-        var mongo = await _mongo.Find(m => m.ID == id).FirstOrDefaultAsync();
-
-        // 3. Kombinovanje u DTO
-        var result = new DogadjajDto
+        try
         {
-            ID = dog.Dogadjaj.ID,
-            Ime = dog.Dogadjaj.Ime,
-            Tip = dog.Dogadjaj.Tip,
-            Lokacija = dog.Dogadjaj.Lokacija,
-            Godina = dog.Godina,
-            Tekst = mongo?.Tekst
-        };
+            // 1. Dohvatanje iz Neo4j (bez Teksta)
+            var dog = (await _client.Cypher
+                .Match("(d:Dogadjaj)")
+                .Where((DogadjajNeo d) => d.ID == id)
+                .OptionalMatch("(d)-[:DESIO_SE]->(g:Godina)")
+                //.OptionalMatch("(d)-[:DESIO_SE_U]->(z:Zemlja)")
+                .Return((d, g) => new
+                {
+                    Dogadjaj = d.As<DogadjajNeo>(),
+                    Godina = g.As<GodinaNeo>()
+                })
+                .ResultsAsync)
+                .FirstOrDefault();
 
-        return Ok(result);
+            if (dog == null)
+                return NotFound($"Nije pronađen nijedan događaj sa ID: {id}");
+
+            // 2. Dohvatanje Teksta iz Mongo
+            var mongo = await _mongo.Find(m => m.ID == id).FirstOrDefaultAsync();
+
+            // 3. Kombinovanje u DTO
+            var result = new DogadjajDto
+            {
+                ID = dog.Dogadjaj.ID,
+                Ime = dog.Dogadjaj.Ime,
+                Tip = dog.Dogadjaj.Tip,
+                Lokacija = dog.Dogadjaj.Lokacija,
+                Godina = dog.Godina,
+                Tekst = mongo?.Tekst
+            };
+
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Došlo je do greške: {ex.Message}");
+        }
     }
-    catch (Exception ex)
-    {
-        return StatusCode(500, $"Došlo je do greške: {ex.Message}");
-    }
-}
+
     [HttpDelete("DeleteDogadjaj/{id}")]
     public async Task<IActionResult> DeleteDogadjaj(Guid id)
     {
@@ -177,139 +178,188 @@ public async Task<IActionResult> GetDogadjaj(Guid id)
     }
 
     [HttpPut("UpdateDogadjaj/{id}")]
-public async Task<IActionResult> UpdateDogadjaj(Guid id, [FromBody] DogadjajDto updatedDogadjaj)
-{
-    // Provera za postojanje u Neo4j
-    var dog = (await _client.Cypher
-                            .Match("(d:Dogadjaj)")
-                            .Where((DogadjajNeo d) => d.ID == id)
-                            .OptionalMatch("(d)-[:DESIO_SE]->(g:Godina)")
-                            .Return((d, g) => new
-                            {
-                                Dogadjaj = d.As<DogadjajNeo>(),
-                                Godina = g.As<GodinaNeo>()
-                            })
-                            .ResultsAsync)
-                            .FirstOrDefault();
-
-    if (dog == null)
-        return NotFound($"Dogadjaj sa ID {id} nije pronađen!");
-
-    // Provera duplikata po imenu
-    var duplikat = (await _client.Cypher
-        .Match("(d:Dogadjaj)")
-        .Where("toLower(d.Ime) = toLower($naziv) AND d.ID <> $id")
-        .WithParam("naziv", updatedDogadjaj.Ime)
-        .WithParam("id", id)
-        .Return(d => d.As<DogadjajNeo>())
-        .ResultsAsync)
-        .Any();
-
-    if (duplikat)
-        return BadRequest($"Dogadjaj sa nazivom '{updatedDogadjaj.Ime}' već postoji u bazi!");
-
-    // Neo4j update
-    var cypher = _client.Cypher
-                .Match("(d:Dogadjaj)")
-                .Where((DogadjajNeo d) => d.ID == id)
-                .Set("d.Ime = $ime, d.Tip=$tip")
-                .Remove("d:Bitka:Rat:Sporazum:Savez:Dokument:Ustanak")
-                .Set($"d:{updatedDogadjaj.Tip}")
-                .WithParam("ime", updatedDogadjaj.Ime)
-                .WithParam("tip", updatedDogadjaj.Tip);
-
-    // Godina logika ostaje ista
-    if (updatedDogadjaj.Godina != null && updatedDogadjaj.Godina.God != 0)
+    public async Task<IActionResult> UpdateDogadjaj(Guid id, [FromBody] DogadjajDto updatedDogadjaj)
     {
-        if (dog.Godina != null && dog.Godina.God != 0)
+        // Provera za postojanje u Neo4j
+        var dog = (await _client.Cypher
+                                .Match("(d:Dogadjaj)")
+                                .Where((DogadjajNeo d) => d.ID == id)
+                                .OptionalMatch("(d)-[:DESIO_SE]->(g:Godina)")
+                                .Return((d, g) => new
+                                {
+                                    Dogadjaj = d.As<DogadjajNeo>(),
+                                    Godina = g.As<GodinaNeo>()
+                                })
+                                .ResultsAsync)
+                                .FirstOrDefault();
+
+        if (dog == null)
+            return NotFound($"Dogadjaj sa ID {id} nije pronađen!");
+
+        // Provera duplikata po imenu
+        var duplikat = (await _client.Cypher
+            .Match("(d:Dogadjaj)")
+            .Where("toLower(d.Ime) = toLower($naziv) AND d.ID <> $id")
+            .WithParam("naziv", updatedDogadjaj.Ime)
+            .WithParam("id", id)
+            .Return(d => d.As<DogadjajNeo>())
+            .ResultsAsync)
+            .Any();
+
+        if (duplikat)
+            return BadRequest($"Dogadjaj sa nazivom '{updatedDogadjaj.Ime}' već postoji u bazi!");
+
+        // Neo4j update
+        var cypher = _client.Cypher
+                    .Match("(d:Dogadjaj)")
+                    .Where((DogadjajNeo d) => d.ID == id)
+                    .Set("d.Ime = $ime, d.Tip=$tip")
+                    .Remove("d:Bitka:Rat:Sporazum:Savez:Dokument:Ustanak")
+                    .Set($"d:{updatedDogadjaj.Tip}")
+                    .WithParam("ime", updatedDogadjaj.Ime)
+                    .WithParam("tip", updatedDogadjaj.Tip);
+
+        // Godina logika ostaje ista
+        if (updatedDogadjaj.Godina != null && updatedDogadjaj.Godina.God != 0)
         {
-            if (dog.Godina.God != updatedDogadjaj.Godina.God || dog.Godina.IsPNE != updatedDogadjaj.Godina.IsPNE)
+            if (dog.Godina != null && dog.Godina.God != 0)
             {
-                await _godinaService.DodajGodinu(updatedDogadjaj.Godina.God, updatedDogadjaj.Godina.IsPNE);
-                cypher = cypher.With("d")
-                               .Match("(g:Godina {God: $dogGod, IsPNE: $dogPNE})")
-                               .Match("(d)-[rel:DESIO_SE]->()")
-                               .Delete("rel")
-                               .Create("(d)-[:DESIO_SE]->(g)")
-                               .WithParam("dogGod", updatedDogadjaj.Godina.God)
-                               .WithParam("dogPNE", updatedDogadjaj.Godina.IsPNE);
-            }
-        }
-        else
-        {
-            await _godinaService.DodajGodinu(updatedDogadjaj.Godina.God, updatedDogadjaj.Godina.IsPNE);
-            cypher = cypher.With("d")
-                           .Match("(g:Godina {God: $dogGod, IsPNE: $dogPNE})")
-                           .Create("(d)-[:DESIO_SE]->(g)")
-                           .WithParam("dogGod", updatedDogadjaj.Godina.God)
-                           .WithParam("dogPNE", updatedDogadjaj.Godina.IsPNE);
-        }
-    }
-    else
-    {
-        cypher = cypher.With("d")
-                       .OptionalMatch("(d)-[rel:DESIO_SE]->()")
-                       .Delete("rel");
-    }
-
-    // Lokacija logika ostaje ista
-    if (!string.IsNullOrEmpty(updatedDogadjaj.Lokacija) && updatedDogadjaj.Lokacija != "string")
-    {
-        var zemljaPostoji = await _client.Cypher
-                                         .Match("(z:Zemlja)")
-                                         .Where("toLower(z.Naziv) = toLower($naziv)")
-                                         .WithParam("naziv", updatedDogadjaj.Lokacija)
-                                         .Return(z => z.As<ZemljaNeo>())
-                                         .ResultsAsync;
-        if (zemljaPostoji.Any())
-        {
-            if (!string.IsNullOrWhiteSpace(dog.Dogadjaj.Lokacija) && dog.Dogadjaj.Lokacija != "string")
-            {
-                if (dog.Dogadjaj.Lokacija != updatedDogadjaj.Lokacija)
+                if (dog.Godina.God != updatedDogadjaj.Godina.God || dog.Godina.IsPNE != updatedDogadjaj.Godina.IsPNE)
                 {
-                    cypher = cypher
-                             .With("d")
-                             .Match("(z:Zemlja)")
-                             .Where("toLower(z.Naziv) = toLower($naziv)")
-                             .OptionalMatch("(d)-[rel:DESIO_SE_U]->()")
-                             .Delete("rel")
-                             .WithParam("naziv", updatedDogadjaj.Lokacija)
-                             .Create("(d)-[:DESIO_SE_U]->(z)")
-                             .Set("d.Lokacija = $naziv");
+                    await _godinaService.DodajGodinu(updatedDogadjaj.Godina.God, updatedDogadjaj.Godina.IsPNE);
+                    cypher = cypher.With("d")
+                                .Match("(g:Godina {God: $dogGod, IsPNE: $dogPNE})")
+                                .Match("(d)-[rel:DESIO_SE]->()")
+                                .Delete("rel")
+                                .Create("(d)-[:DESIO_SE]->(g)")
+                                .WithParam("dogGod", updatedDogadjaj.Godina.God)
+                                .WithParam("dogPNE", updatedDogadjaj.Godina.IsPNE);
                 }
             }
             else
             {
-                cypher = cypher
-                         .With("d")
-                         .Match("(z:Zemlja)")
-                         .Where("toLower(z.Naziv) = toLower($naziv)")
-                         .WithParam("naziv", updatedDogadjaj.Lokacija)
-                         .Create("(d)-[:DESIO_SE_U]->(z)")
-                         .Set("d.Lokacija = $naziv");
+                await _godinaService.DodajGodinu(updatedDogadjaj.Godina.God, updatedDogadjaj.Godina.IsPNE);
+                cypher = cypher.With("d")
+                            .Match("(g:Godina {God: $dogGod, IsPNE: $dogPNE})")
+                            .Create("(d)-[:DESIO_SE]->(g)")
+                            .WithParam("dogGod", updatedDogadjaj.Godina.God)
+                            .WithParam("dogPNE", updatedDogadjaj.Godina.IsPNE);
             }
         }
+        else
+        {
+            cypher = cypher.With("d")
+                        .OptionalMatch("(d)-[rel:DESIO_SE]->()")
+                        .Delete("rel");
+        }
+
+        // Lokacija logika ostaje ista
+        if (!string.IsNullOrEmpty(updatedDogadjaj.Lokacija) && updatedDogadjaj.Lokacija != "string")
+        {
+            var zemljaPostoji = await _client.Cypher
+                                            .Match("(z:Zemlja)")
+                                            .Where("toLower(z.Naziv) = toLower($naziv)")
+                                            .WithParam("naziv", updatedDogadjaj.Lokacija)
+                                            .Return(z => z.As<ZemljaNeo>())
+                                            .ResultsAsync;
+            if (zemljaPostoji.Any())
+            {
+                if (!string.IsNullOrWhiteSpace(dog.Dogadjaj.Lokacija) && dog.Dogadjaj.Lokacija != "string")
+                {
+                    if (dog.Dogadjaj.Lokacija != updatedDogadjaj.Lokacija)
+                    {
+                        cypher = cypher
+                                .With("d")
+                                .Match("(z:Zemlja)")
+                                .Where("toLower(z.Naziv) = toLower($naziv)")
+                                .OptionalMatch("(d)-[rel:DESIO_SE_U]->()")
+                                .Delete("rel")
+                                .WithParam("naziv", updatedDogadjaj.Lokacija)
+                                .Create("(d)-[:DESIO_SE_U]->(z)")
+                                .Set("d.Lokacija = $naziv");
+                    }
+                }
+                else
+                {
+                    cypher = cypher
+                            .With("d")
+                            .Match("(z:Zemlja)")
+                            .Where("toLower(z.Naziv) = toLower($naziv)")
+                            .WithParam("naziv", updatedDogadjaj.Lokacija)
+                            .Create("(d)-[:DESIO_SE_U]->(z)")
+                            .Set("d.Lokacija = $naziv");
+                }
+            }
+        }
+        else
+        {
+            cypher = cypher.With("d")
+                        .OptionalMatch("(d)-[rel:DESIO_SE_U]->()")
+                        .Delete("rel")
+                        .Set("d.Lokacija = $naziv")
+                        .WithParam("naziv", "string");
+        }
+
+        // Izvrši Neo4j update
+        await cypher.ExecuteWithoutResultsAsync();
+
+        // MongoDB update Teksta
+        if (!string.IsNullOrWhiteSpace(updatedDogadjaj.Tekst))
+        {
+            var update = Builders<DogadjajMongo>.Update.Set(m => m.Tekst, updatedDogadjaj.Tekst);
+            await _mongo.UpdateOneAsync(m => m.ID == id, update, new MongoDB.Driver.UpdateOptions { IsUpsert = true });
+        }
+
+        return Ok($"Uspešno ažuriran događaj '{updatedDogadjaj.Ime}' sa ID: {id}!");
     }
-    else
+
+    [HttpGet("GetAllDogadjaji")]
+    public async Task<IActionResult> GetAllDogadjaji()
     {
-        cypher = cypher.With("d")
-                       .OptionalMatch("(d)-[rel:DESIO_SE_U]->()")
-                       .Delete("rel")
-                       .Set("d.Lokacija = $naziv")
-                       .WithParam("naziv", "string");
+        try
+        {
+            // 1. Dohvatanje iz Neo4j (bez Teksta)
+            var dogadjaji =  (await _client.Cypher
+                .Match("(d:Dogadjaj)")
+                .Where("NOT (d:Bitka OR d:Rat)")
+                .OptionalMatch("(d)-[:DESIO_SE]->(g:Godina)")
+                .Return((d, g) => new
+                {
+                    Dogadjaj = d.As<DogadjajNeo>(),
+                    Godina = g.As<GodinaNeo>()
+                })
+                .ResultsAsync)
+                .ToList();
+
+
+            if (!dogadjaji.Any())
+                return NotFound($"Nije pronađen nijedan događaj u bazi!");
+
+            // 2. Dohvatanje Teksta iz Mongo
+            var ids = dogadjaji.Select(d => d.Dogadjaj.ID).ToList();
+            var mongoList = await _mongo.Find(m => ids.Contains(m.ID)).ToListAsync();
+
+            // Kombinovanje
+            var result = dogadjaji.Select(d =>
+            {
+                var mongo = mongoList.FirstOrDefault(m => m.ID == d.Dogadjaj.ID);
+                return new DogadjajDto
+                {
+                    ID = d.Dogadjaj.ID,
+                    Ime = d.Dogadjaj.Ime,
+                    Tip = d.Dogadjaj.Tip,
+                    Lokacija = d.Dogadjaj.Lokacija,
+                    Godina = d.Godina,
+                    Tekst = mongo?.Tekst
+                };
+            }).ToList();
+
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Došlo je do greške: {ex.Message}");
+        }
     }
-
-    // Izvrši Neo4j update
-    await cypher.ExecuteWithoutResultsAsync();
-
-    // MongoDB update Teksta
-    if (!string.IsNullOrWhiteSpace(updatedDogadjaj.Tekst))
-    {
-        var update = Builders<DogadjajMongo>.Update.Set(m => m.Tekst, updatedDogadjaj.Tekst);
-        await _mongo.UpdateOneAsync(m => m.ID == id, update, new MongoDB.Driver.UpdateOptions { IsUpsert = true });
-    }
-
-    return Ok($"Uspešno ažuriran događaj '{updatedDogadjaj.Ime}' sa ID: {id}!");
-}
 
 }
