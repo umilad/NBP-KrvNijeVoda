@@ -6,9 +6,11 @@ import Licnost from './pages/Licnost.tsx';
 import Dogadjaji from './pages/Dogadjaji.tsx';
 import Dogadjaj from './pages/Dogadjaj.tsx';
 import DodajDogadjaj from './pages/DogadjajPages/DodajDogadjaj.tsx';
+import AzurirajDogadjaj from './pages/DogadjajPages/AzurirajDogadjaj.tsx'; 
 import Dinastije from './pages/Dinastije.tsx';
 import Dinastija from './pages/Dinastija.tsx';
 import DodajDinastiju from './pages/DinastijaPages/DodajDinastiju.tsx';
+import AzurirajDinastiju from './pages/DinastijaPages/AzurirajDinastiju.tsx'; // nova komponenta
 import DodajLicnost from './pages/LicnostPages/DodajLicnost.tsx';
 import Login from './pages/Login.tsx';
 import Registracija from './pages/Registracija.tsx';
@@ -39,9 +41,11 @@ function App() {
             <Route path="/licnost/:id" element={<Licnost />} />
             <Route path="/dogadjaji" element={<Dogadjaji />} />
             <Route path="/dogadjaj/:id" element={<Dogadjaj />} />
+            <Route path="/dogadjaj/edit/:id" element={<AzurirajDogadjaj />} />
             <Route path="/dodaj-dogadjaj" element={<DodajDogadjaj />} />
             <Route path="/dinastije" element={<Dinastije />} />
             <Route path="/dinastija/:id" element={<Dinastija />} />
+            <Route path="/dinastija/edit/:id" element={<AzurirajDinastiju />} /> {/* nova ruta */}
             <Route path="/dodaj-dinastiju" element={<DodajDinastiju />} />
             <Route path="/dodaj-licnost" element={<DodajLicnost />} /> 
             <Route path="/prijava" element={<Login />} />

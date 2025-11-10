@@ -15,10 +15,11 @@ public class RedisService
             var connectionString = $"rediss://{user}:{password}@{host}:{port},abortConnect=false";
 
             // Connect to Redis
-            var muxer = ConnectionMultiplexer.Connect( new ConfigurationOptions{
-                EndPoints= { {"redis-13125.c311.eu-central-1-1.ec2.redns.redis-cloud.com", 13125} },
-                User="default",
-                Password="olHTtzdeV5iMAuV081w4jWAwRZIRiLkR"
+            var muxer = ConnectionMultiplexer.Connect(new ConfigurationOptions
+            {
+                EndPoints = { { "redis-13125.c311.eu-central-1-1.ec2.redns.redis-cloud.com", 13125 } },
+                User = "default",
+                Password = "olHTtzdeV5iMAuV081w4jWAwRZIRiLkR"
             }
         );
 
@@ -26,7 +27,7 @@ public class RedisService
             _db = muxer.GetDatabase();
 
             Console.WriteLine("Connected to Redis successfully!");
-            
+
         }
         catch (Exception ex)
         {
@@ -36,10 +37,10 @@ public class RedisService
     }
 
 
-    
+
 
     // Set a value in Redis
-     public async Task SetAsync(string key, string value, TimeSpan? expiry = null)
+    public async Task SetAsync(string key, string value, TimeSpan? expiry = null)
     {
         if (_db == null) return; // skip if Redis unavailable
         await _db.StringSetAsync(key, value, expiry);
@@ -61,10 +62,10 @@ public class RedisService
     }
 
     public async Task<bool> DeleteAsync(string key)
-{
-    if (_db == null) return false;
-    return await _db.KeyDeleteAsync(key);
-}
+    {
+        if (_db == null) return false;
+        return await _db.KeyDeleteAsync(key);
+    }
 
     public async Task<bool> ExistsAsync(string key)
     {
@@ -73,28 +74,93 @@ public class RedisService
     }
 
     public async Task AddVisitedPageAsync(string token, string page)
+    {
+        if (_db == null) return;
+        await _db.ListRightPushAsync($"{token}:history", page);
+        await _db.KeyExpireAsync($"{token}:history", TimeSpan.FromHours(2)); // koliko traje token
+    }
+
+    // Vrati listu stranica za dati token
+    public async Task<List<string>> GetVisitedPagesAsync(string token)
+    {
+        if (_db == null) return new List<string>();
+        var values = await _db.ListRangeAsync($"{token}:history");
+        return values.Select(v => v.ToString()).ToList();
+    }
+
+    // Obriši istoriju kad se token obriše
+    public async Task DeleteHistoryAsync(string token)
+    {
+        if (_db == null) return;
+        await _db.KeyDeleteAsync($"{token}:history");
+    }
+
+    // 🟩 Inicijalizuj prazan hash
+public async Task SetHashAsync(string key, Dictionary<string, int> values, TimeSpan? expiry = null)
 {
     if (_db == null) return;
-    await _db.ListRightPushAsync($"{token}:history", page);
-    await _db.KeyExpireAsync($"{token}:history", TimeSpan.FromHours(2)); // koliko traje token
+    
+    if (values != null && values.Count > 0)
+    {
+        var entries = values.Select(v => new HashEntry(v.Key, v.Value)).ToArray();
+        await _db.HashSetAsync(key, entries);
+    }
+
+    if (expiry.HasValue)
+        await _db.KeyExpireAsync(key, expiry);
 }
 
-// Vrati listu stranica za dati token
-public async Task<List<string>> GetVisitedPagesAsync(string token)
-{
-    if (_db == null) return new List<string>();
-    var values = await _db.ListRangeAsync($"{token}:history");
-    return values.Select(v => v.ToString()).ToList();
+
+
+
+// 🟩 Povećaj brojač poseta, sada sa label
+  // Povećaj brojač poseta i sačuvaj label
+    public async Task IncrementPageVisitAsync(string username, string path, string label)
+    {
+        if (_db == null) return;
+
+        string key = username;
+
+        // proveri da li postoji stari value
+        var existing = await _db.HashGetAsync(key, path);
+        int count = 1;
+        if (!existing.IsNullOrEmpty)
+        {
+            var parts = existing.ToString().Split('|');
+            if (parts.Length > 0 && int.TryParse(parts[0], out var existingCount))
+                count = existingCount + 1;
+        }
+
+        // upisi novi value: "count|label"
+        string newValue = $"{count}|{label}";
+        await _db.HashSetAsync(key, path, newValue);
+        await _db.KeyExpireAsync(key, TimeSpan.FromHours(12));
+    }
+
+    // Vrati top posete sa label
+    public async Task<List<object>> GetTopVisitedPagesAsync(string username)
+    {
+        if (_db == null) return new List<object>();
+
+        string key = username;
+        var all = await _db.HashGetAllAsync(key);
+
+        return all
+            .Select(x =>
+            {
+                var parts = x.Value.ToString().Split('|');
+                int count = parts.Length > 0 && int.TryParse(parts[0], out var c) ? c : 0;
+                string label = parts.Length > 1 ? parts[1] : x.Name.ToString();
+                return new { Path = x.Name.ToString(), Count = count, Label = label };
+            })
+            .OrderByDescending(x => x.Count)
+            .Cast<object>()
+            .ToList();
+    }
 }
 
-// Obriši istoriju kad se token obriše
-public async Task DeleteHistoryAsync(string token)
-{
-    if (_db == null) return;
-    await _db.KeyDeleteAsync($"{token}:history");
-}
 
-}
+
 
 
 
