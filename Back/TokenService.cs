@@ -37,7 +37,25 @@ public class TokenService
         };
 
         var token = tokenHandler.CreateToken(tokenDescriptor);
-        return tokenHandler.WriteToken(token); 
+        return tokenHandler.WriteToken(token);
     }
     
+    public string? GetUsernameFromToken(string token)
+{
+    var handler = new JwtSecurityTokenHandler();
+
+    if (!handler.CanReadToken(token))
+        return null;
+
+    var jwtToken = handler.ReadJwtToken(token);
+
+    // tvoj token sadrži i "sub" i "name", koristi bilo koji koji postoji
+    var usernameClaim = jwtToken.Claims.FirstOrDefault(c =>
+        c.Type == JwtRegisteredClaimNames.Sub ||
+        c.Type == JwtRegisteredClaimNames.Name ||
+        c.Type == "unique_name");
+
+    return usernameClaim?.Value;
+}
+
 }

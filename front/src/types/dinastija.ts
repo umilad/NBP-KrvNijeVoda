@@ -2,8 +2,8 @@ export interface Dinastija {
     id: string;
     naziv: string;
     pocetakVladavineGod: number;
-    pocetakVladavinePNE: number;
+    pocetakVladavinePNE: boolean;
     krajVladavineGod: number;
-    krajVladavinePNE: number;
+    krajVladavinePNE: boolean;
     slika?: string;
 }

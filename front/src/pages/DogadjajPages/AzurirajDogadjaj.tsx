@@ -1,44 +1,81 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../AuthContext";
+import type { Dogadjaj, Bitka, Rat, TipDogadjaja } from "../../types/dogadjaj";
 
 interface Zemlja {
   id: string;
   naziv: string;
 }
 
-interface Rat {
+interface RatDropdown {
   id: string;
   ime: string;
   godina?: number;
 }
 
-export default function DodajDogadjaj() {
+export default function AzurirajDogadjaj() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { token } = useAuth();
+
+  // Opšta polja Dogadjaj
   const [ime, setIme] = useState("");
-  const [tip, setTip] = useState("Bitka");
-  const [lokacija, setLokacija] = useState("");
-  const [zemlje, setZemlje] = useState<Zemlja[]>([]);
-  const [godina, setGodina] = useState<number | "">("");
+  const [tip, setTip] = useState<TipDogadjaja>("Bitka");
+  const [lokacija, setLokacija] = useState<string>("");
+  const [godina, setGodina] = useState<string>(""); // string za input controlled
   const [isPNE, setIsPNE] = useState(false);
   const [tekst, setTekst] = useState("");
 
   // Polja za Bitku
-  const [pobednik, setPobednik] = useState("");
-  const [brojZrtava, setBrojZrtava] = useState<number | "">("");
-  const [rat, setRat] = useState("");
+  const [pobednik, setPobednik] = useState<string>("");
+  const [brojZrtava, setBrojZrtava] = useState<string>(""); // string
+  const [rat, setRat] = useState<string>("");
 
   // Polja za Rat
-  const [godinaDo, setGodinaDo] = useState<number | "">("");
+  const [godinaDo, setGodinaDo] = useState<string>(""); // string
   const [bitke, setBitke] = useState<string>("");
 
-  // Fetch za dropdown-e
-  const [ratovi, setRatovi] = useState<Rat[]>([]);
+  // Dropdown-i
+  const [zemlje, setZemlje] = useState<Zemlja[]>([]);
+  const [ratovi, setRatovi] = useState<RatDropdown[]>([]);
 
-  const navigate = useNavigate();
-  const { token } = useAuth();
-
+  // Učitavanje postojećeg dogadjaja i dropdown-a
   useEffect(() => {
+    async function loadDogadjaj() {
+      if (!id) return;
+      try {
+        const res = await axios.get<Dogadjaj | Bitka | Rat>(
+          `http://localhost:5210/api/GetDogadjaj/${id}`
+        );
+        const d = res.data;
+
+        setIme(d.ime);
+        setTip(d.tip);
+        setLokacija(d.lokacija ?? "");
+        setGodina(d.godina?.God?.toString() ?? "");
+        setIsPNE(d.godina?.IsPNE ?? false);
+        setTekst(d.tekst);
+
+        if (d.tip === "Bitka") {
+          const b = d as Bitka;
+          setPobednik(b.pobednik ?? "");
+          setBrojZrtava(b.brojZrtava?.toString() ?? "");
+          setRat(b.rat ?? "");
+        }
+
+        if (d.tip === "Rat") {
+          const r = d as Rat;
+          setPobednik(r.pobednik ?? "");
+          setGodinaDo(r.godinaDo?.God?.toString() ?? "");
+          setBitke(r.bitke.join(", ") ?? "");
+        }
+      } catch (err) {
+        console.error("Greška pri učitavanju događaja:", err);
+      }
+    }
+
     async function fetchZemlje() {
       try {
         const res = await axios.get<Zemlja[]>("http://localhost:5210/api/GetAllZemlje");
@@ -50,64 +87,50 @@ export default function DodajDogadjaj() {
 
     async function fetchRatovi() {
       try {
-        const res = await axios.get<Rat[]>("http://localhost:5210/api/GetAllRatovi");
+        const res = await axios.get<RatDropdown[]>("http://localhost:5210/api/GetAllRatovi");
         setRatovi(res.data);
-        console.log("Ratovi sa servera:", res.data);
       } catch (err) {
         console.error("Greška pri učitavanju ratova:", err);
       }
     }
 
+    loadDogadjaj();
     fetchZemlje();
     fetchRatovi();
-  }, []);
+  }, [id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!ime.trim()) {
-      alert("Ime događaja je obavezno!");
-      return;
-    }
+    if (!ime.trim() || !token || !id) return;
 
-    let endpoint = "http://localhost:5210/api/CreateDogadjaj";
-    let payload: Record<string, unknown> = {
+    const payload: any = {
       Ime: ime,
       Tip: tip,
-      Tekst: tekst || null,
+      Tekst: tekst || undefined,
+      Lokacija: lokacija || undefined,
+      Godina: godina ? { God: Number(godina), IsPNE: isPNE } : undefined,
     };
 
     if (tip === "Bitka") {
-      endpoint = "http://localhost:5210/api/CreateBitka";
-      payload = {
-        ...payload,
-        Pobednik: pobednik || null,
-        BrojZrtava: brojZrtava || null,
-        Rat: rat || null,
-        Lokacija: lokacija || null,
-        Godina: godina === "" ? null : { God: godina, IsPNE: isPNE },
-      };
-    } else if (tip === "Rat") {
-      endpoint = "http://localhost:5210/api/CreateRat";
-      payload = {
-        ...payload,
-        Pobednik: pobednik || null,
-        Lokacija: lokacija || null,
-        Godina: godina === "" ? null : { God: godina, IsPNE: isPNE },
-        GodinaDo: godinaDo === "" ? null : { God: godinaDo, IsPNE: isPNE },
-        Bitke: bitke ? bitke.split(",").map((b) => b.trim()) : [],
-      };
-    } else {
-      payload.Lokacija = lokacija || null;
-      payload.Godina = godina === "" ? null : { God: godina, IsPNE: isPNE };
+      payload.Pobednik = pobednik || undefined;
+      payload.BrojZrtava = brojZrtava ? Number(brojZrtava) : undefined;
+      payload.Rat = rat || undefined;
+    }
+
+    if (tip === "Rat") {
+      payload.Pobednik = pobednik || undefined;
+      payload.GodinaDo = godinaDo ? { God: Number(godinaDo), IsPNE: isPNE } : undefined;
+      payload.Bitke = bitke ? bitke.split(",").map((b) => b.trim()) : undefined;
     }
 
     try {
-      const response = await axios.post(endpoint, payload, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await axios.put(
+        `http://localhost:5210/api/UpdateDogadjaj/${id}`,
+        payload,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       alert(response.data);
       navigate("/dogadjaji");
     } catch (err: unknown) {
@@ -122,7 +145,7 @@ export default function DodajDogadjaj() {
   return (
     <div className="dodaj-dogadjaj my-[180px] w-full flex justify-center">
       <div className="pozadinaForme flex flex-col items-center justify-center relative w-1/3 border-2 border-[#3f2b0a] bg-[#e6cda5] p-[20px] rounded-lg text-center text-[#3f2b0a] shadow-md">
-        <h1 className="text-2xl font-bold mb-[15px]">Dodaj događaj</h1>
+        <h1 className="text-2xl font-bold mb-[15px]">Ažuriraj događaj</h1>
         <form className="w-full flex flex-col gap-4" onSubmit={handleSubmit}>
           <input
             type="text"
@@ -133,47 +156,26 @@ export default function DodajDogadjaj() {
             required
           />
 
+          {/* Dropdown za zemlje */}
           <select
-            value={tip}
-            onChange={(e) => setTip(e.target.value)}
-            className="p-[6px] rounded-[3px] border border-[#3f2b0a] focus:outline-none"
-          >
-            <option>Bitka</option>
-            <option>Rat</option>
-            <option>Ustanak</option>
-            <option>Sporazum</option>
-            <option>Savez</option>
-            <option>Dokument</option>
-          </select>
-
-          <select
-  value={lokacija}
-  onChange={(e) => setLokacija(e.target.value)}
-  className="p-[6px] rounded-[3px] border border-[#3f2b0a] focus:outline-none"
->
-  <option value="">{`Izaberi zemlju`}</option>
-  {zemlje.map((z) => (
-    <option key={z.naziv} value={z.naziv}>
-      {z.naziv}
-    </option>
-  ))}
-  <option value="druga-lokacija">Druga lokacija...</option>
-</select>
-
-          <input
-            type="text"
-            placeholder="Unesi drugu lokaciju"
             value={lokacija}
             onChange={(e) => setLokacija(e.target.value)}
             className="p-[6px] rounded-[3px] border border-[#3f2b0a] focus:outline-none"
-          />
+          >
+            <option value="">Izaberi lokaciju</option>
+            {zemlje.map((z) => (
+              <option key={z.id} value={z.naziv}>
+                {z.naziv}
+              </option>
+            ))}
+          </select>
 
           <div className="flex gap-4 items-center">
             <input
               type="number"
               placeholder="Godina"
               value={godina}
-              onChange={(e) => setGodina(Number(e.target.value))}
+              onChange={(e) => setGodina(e.target.value)}
               className="p-[6px] rounded-[3px] border border-[#3f2b0a] focus:outline-none flex-1"
             />
             <label className="flex items-center gap-2">
@@ -199,10 +201,9 @@ export default function DodajDogadjaj() {
                 type="number"
                 placeholder="Broj žrtava"
                 value={brojZrtava}
-                onChange={(e) => setBrojZrtava(Number(e.target.value))}
+                onChange={(e) => setBrojZrtava(e.target.value)}
                 className="p-[6px] rounded-[3px] border border-[#3f2b0a] focus:outline-none"
               />
-              {console.log("Ratovi:", ratovi)}
               <select
                 value={rat}
                 onChange={(e) => setRat(e.target.value)}
@@ -231,7 +232,7 @@ export default function DodajDogadjaj() {
                 type="number"
                 placeholder="Godina do"
                 value={godinaDo}
-                onChange={(e) => setGodinaDo(Number(e.target.value))}
+                onChange={(e) => setGodinaDo(e.target.value)}
                 className="p-[6px] rounded-[3px] border border-[#3f2b0a] focus:outline-none"
               />
               <input
@@ -255,7 +256,7 @@ export default function DodajDogadjaj() {
             type="submit"
             className="bg-[#3f2b0a] text-[#e6cda5] p-[6px] mb-[15px] rounded-[3px] hover:bg-[#2b1d07] transition font-bold"
           >
-            Kreiraj događaj
+            Sačuvaj promene
           </button>
         </form>
       </div>

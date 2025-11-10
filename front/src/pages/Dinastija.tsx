@@ -1,6 +1,6 @@
 import axios from 'axios';
-import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useEffect, useState, useRef } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import type { Dinastija } from "../types";
 
@@ -8,6 +8,8 @@ export default function Dinastija() {
     const [dinastija, setDinastija] = useState<Dinastija | null>(null);
     const { id } = useParams();
     const { token } = useAuth(); // token je opcionalan
+    const hasTracked = useRef(false); // flag da ne pošaljemo više puta
+    const navigate = useNavigate();
 
     useEffect(() => {
         async function loadDinastija() {
@@ -23,21 +25,24 @@ export default function Dinastija() {
 
                 console.log("Učitana dinastija:", response.data.naziv);
 
-                // Ako postoji token, pratimo posetu
-                if (token) {
-                    try {
-                        const label = `Dinastija: ${response.data.naziv}`;
-                        await axios.post(
-                            "http://localhost:5210/api/Auth/track",
-                            {
-                                path: `/dinastija/${id}`,
-                                label: label
-                            },
-                            { headers: { Authorization: `Bearer ${token}` } }
-                        );
-                    } catch (err) {
-                        console.error("Failed to track page", err);
-                    }
+                // Ako postoji token i još nismo trackovali
+                if (token && !hasTracked.current) {
+                    hasTracked.current = true;
+                    const label = `Dinastija: ${response.data.naziv}`;
+
+                    // track za history list
+                    await axios.post(
+                        "http://localhost:5210/api/Auth/track",
+                        { path: `/dinastija/${id}`, label },
+                        { headers: { Authorization: `Bearer ${token}` } }
+                    );
+
+                    // track za broj poseta (hash)
+                    await axios.post(
+                        "http://localhost:5210/api/Auth/track-visit",
+                        { path: `/dinastija/${id}`, label },
+                        { headers: { Authorization: `Bearer ${token}` } }
+                    );
                 }
 
             } catch (error) {
@@ -48,6 +53,26 @@ export default function Dinastija() {
         loadDinastija();
     }, [id, token]);
 
+    const handleDelete = async () => {
+        if (!id || !token) return;
+        if (!window.confirm("Da li ste sigurni da želite da obrišete ovu dinastiju?")) return;
+
+        try {
+            await axios.delete(`http://localhost:5210/api/DeleteDinastija/${id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            alert("Dinastija obrisana!");
+            navigate("/dinastije");
+        } catch (error) {
+            console.error("Greška prilikom brisanja:", error);
+        }
+    };
+
+    const handleUpdate = () => {
+        if (!id) return;
+        navigate(`/dinastija/edit/${id}`);
+    };
+
     return (
         <div className="dinastije my-[120px]">
             <div className="pozadinaStabla flex flex-col items-center justify-center relative mx-[100px] p-[20px] border-2 border-[#3f2b0a] bg-[#e6cda5] rounded-lg text-center text-[#3f2b0a]">
@@ -56,6 +81,7 @@ export default function Dinastija() {
                     {dinastija?.pocetakVladavineGod} - {dinastija?.krajVladavineGod} 
                     {dinastija?.krajVladavinePNE ? " p. n. e." : ""}
                 </span>
+
                 <div className="stablo">
                     {/* Tree row - person container */}
                     <div className="relative flex justify-center mt-[60px]">
@@ -161,6 +187,24 @@ export default function Dinastija() {
                         </div>
                     </div>
                 </div>
+
+                {/* DUGMAD NA DNU */}
+                {dinastija && token && (
+                    <div className="mt-6 flex gap-4 justify-center">
+                        <button
+                            onClick={handleDelete}
+                            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
+                        >
+                            Obriši
+                        </button>
+                        <button
+                            onClick={handleUpdate}
+                            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                        >
+                            Ažuriraj
+                        </button>
+                    </div>
+                )}
             </div>
         </div>
     );
