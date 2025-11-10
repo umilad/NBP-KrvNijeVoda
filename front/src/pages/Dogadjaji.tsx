@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { Dogadjaj } from "../types";
+import type { Dogadjaj, Rat, Bitka } from "../types";
 import { useSearch } from "../components/SearchContext";
 import { useAuth } from "../pages/AuthContext"; // ✅ import auth konteksta
 
@@ -12,20 +12,54 @@ export default function Dogadjaji() {
     const { role } = useAuth(); // ✅ dohvat role korisnika
 
     // API poziv
-    async function GetAllDogadjaji() {
-        try {
-            const response = await axios.get<Dogadjaj[]>("http://localhost:5210/api/GetAllDogadjaji");
-            return response.data;
-        } catch (error) {
-            console.error("Error fetching dogadjaji:", error);
-            return [];
-        }
-    }
-
+    
     useEffect(() => {
+        async function GetAllDogadjaji() {
+            try {
+                const response = await axios.get<Dogadjaj[]>("http://localhost:5210/api/GetAllDogadjaji");
+                return response.data;
+            } catch (error) {
+                console.error("Error fetching dogadjaji:", error);
+                return [];
+            }
+        }
+
+        async function GetAllBitke() {
+            try {
+                const response = await axios.get<Bitka[]>("http://localhost:5210/api/GetAllBitke");
+                return response.data;
+            } catch (error) {
+                console.error("Error fetching bitke:", error);
+                return [];
+            }
+        }
+
+        async function GetAllRatovi() {
+            try {
+                const response = await axios.get<Rat[]>("http://localhost:5210/api/GetAllRatovi");
+                return response.data;
+            } catch (error) {
+                console.error("Error fetching ratovi:", error);
+                return [];
+            }
+        }
         async function loadAllDogadjaji() {
-            const data = await GetAllDogadjaji();
-            setDogadjaji(data);
+            try {
+                const [dogadjajiData, ratoviData, bitkeData] = await Promise.all([
+                    GetAllDogadjaji(),
+                    GetAllRatovi(),
+                    GetAllBitke()
+                ]);
+                const allData = [
+                    ...(dogadjajiData ?? []),
+                    ...(ratoviData ?? []),
+                    ...(bitkeData ?? [])
+                ]
+                setDogadjaji(allData);
+            }
+            catch (error) {
+                console.error("Error loading events:", error);
+            }            
         }
         loadAllDogadjaji();
     }, []);
@@ -62,9 +96,9 @@ export default function Dogadjaji() {
                             {dogadjaj.godina ? `${dogadjaj.godina.god}` : ""}
                             {dogadjaj
                                 ? (("godinaDo" in dogadjaj && dogadjaj.godinaDo)
-                                    ? ` - ${dogadjaj.godinaDo}. ${dogadjaj.godinaDo ? "p.n.e." : ""}`
+                                    ? ` - ${dogadjaj.godinaDo}. ${dogadjaj.godinaDo ? " p.n.e." : ""}`
                                     : dogadjaj.godina
-                                        ? `${dogadjaj.godina ? "p. n. e." : ""}`
+                                        ? `${dogadjaj.godina ? " p. n. e." : ""}`
                                         : "")
                                 : ""}
                         </span>

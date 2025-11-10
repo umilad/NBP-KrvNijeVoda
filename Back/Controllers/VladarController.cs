@@ -779,8 +779,84 @@ public class VladarController : ControllerBase
                                 .ExecuteWithoutResultsAsync();
             await _vladarCollection.DeleteOneAsync(d => d.ID == id);
             return Ok($"Vladar sa id:{id} uspesno obrisan iz baze!");
-        }        
-        catch (Exception ex)  
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
+        }
+    }
+    
+    [HttpGet("GetAllVladare")]
+    public async Task<IActionResult> GetAllVladare()
+    {
+        try
+        {
+            var vladari = (await _client.Cypher.Match("(v:Licnost:Vladar)")
+                                          //   .OptionalMatch("(l)-[r:RODJEN]->(gr:Godina)")
+                                          //   .OptionalMatch("(l)-[r2:UMRO]->(gs:Godina)")
+                                          //   .OptionalMatch("(l)-[r3:RODJEN_U]->(m:Lokacija)-[:PRIPADA_ZEMLJI]->(z:Zemlja)")
+                                          //   .OptionalMatch("(l)-[r4:VLADAO_OD]->(gpv:Godina)")
+                                          //   .OptionalMatch("(l)-[r5:VLADAO_DO]->(gkv:Godina)")
+                                          .OptionalMatch("(v)-[r6:PRIPADA_DINASTIJI]->(d:Dinastija)")
+                                          // .Return((l, gr, gs, m, z, gpv, gkv, d) => new {
+                                          //     Vladar = l.As<Vladar>(),
+                                          //     Rodjen = gr.As<Godina>(),
+                                          //     Umro = gs.As<Godina>(),
+                                          //     Mesto =  m.As<Lokacija>(),
+                                          //     Zemlja = z.As<Zemlja>(),
+                                          //     Pocetak = gpv.As<Godina>(),
+                                          //     Kraj = gkv.As<Godina>(),
+                                          //     Dinastija = d.As<Dinastija>()                                        
+                                          // }) 
+                                          .Return((v, d) => new
+                                          {
+                                              Vladar = v.As<VladarNeo>(),
+                                              Dinastija = d.As<DinastijaNeo>()
+                                          })
+                                          //.Return(vl => vl.As<Vladar>())
+                                          .ResultsAsync)
+                                          .ToList();
+
+
+            if (!vladari.Any())
+            {
+                return BadRequest($"Nijedan vladar nije pronađen u bazi!");
+            }
+
+            var ids = vladari.Select(v => v.Vladar.ID).ToList();
+            var mongoList = await _vladarCollection.Find(m => ids.Contains(m.ID)).ToListAsync();
+
+            var result = vladari.Select(vl =>
+            {
+                var mongo = mongoList.FirstOrDefault(m => m.ID == vl.Vladar.ID);
+                return new VladarDto
+                {
+                    ID = vl.Vladar.ID,
+                    Titula = vl.Vladar.Titula,
+                    Ime = vl.Vladar.Ime,
+                    Prezime = vl.Vladar.Prezime,
+                    GodinaRodjenja = vl.Vladar.GodinaRodjenja,
+                    GodinaRodjenjaPNE = vl.Vladar.GodinaRodjenjaPNE,
+                    GodinaSmrti = vl.Vladar.GodinaSmrti,
+                    GodinaSmrtiPNE = vl.Vladar.GodinaSmrtiPNE,
+                    Pol = vl.Vladar.Pol,
+                    //Slika = vl.Vladar.Slika,
+                    MestoRodjenja = vl.Vladar.MestoRodjenja,
+                    //Tekst = vl.Vladar.Tekst,
+                    Dinastija = vl.Dinastija, // ?? new Dinastija() ne moze jer mora da ima naziv da bi kreirao novu zato sad ostavljam ovako 
+                    PocetakVladavineGod = vl.Vladar.PocetakVladavineGod,
+                    PocetakVladavinePNE = vl.Vladar.PocetakVladavinePNE,
+                    KrajVladavineGod = vl.Vladar.KrajVladavineGod,
+                    KrajVladavinePNE = vl.Vladar.KrajVladavinePNE,
+                    //Clanovi = item.Clanovi?.ToList() ?? new List<Licnost>()  // If no Licnost found, return empty list
+                    Tekst = mongo?.Tekst,
+                    Slika = mongo?.Slika,
+                    Teritorija = mongo.Teritorija
+                };
+            });
+            return Ok(result);
+        }
+        catch (Exception ex)
         {
             return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
         }

@@ -1,10 +1,28 @@
 import { useLocation } from "react-router-dom";
-import { useMemo } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { useSearch } from "./SearchContext";
 
-export default function SearchBar() {
+interface SearchBarProps {
+  onSearch?: () => void; // optional prop
+}
+
+export default function SearchBar({ onSearch }: SearchBarProps) {
     const location = useLocation();
-    const { query, setQuery } = useSearch();
+    const { query, setQuery } = useSearch();    
+    const [typing, setTyping] = useState(false);
+
+    useEffect(() => {
+        if (!onSearch) return;
+        if (!query) return;
+
+        setTyping(true);
+        const timeout = setTimeout(() => {
+        onSearch();
+        setTyping(false);
+        }, 500);
+
+        return () => clearTimeout(timeout);
+    }, [query, onSearch]);
 
     const placeholder = useMemo(() => {
         if (location.pathname.startsWith("/licnosti")) return "Pretraži ličnosti...";
@@ -12,7 +30,7 @@ export default function SearchBar() {
         if (location.pathname.startsWith("/dogadjaj")) return "Pretraži događaje...";
         if (location.pathname.startsWith("/dinastije")) return "Pretraži dinastije...";        
         if (location.pathname.startsWith("/dinastija")) return "Pretraži dinastije...";
-        return "Pretraži...";
+        return "Pretraži godine...";
     }, [location.pathname]);
 
     const isDisabled = useMemo(() => {

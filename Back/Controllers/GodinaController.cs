@@ -166,15 +166,15 @@ public async Task<IActionResult> ExportDatabaseAsCypherString()
     [HttpPut("UpdateGodina/{id}")]
     public async Task<IActionResult> UpdateGodina(Guid id, [FromBody] GodinaDto updatedGodina)
     {
-        try 
+        try
         {
-    
+
             var god = (await _client.Cypher.Match("(g:Godina)")
                                     .Where((GodinaNeo g) => g.ID == id)
                                     .Return(g => g.As<GodinaNeo>())
                                     .ResultsAsync)
                                     .FirstOrDefault();
-                
+
 
             if (god == null)
                 return NotFound($"Godina sa ID: {id} nije pronađena.");
@@ -199,9 +199,69 @@ public async Task<IActionResult> ExportDatabaseAsCypherString()
             return Ok($"Godina sa ID: {id} uspešno ažurirana.");
         }
 
-        catch (Exception ex)  
+        catch (Exception ex)
         {
             return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
+        }
+    }
+
+
+    [HttpGet("GetAllEventsForGodina/{god}")]
+    public async Task<IActionResult> GetAllEventsForGodina(int god)
+    {
+        try
+        {
+            var results = new Dictionary<string, object>();
+
+            var dogadjaji = await _client.Cypher
+                .Match("(d:Dogadjaj)-[:DESIO_SE]->(g:Godina)")
+                .Where("NOT (d:Bitka OR d:Rat)")
+                .AndWhere((GodinaNeo g) => g.God == god)
+                .Return(d => d.As<DogadjajNeo>())
+                .ResultsAsync;
+            results["dogadjaji"] = dogadjaji;
+
+            var bitke = await _client.Cypher
+                .Match("(d:Dogadjaj:Bitka)-[:DESIO_SE]->(g:Godina)")
+                .Where((GodinaNeo g) => g.God == god)
+                .Return(d => d.As<BitkaNeo>())
+                .ResultsAsync;
+            results["bitke"] = bitke;
+
+            var ratovi = await _client.Cypher
+                .Match("(r:Dogadjaj:Rat)-[rel]->(g:Godina)")
+                .Where("(type(rel)='DESIO_SE' OR type(rel)='RAT_TRAJAO_DO')")
+                .AndWhere((GodinaNeo g) => g.God == god)
+                .Return(r => r.As<RatNeo>())
+                .ResultsAsync;
+            results["ratovi"] = ratovi;
+
+            var vladari = await _client.Cypher
+                .Match("(v:Vladar)-[r:VLADAO_OD|VLADAO_DO|RODJEN|UMRO]->(g:Godina)")
+                .Where((GodinaNeo g) => g.God == god)
+                .Return(v => v.As<VladarNeo>())
+                .ResultsAsync;
+            results["vladari"] = vladari;
+
+            var licnosti = await _client.Cypher
+                .Match("(l:Licnost)-[r:RODJEN|UMRO]->(g:Godina)")
+                .Where((GodinaNeo g) => g.God == god)
+                .Return(l => l.As<LicnostNeo>())
+                .ResultsAsync;
+            results["licnosti"] = licnosti;
+
+            var dinastije = await _client.Cypher
+                .Match("(d:Dinastija)-[r:POCETAK_VLADAVINE|KRAJ_VLADAVINE]->(g:Godina)")
+                .Where((GodinaNeo g) => g.God == god)
+                .Return(d => d.As<DinastijaNeo>())
+                .ResultsAsync;
+            results["dinastije"] = dinastije;
+
+            return Ok(results);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Došlo je do greške pri radu sa bazom: {ex.Message}");
         }
     }
 
