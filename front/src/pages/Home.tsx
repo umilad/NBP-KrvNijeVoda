@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import YearTimeline from '../components/YearTimeline.tsx';
 import type { YearTimelineHandle } from '../components/YearTimeline.tsx';
 import DinastijaPrikaz from "../components/DinastijaPrikaz";
-import type { AllEventsForGodinaResponse, Godina } from "../types";
+import type { AllEventsForGodinaResponse } from "../types";
 import { useSearch } from "../components/SearchContext";
 import axios from "axios";
 import Searchbar from "../components/Searchbar";
@@ -11,26 +11,26 @@ export default function Home() {
   const timelineRef = useRef<YearTimelineHandle>(null); // could use proper type for forwardRef
   const [activeYear, setActiveYear] = useState<number>(0);
   const [allActiveYearEvents, setAllActiveYearEvents] = useState<AllEventsForGodinaResponse| null>(null);
-  const [godine, setGodine] = useState<Godina[]>([]);
+  //const [godine, setGodine] = useState<Godina[]>([]);
   const { query } = useSearch();
 
   useEffect(() => {
-    async function GetAllGodine(){
-      try {
-        const response = await axios.get<Godina[]>(`http://localhost:5210/api/GetAllGodine`);
-        return response.data;
-      } catch (error) {
-          console.error("Error fetching godine:", error);
-          return [];
-      }
-    }
+    // async function GetAllGodine(){
+    //   try {
+    //     const response = await axios.get<Godina[]>(`http://localhost:5210/api/GetAllGodine`);
+    //     return response.data;
+    //   } catch (error) {
+    //       console.error("Error fetching godine:", error);
+    //       return [];
+    //   }
+    // }
 
-    async function loadAllGodine(){
-      const data = await GetAllGodine();
-      setGodine(data);
-    }
+    // async function loadAllGodine(){
+    //   const data = await GetAllGodine();
+    //   setGodine(data);
+    // }
 
-    loadAllGodine();
+    // loadAllGodine();
 
     async function GetAllEventsForGodina(){
       try {

@@ -71,12 +71,12 @@ export default function Dogadjaj() {
             <div className="absolute top-30 w-5/6 mx-[100px] p-[20px] block border-2 border-[#3f2b0a] bg-[#e6cda5] rounded-lg text-center text-[#3f2b0a] mt-4">
                 <p className="text-2xl font-bold mt-2">{dogadjaj?.ime}</p>
                 <span className="text-xl font-bold mt-2">
-                    {dogadjaj?.godina ? `${dogadjaj?.godina.god}` : ""}
+                    {dogadjaj?.godina ? `${dogadjaj?.godina.god}.` : ""}
                     {dogadjaj
                         ? (("godinaDo" in dogadjaj && dogadjaj.godinaDo)
-                            ? ` - ${dogadjaj.godinaDo}. ${dogadjaj.godinaDo ? "p.n.e." : "" }`
+                            ? ` - ${dogadjaj.godinaDo}. ${dogadjaj.godinaDo ? " p.n.e." : "" }`
                             : dogadjaj.godina
-                                ? `${dogadjaj.godina ? "p. n. e." : ""}` 
+                                ? `${dogadjaj.godina ? " p. n. e." : ""}` 
                                 : "")
                         : ""}
                 </span>

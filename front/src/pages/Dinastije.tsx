@@ -61,7 +61,7 @@ export default function Dinastije() {
                     >
                         <span className='dogadjaj-header text-xl font-bold mt-2'>{dinastija.naziv}</span>
                         <span className='dogadjaj-godina text-l font-bold mt-2'>
-                            {dinastija.pocetakVladavineGod} - {dinastija.krajVladavineGod} 
+                            {dinastija.pocetakVladavineGod} - {dinastija.krajVladavineGod}. 
                             {dinastija.krajVladavinePNE ? " p. n. e." : ""}
                         </span>
 

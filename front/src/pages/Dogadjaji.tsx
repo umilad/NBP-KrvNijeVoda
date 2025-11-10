@@ -93,7 +93,7 @@ export default function Dogadjaji() {
                         
                         <span className='dogadjaj-header text-xl font-bold mt-2'>{dogadjaj.ime}</span>
                         <span className='dogadjaj-godina text-l font-bold mt-2'>
-                            {dogadjaj.godina ? `${dogadjaj.godina.god}` : ""}
+                            {dogadjaj.godina ? `${dogadjaj.godina.god}.` : ""}
                             {dogadjaj
                                 ? (("godinaDo" in dogadjaj && dogadjaj.godinaDo)
                                     ? ` - ${dogadjaj.godinaDo}. ${dogadjaj.godinaDo ? " p.n.e." : ""}`
@@ -101,9 +101,6 @@ export default function Dogadjaji() {
                                         ? `${dogadjaj.godina ? " p. n. e." : ""}`
                                         : "")
                                 : ""}
-                        </span>
-                        <span className='text-justify'>
-                            {dogadjaj.tekst}
                         </span>
                     </div>
                 ))}

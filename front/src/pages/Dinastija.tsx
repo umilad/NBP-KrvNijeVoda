@@ -78,7 +78,7 @@ export default function Dinastija() {
             <div className="pozadinaStabla flex flex-col items-center justify-center relative mx-[100px] p-[20px] border-2 border-[#3f2b0a] bg-[#e6cda5] rounded-lg text-center text-[#3f2b0a]">
                 <p className="text-2xl font-bold">{dinastija?.naziv}</p>
                 <span className="text-xl font-bold mb-[10px]">
-                    {dinastija?.pocetakVladavineGod} - {dinastija?.krajVladavineGod} 
+                    {dinastija?.pocetakVladavineGod} - {dinastija?.krajVladavineGod}. 
                     {dinastija?.krajVladavinePNE ? " p. n. e." : ""}
                 </span>
 
