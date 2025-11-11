@@ -13,6 +13,7 @@ export interface Licnost {
     mestoRodjenja?: string;
     slika?: string;
     tekst?: string;
+    isVladar : boolean;
 }
 
 export interface Vladar extends Licnost {

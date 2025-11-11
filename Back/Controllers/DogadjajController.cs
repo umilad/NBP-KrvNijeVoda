@@ -121,7 +121,7 @@ public async Task<IActionResult> CreateDogadjaj([FromBody] DogadjajDto dogadjaj)
                 .Match("(d:Dogadjaj)")
                 .Where((DogadjajNeo d) => d.ID == id)
                 .OptionalMatch("(d)-[:DESIO_SE]->(g:Godina)")
-                //.OptionalMatch("(d)-[:DESIO_SE_U]->(z:Zemlja)")
+                .OptionalMatch("(d)-[:DESIO_SE_U]->(z:Zemlja)")
                 .Return((d, g) => new
                 {
                     Dogadjaj = d.As<DogadjajNeo>(),
@@ -135,7 +135,6 @@ public async Task<IActionResult> CreateDogadjaj([FromBody] DogadjajDto dogadjaj)
 
             // 2. Dohvatanje Teksta iz Mongo
             var mongo = await _mongo.Find(m => m.ID == id).FirstOrDefaultAsync();
-
             // 3. Kombinovanje u DTO
             var result = new DogadjajDto
             {

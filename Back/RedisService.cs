@@ -115,27 +115,38 @@ public async Task SetHashAsync(string key, Dictionary<string, int> values, TimeS
 
 // 🟩 Povećaj brojač poseta, sada sa label
   // Povećaj brojač poseta i sačuvaj label
-    public async Task IncrementPageVisitAsync(string username, string path, string label)
+  public async Task IncrementPageVisitAsync(string username, string path, string label)
+{
+    if (_db == null) return;
+
+    string key = username;
+
+    // ⚡️ Provera tipa Redis ključa
+    var keyType = await _db.KeyTypeAsync(key);
+    if (keyType != RedisType.Hash)
     {
-        if (_db == null) return;
-
-        string key = username;
-
-        // proveri da li postoji stari value
-        var existing = await _db.HashGetAsync(key, path);
-        int count = 1;
-        if (!existing.IsNullOrEmpty)
-        {
-            var parts = existing.ToString().Split('|');
-            if (parts.Length > 0 && int.TryParse(parts[0], out var existingCount))
-                count = existingCount + 1;
-        }
-
-        // upisi novi value: "count|label"
-        string newValue = $"{count}|{label}";
-        await _db.HashSetAsync(key, path, newValue);
-        await _db.KeyExpireAsync(key, TimeSpan.FromHours(12));
+        // Ako nije hash (ili ne postoji), obriši i kreiraj prazan hash
+        await _db.KeyDeleteAsync(key);
+        await _db.HashSetAsync(key, new HashEntry[] { });
     }
+
+    // Provera postojeće vrednosti
+    var existing = await _db.HashGetAsync(key, path);
+    int count = 1;
+    if (!existing.IsNullOrEmpty)
+    {
+        var parts = existing.ToString().Split('|');
+        if (parts.Length > 0 && int.TryParse(parts[0], out var existingCount))
+            count = existingCount + 1;
+    }
+
+    // Upis nove vrednosti: "count|label"
+    string newValue = $"{count}|{label}";
+    await _db.HashSetAsync(key, path, newValue);
+
+    // Opcionalno: postavi expiry na 12h
+    await _db.KeyExpireAsync(key, TimeSpan.FromHours(12));
+}
 
     // Vrati top posete sa label
     public async Task<List<object>> GetTopVisitedPagesAsync(string username)

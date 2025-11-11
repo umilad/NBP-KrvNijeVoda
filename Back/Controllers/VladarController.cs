@@ -28,144 +28,154 @@ public class VladarController : ControllerBase
     }
 
     [HttpPost("CreateVladar")]
-    public async Task<IActionResult> CreateVladar([FromBody] VladarDto vladar)
+public async Task<IActionResult> CreateVladar([FromBody] VladarDto vladar)
+{
+    try
     {
-        try
+        // Provera da li vladar već postoji
+        var postojeciVladar = (await _client.Cypher
+            .Match("(l:Licnost:Vladar)")
+            .Where("toLower(l.Titula) = toLower($titula) AND toLower(l.Ime) = toLower($ime) AND toLower(l.Prezime) = toLower($prezime)")
+            .WithParam("titula", vladar.Titula)
+            .WithParam("ime", vladar.Ime)
+            .WithParam("prezime", vladar.Prezime)
+            .Return(l => l.As<VladarNeo>())
+            .ResultsAsync)
+            .FirstOrDefault();
+
+        if (postojeciVladar != null)
+            return BadRequest($"Vladar {vladar.Titula} {vladar.Ime} {vladar.Prezime} već postoji u bazi sa ID: {postojeciVladar.ID}!");
+
+        var vladarID = Guid.NewGuid();
+
+        // Kreiranje Vladara
+        var query = _client.Cypher.Create("(v:Licnost:Vladar {ID: $id, Titula: $titula, Ime: $ime, Prezime: $prezime, Pol: $pol, MestoRodjenja: $mestoRodjenja})")
+            .WithParam("id", vladarID)
+            .WithParam("titula", vladar.Titula)
+            .WithParam("ime", vladar.Ime)
+            .WithParam("prezime", vladar.Prezime)
+            .WithParam("pol", vladar.Pol)
+            .WithParam("mestoRodjenja", vladar.MestoRodjenja);
+
+        // Godina rođenja
+        if (vladar.GodinaRodjenja != 0)
         {
-            //obavezni atributi    titula ime prezime na frontu    
-            var postojeciVladar = (await _client.Cypher.Match("(l:Licnost:Vladar)")
-                                                       .Where("toLower(l.Titula) = toLower($titula) AND toLower(l.Ime) = toLower($ime) AND toLower(l.Prezime) = toLower($prezime)") 
-                                                       .WithParam("titula", vladar.Titula)
-                                                       .WithParam("ime", vladar.Ime)
-                                                       .WithParam("prezime", vladar.Prezime)
-                                                       .Return(l => l.As<VladarNeo>())
-                                                       .ResultsAsync)
-                                                       .FirstOrDefault();
-
-
-            if (postojeciVladar != null)
-                return BadRequest($"Vladar {vladar.Titula} {vladar.Ime} {vladar.Prezime} vec postoji u bazi sa ID: {postojeciVladar.ID}!");
-
-            var vladarID = Guid.NewGuid();
-            var query = _client.Cypher.Create("(v:Licnost:Vladar {ID: $id, Titula: $titula, Ime: $ime, Prezime: $prezime, Pol: $pol, MestoRodjenja: $mestoRodjenja})")
-                                      .WithParam("id", vladarID)
-                                      .WithParam("titula", vladar.Titula)
-                                      .WithParam("ime", vladar.Ime)
-                                      .WithParam("prezime", vladar.Prezime)
-                                      .WithParam("pol", vladar.Pol)
-                                      .WithParam("mestoRodjenja", vladar.MestoRodjenja);
-                                      
-
-            if (vladar.GodinaRodjenja != 0)
-            {
-                await _godinaService.DodajGodinu(vladar.GodinaRodjenja, vladar.GodinaRodjenjaPNE);
-                query = query.With("v")
-                             .Match("(gr:Godina {God: $rodj, IsPNE: $pner})")
-                             .WithParam("rodj", vladar.GodinaRodjenja)
-                             .WithParam("pner", vladar.GodinaRodjenjaPNE)
-                             .Set("v.GodinaRodjenja = $rodj, v.GodinaRodjenjaPNE = $pner")
-                             .Create("(v)-[:RODJEN]->(gr)");
-            }
-            if (vladar.GodinaSmrti != 0)
-            {
-                await _godinaService.DodajGodinu(vladar.GodinaSmrti, vladar.GodinaSmrtiPNE);
-                query = query.With("v")
-                             .Match("(gs:Godina {God: $smrt, IsPNE: $pnes})")
-                             .WithParam("smrt", vladar.GodinaSmrti)
-                             .WithParam("pnes", vladar.GodinaSmrtiPNE)
-                             .Set("v.GodinaSmrti = $smrt, v.GodinaSmrtiPNE = $pnes")
-                             .Create("(v)-[:UMRO]->(gs)");
-            }
-
-            if (vladar.PocetakVladavineGod != 0)
-            {
-                await _godinaService.DodajGodinu(vladar.PocetakVladavineGod, vladar.PocetakVladavinePNE);
-                query = query.With("v")
-                             .Match("(gp:Godina {God: $poc, IsPNE: $pne})")
-                             .WithParam("poc", vladar.PocetakVladavineGod)
-                             .WithParam("pne", vladar.PocetakVladavinePNE)
-                             .Set("v.PocetakVladavineGod = $poc, v.PocetakVladavinePNE = $pne")
-                             .Create("(v)-[:VLADAO_OD]->(gp)");
-            }
-
-            if (vladar.KrajVladavineGod != 0)
-            {
-                await _godinaService.DodajGodinu(vladar.KrajVladavineGod, vladar.KrajVladavinePNE);
-                query = query.With("v")
-                             .Match("(gk:Godina {God: $gkv, IsPNE: $kvpne})")
-                             .WithParam("gkv", vladar.KrajVladavineGod)
-                             .WithParam("kvpne", vladar.KrajVladavinePNE)
-                             .Set("v.KrajVladavineGod = $gkv, v.KrajVladavinePNE = $kvpne")
-                             .Create("(v)-[:VLADAO_DO]->(gk)");
-            }
-
-            if (!string.IsNullOrWhiteSpace(vladar.MestoRodjenja) && vladar.MestoRodjenja != "string")
-            {
-                var z = (await _client.Cypher.Match("(z:Zemlja)")
-                                             .Where("toLower(z.Naziv) = toLower($naziv)")
-                                             .WithParam("naziv", vladar.MestoRodjenja)
-                                             .Return(z => z.As<ZemljaNeo>())
-                                             .ResultsAsync)
-                                             .FirstOrDefault();
-
-                if (z != null)
-                    query = query.With("v")
-                                 .Match("(z:Zemlja)")
-                                 .Where("toLower(z.Naziv) = toLower($naziv)")
-                                 .WithParam("naziv", vladar.MestoRodjenja)
-                                 .Create("(v)-[:RODJEN_U]->(z)")
-                                 .Set("v.MestoRodjenja = $naziv");
-                else
-                    query = query.With("v")
-                                 .Set("v.MestoRodjenja = $mr")
-                                 .WithParam("mr", "string");
-            }
-
-            if (vladar.Dinastija != null)
-            //napravi DINASTIJASERVICE
-            {
-                if (!string.IsNullOrWhiteSpace(vladar.Dinastija.Naziv) || vladar.Dinastija.Naziv != "string")
-                {
-                    var din = (await _client.Cypher.Match("(d:Dinastija)")
-                                                   .Where("toLower(d.Naziv) = toLower($naziv)")
-                                                   .WithParam("naziv", vladar.Dinastija.Naziv)
-                                                   .Return(d => d.As<DinastijaNeo>())
-                                                   .ResultsAsync)
-                                                   .FirstOrDefault();
-
-                    if (din != null)
-                    {
-                        //vladar.Dinastija = din;
-                        query = query.With("v")
-                                     .Match("(d:Dinastija)")
-                                     .Where("toLower(d.Naziv) = toLower($naziv)")
-                                     .WithParam("naziv", vladar.Dinastija.Naziv)
-                                     .Create("(v)-[:PRIPADA_DINASTIJI]->(d)");
-                        //za setovanje parametara svih.Set("d.Dinastija")
-                        //nema potrebe jer ih ne ocitavam tu a kad povuce vezu videce sve 
-                    }
-                }
-            }
-
-            await query.ExecuteWithoutResultsAsync();
-             if (!string.IsNullOrWhiteSpace(vladar.Tekst)||!string.IsNullOrWhiteSpace(vladar.Slika)|| !string.IsNullOrWhiteSpace(vladar.Teritorija))
-            {
-                var vladarMongo = new VladarMongo
-                {
-                    ID = Guid.Parse(vladarID.ToString()),
-                    Tekst = vladar.Tekst,
-                    Slika = vladar.Slika,
-                    Teritorija = vladar.Teritorija
-                };
-                await _vladarCollection.InsertOneAsync(vladarMongo);
-            }
-            return Ok($"Uspesno dodata vladar sa id:{vladarID} u bazu!");
+            await _godinaService.DodajGodinu(vladar.GodinaRodjenja, vladar.GodinaRodjenjaPNE);
+            query = query.With("v")
+                         .Match("(gr:Godina {God: $rodj, IsPNE: $pner})")
+                         .WithParam("rodj", vladar.GodinaRodjenja)
+                         .WithParam("pner", vladar.GodinaRodjenjaPNE)
+                         .Set("v.GodinaRodjenja = $rodj, v.GodinaRodjenjaPNE = $pner")
+                         .Create("(v)-[:RODJEN]->(gr)");
         }
-        catch (Exception ex)
+
+        // Godina smrti
+        if (vladar.GodinaSmrti != 0)
         {
-            return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
+            await _godinaService.DodajGodinu(vladar.GodinaSmrti, vladar.GodinaSmrtiPNE);
+            query = query.With("v")
+                         .Match("(gs:Godina {God: $smrt, IsPNE: $pnes})")
+                         .WithParam("smrt", vladar.GodinaSmrti)
+                         .WithParam("pnes", vladar.GodinaSmrtiPNE)
+                         .Set("v.GodinaSmrti = $smrt, v.GodinaSmrtiPNE = $pnes")
+                         .Create("(v)-[:UMRO]->(gs)");
         }
+
+        // Početak vladavine
+        if (vladar.PocetakVladavineGod != 0)
+        {
+            await _godinaService.DodajGodinu(vladar.PocetakVladavineGod, vladar.PocetakVladavinePNE);
+            query = query.With("v")
+                         .Match("(gp:Godina {God: $poc, IsPNE: $pne})")
+                         .WithParam("poc", vladar.PocetakVladavineGod)
+                         .WithParam("pne", vladar.PocetakVladavinePNE)
+                         .Set("v.PocetakVladavineGod = $poc, v.PocetakVladavinePNE = $pne")
+                         .Create("(v)-[:VLADAO_OD]->(gp)");
+        }
+
+        // Kraj vladavine
+        if (vladar.KrajVladavineGod != 0)
+        {
+            await _godinaService.DodajGodinu(vladar.KrajVladavineGod, vladar.KrajVladavinePNE);
+            query = query.With("v")
+                         .Match("(gk:Godina {God: $gkv, IsPNE: $kvpne})")
+                         .WithParam("gkv", vladar.KrajVladavineGod)
+                         .WithParam("kvpne", vladar.KrajVladavinePNE)
+                         .Set("v.KrajVladavineGod = $gkv, v.KrajVladavinePNE = $kvpne")
+                         .Create("(v)-[:VLADAO_DO]->(gk)");
+        }
+
+        // Mesto rodjenja
+        if (!string.IsNullOrWhiteSpace(vladar.MestoRodjenja) && vladar.MestoRodjenja != "string")
+        {
+            var z = (await _client.Cypher.Match("(z:Zemlja)")
+                                         .Where("toLower(z.Naziv) = toLower($mestoNaziv)")
+                                         .WithParam("mestoNaziv", vladar.MestoRodjenja)
+                                         .Return(z => z.As<ZemljaNeo>())
+                                         .ResultsAsync)
+                                         .FirstOrDefault();
+
+            if (z != null)
+            {
+                query = query.With("v")
+                             .Match("(z:Zemlja)")
+                             .Where("toLower(z.Naziv) = toLower($mestoNaziv)")
+                             .WithParam("mestoNaziv", vladar.MestoRodjenja)
+                             .Create("(v)-[:RODJEN_U]->(z)")
+                             .Set("v.MestoRodjenja = $mestoNaziv");
+            }
+            else
+            {
+                query = query.With("v")
+                             .Set("v.MestoRodjenja = $mr")
+                             .WithParam("mr", "string");
+            }
+        }
+
+        // Dinastija
+        if (vladar.Dinastija != null && !string.IsNullOrWhiteSpace(vladar.Dinastija.Naziv) && vladar.Dinastija.Naziv != "string")
+        {
+            var din = (await _client.Cypher.Match("(d:Dinastija)")
+                                           .Where("toLower(d.Naziv) = toLower($dinNaziv)")
+                                           .WithParam("dinNaziv", vladar.Dinastija.Naziv)
+                                           .Return(d => d.As<DinastijaNeo>())
+                                           .ResultsAsync)
+                                           .FirstOrDefault();
+
+            if (din != null)
+            {
+                query = query.With("v")
+                             .Match("(d:Dinastija)")
+                             .Where("toLower(d.Naziv) = toLower($dinNaziv)")
+                             .WithParam("dinNaziv", vladar.Dinastija.Naziv)
+                             .Create("(v)-[:PRIPADA_DINASTIJI]->(d)");
+            }
+        }
+
+        // Izvrši query
+        await query.ExecuteWithoutResultsAsync();
+
+        // MongoDB za dodatne podatke
+        if (!string.IsNullOrWhiteSpace(vladar.Tekst) || !string.IsNullOrWhiteSpace(vladar.Slika) || !string.IsNullOrWhiteSpace(vladar.Teritorija))
+        {
+            var vladarMongo = new VladarMongo
+            {
+                ID = vladarID,
+                Tekst = vladar.Tekst,
+                Slika = vladar.Slika,
+                Teritorija = vladar.Teritorija
+            };
+            await _vladarCollection.InsertOneAsync(vladarMongo);
+        }
+
+        return Ok($"Uspešno dodat vladar sa id:{vladarID} u bazu!");
     }
+    catch (Exception ex)
+    {
+        return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
+    }
+}
+
 
     [HttpGet("GetVladar/{id}")]
     public async Task<IActionResult> GetVladar(Guid id)
@@ -237,262 +247,194 @@ public class VladarController : ControllerBase
         }
     }
 
-    [HttpPut("UpdateVladar/{id}")]
-    public async Task<IActionResult> UpdateVladar([FromBody] VladarDto vladar, Guid id)
+   [HttpPut("UpdateVladar/{id}")]
+public async Task<IActionResult> UpdateVladar([FromBody] VladarDto vladar, Guid id)
+{
+    try
     {
-        //racunamo da mora da ima titulu, ime, prezime i od veza samo pocetak i kraj vladavine
-        try {
-            var vl = (await _client.Cypher.Match("(v:Licnost:Vladar)")
-                                          .Where((VladarNeo v) => v.ID == id)
-                                          .OptionalMatch("(v)-[:PRIPADA_DINASTIJI]->(d)")
-                                          .Return((v, d) => new
-                                          {
-                                            Dinastija = d.As<DinastijaNeo>(),
-                                            Vladar = v.As<VladarNeo>()         
-                                          })
-                                          .ResultsAsync)
-                                          .FirstOrDefault();
-        
-            //prvo update obicne atribute pa provera za sve ostale
-
-            if(vl.Vladar == null)
+        // Pronadji vladara i njegove postojeće veze
+        var vl = (await _client.Cypher
+            .Match("(v:Licnost:Vladar)")
+            .Where((VladarNeo v) => v.ID == id)
+            .OptionalMatch("(v)-[:PRIPADA_DINASTIJI]->(d)")
+            .Return((v, d) => new
             {
-                return BadRequest($"Vladar sa ID: {id} nije pronadjena u bazi!");
+                Dinastija = d.As<DinastijaNeo>(),
+                Vladar = v.As<VladarNeo>()
+            })
+            .ResultsAsync)
+            .FirstOrDefault();
+
+        if (vl == null || vl.Vladar == null)
+            return BadRequest($"Vladar sa ID: {id} nije pronađen u bazi!");
+
+        // Osnovno ažuriranje atributa Vladara
+        var query = _client.Cypher
+            .Match("(v:Licnost:Vladar)")
+            .Where((VladarNeo v) => v.ID == id)
+            .OptionalMatch("(v)-[r6:PRIPADA_DINASTIJI]->(d:Dinastija)")
+            .Set("v.Titula = $titula, v.Ime = $ime, v.Prezime = $prezime, v.Pol = $pol, v.MestoRodjenja = $mestoRodjenja")
+            .WithParam("titula", vladar.Titula)
+            .WithParam("ime", vladar.Ime)
+            .WithParam("prezime", vladar.Prezime)
+            .WithParam("pol", vladar.Pol)
+            .WithParam("mestoRodjenja", vl.Vladar.MestoRodjenja);
+
+        // ===== GODINA RODJENJA =====
+        if (vladar.GodinaRodjenja != 0)
+        {
+            await _godinaService.DodajGodinu(vladar.GodinaRodjenja, vladar.GodinaRodjenjaPNE);
+
+            if (vl.Vladar.GodinaRodjenja != vladar.GodinaRodjenja || vl.Vladar.GodinaRodjenjaPNE != vladar.GodinaRodjenjaPNE)
+            {
+                query = query.With("v")
+                    .OptionalMatch("(v)-[r:RODJEN]->(:Godina)")
+                    .Delete("r")
+                    .With("v")
+                    .Match("(g:Godina {God: $god, IsPNE: $pne})")
+                    .WithParam("god", vladar.GodinaRodjenja)
+                    .WithParam("pne", vladar.GodinaRodjenjaPNE)
+                    .Create("(v)-[:RODJEN]->(g)")
+                    .Set("v.GodinaRodjenja = $god, v.GodinaRodjenjaPNE = $pne");
             }
+        }
 
-            var query = _client.Cypher.Match("(v:Licnost:Vladar)")
-                                      .Where((VladarNeo v) => v.ID == id)
-                                      .OptionalMatch("(v)-[r6:PRIPADA_DINASTIJI]->(d:Dinastija)")
-                                      .Set("v.Titula = $titula, v.Ime = $ime, v.Prezime = $prezime, v.Pol = $pol , v.MestoRodjenja = $mestoRodjenja")
-                                      .WithParam("titula", vladar.Titula)
-                                      .WithParam("ime", vladar.Ime)
-                                      .WithParam("prezime", vladar.Prezime)
-                                      .WithParam("pol", vladar.Pol)
-                                      .WithParam("mestoRodjenja", vl.Vladar.MestoRodjenja);
+        // ===== GODINA SMRTI =====
+        if (vladar.GodinaSmrti != 0)
+        {
+            await _godinaService.DodajGodinu(vladar.GodinaSmrti, vladar.GodinaSmrtiPNE);
 
-            if (vladar.GodinaRodjenja != 0)
+            if (vl.Vladar.GodinaSmrti != vladar.GodinaSmrti || vl.Vladar.GodinaSmrtiPNE != vladar.GodinaSmrtiPNE)
             {
-                if (vl.Vladar.GodinaRodjenja != 0)
+                query = query.With("v")
+                    .OptionalMatch("(v)-[r1:UMRO]->(:Godina)")
+                    .Delete("r1")
+                    .With("v")
+                    .Match("(g2:Godina {God: $gods, IsPNE: $pnes})")
+                    .WithParam("gods", vladar.GodinaSmrti)
+                    .WithParam("pnes", vladar.GodinaSmrtiPNE)
+                    .Create("(v)-[:UMRO]->(g2)")
+                    .Set("v.GodinaSmrti = $gods, v.GodinaSmrtiPNE = $pnes");
+            }
+        }
+
+        // ===== MESTO RODJENJA =====
+        if (!string.IsNullOrWhiteSpace(vladar.MestoRodjenja) && vladar.MestoRodjenja != "string")
+        {
+            var z = (await _client.Cypher
+                .Match("(z:Zemlja)")
+                .Where("toLower(z.Naziv) = toLower($n)")
+                .WithParam("n", vladar.MestoRodjenja)
+                .Return(z => z.As<ZemljaNeo>())
+                .ResultsAsync)
+                .FirstOrDefault();
+
+            if (z != null)
+            {
+                if (vl.Vladar.MestoRodjenja != vladar.MestoRodjenja)
                 {
-                    if (vl.Vladar.GodinaRodjenja != vladar.GodinaRodjenja || vl.Vladar.GodinaRodjenjaPNE != vladar.GodinaRodjenjaPNE)
-                    {
-                        await _godinaService.DodajGodinu(vladar.GodinaRodjenja, vladar.GodinaRodjenjaPNE);
-                        query = query.With("v")
-                                     .Match("(v)-[r:RODJEN]->(sg:Godina)")
-                                     .Match("(g:Godina {God: $god, IsPNE: $pne})")
-                                     .WithParam("god", vladar.GodinaRodjenja)
-                                     .WithParam("pne", vladar.GodinaRodjenjaPNE)                                     
-                                     .Delete("r")     
-                                     .Create("(v)-[:RODJEN]->(g)")
-                                     .Set("v.GodinaRodjenja = $god, v.GodinaRodjenjaPNE = $pne");
-                    }
-                }
-                else
-                {
-                    //ne postoji godina samo unosimo novu 
-                    await _godinaService.DodajGodinu(vladar.GodinaRodjenja, vladar.GodinaRodjenjaPNE);
                     query = query.With("v")
-                                 .Match("(g:Godina {God: $god, IsPNE: $pne})")
-                                 .WithParam("god", vladar.GodinaRodjenja)
-                                 .WithParam("pne", vladar.GodinaRodjenjaPNE)
-                                 .Create("(v)-[:RODJEN]->(g)")
-                                 .Set("v.GodinaRodjenja = $god, v.GodinaRodjenjaPNE = $pne");
+                        .OptionalMatch("(v)-[r2:RODJEN_U]->(:Zemlja)")
+                        .Delete("r2")
+                        .With("v")
+                        .Match("(z:Zemlja)")
+                        .Where("toLower(z.Naziv) = toLower($n)")
+                        .WithParam("n", vladar.MestoRodjenja)
+                        .Create("(v)-[:RODJEN_U]->(z)")
+                        .Set("v.MestoRodjenja = $n");
                 }
             }
+        }
 
-            //isto samo za smrt
-            if (vladar.GodinaSmrti != 0)//uneta godina
+        // ===== POČETAK VLADAVINE =====
+        if (vladar.PocetakVladavineGod != 0)
+        {
+            await _godinaService.DodajGodinu(vladar.PocetakVladavineGod, vladar.PocetakVladavinePNE);
+
+            if (vl.Vladar.PocetakVladavineGod != vladar.PocetakVladavineGod || vl.Vladar.PocetakVladavinePNE != vladar.PocetakVladavinePNE)
             {
-                if (vl.Vladar.GodinaSmrti != 0)//postoji vec neka godina
-                {
-                    if (vl.Vladar.GodinaSmrti != vladar.GodinaSmrti || vl.Vladar.GodinaSmrtiPNE != vladar.GodinaSmrtiPNE)
-                    {//promenjena je 
-                        await _godinaService.DodajGodinu(vladar.GodinaSmrti, vladar.GodinaSmrtiPNE);
-                        query = query.With("v")
-                                     .Match("(v)-[r1:UMRO]->(sgs:Godina)")
-                                     .Match("(g2:Godina {God: $gods, IsPNE: $pnes})")
-                                     .WithParam("gods", vladar.GodinaSmrti)
-                                     .WithParam("pnes", vladar.GodinaSmrtiPNE)
-                                     .Delete("r1")
-                                     .Create("(v)-[:UMRO]->(g2)")
-                                     .Set("v.GodinaSmrti = $gods, v.GodinaSmrtiPNE = $pnes");
+                query = query.With("v")
+                    .OptionalMatch("(v)-[r7:VLADAO_OD]->(:Godina)")
+                    .Delete("r7")
+                    .With("v")
+                    .Match("(gp:Godina {God: $poc, IsPNE: $pnep})")
+                    .WithParam("poc", vladar.PocetakVladavineGod)
+                    .WithParam("pnep", vladar.PocetakVladavinePNE)
+                    .Create("(v)-[:VLADAO_OD]->(gp)")
+                    .Set("v.PocetakVladavineGod = $poc, v.PocetakVladavinePNE = $pnep");
+            }
+        }
 
-                    }
-                    //else ista je godina ne radi se nista 
-                }
-                else
+        // ===== KRAJ VLADAVINE =====
+        if (vladar.KrajVladavineGod != 0)
+        {
+            await _godinaService.DodajGodinu(vladar.KrajVladavineGod, vladar.KrajVladavinePNE);
+
+            if (vl.Vladar.KrajVladavineGod != vladar.KrajVladavineGod || vl.Vladar.KrajVladavinePNE != vladar.KrajVladavinePNE)
+            {
+                query = query.With("v")
+                    .OptionalMatch("(v)-[r8:VLADAO_DO]->(:Godina)")
+                    .Delete("r8")
+                    .With("v")
+                    .Match("(gk:Godina {God: $kraj, IsPNE: $kvpne})")
+                    .WithParam("kraj", vladar.KrajVladavineGod)
+                    .WithParam("kvpne", vladar.KrajVladavinePNE)
+                    .Create("(v)-[:VLADAO_DO]->(gk)")
+                    .Set("v.KrajVladavineGod = $kraj, v.KrajVladavinePNE = $kvpne");
+            }
+        }
+
+        // ===== DINASTIJA =====
+        if (vladar.Dinastija != null && 
+            !string.IsNullOrWhiteSpace(vladar.Dinastija.Naziv) && 
+            vladar.Dinastija.Naziv != "string")
+        {
+            var din = (await _client.Cypher
+                .Match("(d:Dinastija)")
+                .Where("toLower(d.Naziv) = toLower($naziv)")
+                .WithParam("naziv", vladar.Dinastija.Naziv)
+                .Return(d => d.As<DinastijaNeo>())
+                .ResultsAsync)
+                .FirstOrDefault();
+
+            if (din != null)
+            {
+                if (vl.Dinastija == null || vl.Dinastija.Naziv != din.Naziv)
                 {
-                    //ne postoji godina samo unosimo novu 
-                    await _godinaService.DodajGodinu(vladar.GodinaSmrti, vladar.GodinaSmrtiPNE);
                     query = query.With("v")
-                                 .Match("(g2:Godina {God: $gods, IsPNE: $pnes})")
-                                 .WithParam("gods", vladar.GodinaSmrti)
-                                 .WithParam("pnes", vladar.GodinaSmrtiPNE)
-                                 .Create("(v)-[:UMRO]->(g2)")
-                                 .Set("v.GodinaSmrti = $gods, v.GodinaSmrtiPNE = $pnes");
-                }
-                
-            }
-
-            //mesto
-            if (!string.IsNullOrWhiteSpace(vladar.MestoRodjenja) && vladar.MestoRodjenja != "string")//uneto mesto 
-            {
-                var z = (await _client.Cypher.Match("(z:Zemlja)")
-                                             .Where("toLower(z.Naziv) = toLower($n)")
-                                             .WithParam("n", vladar.MestoRodjenja)
-                                             .Return(z => z.As<ZemljaNeo>())
-                                             .ResultsAsync)
-                                             .FirstOrDefault();
-
-                if (z != null)//postoji takvo mesto ima smisla da se bilo sta proverava
-                {
-                    if (!string.IsNullOrWhiteSpace(vl.Vladar.MestoRodjenja) && vl.Vladar.MestoRodjenja != "string")//vec postoji nesto u bazi  
-                    {
-                        //provera je l su ista mesta 
-                        if (vl.Vladar.MestoRodjenja != vladar.MestoRodjenja)//izmenjeno je 
-                        {
-                            query = query.With("v")
-                                         .Match("(z:Zemlja)")
-                                         .Where("toLower(z.Naziv) = toLower($n)")
-                                         .Match("(v)-[r2:RODJEN_U]->(sz:Zemlja)")
-                                         .WithParam("n", vladar.MestoRodjenja)
-                                         .Delete("r2")
-                                         .Create("(v)-[:RODJEN_U]->(z)")
-                                         .Set("v.MestoRodjenja = $n");
-                        }
-                        //else isto je 
-                    }
-                    else //nije postojalo mesto u bazi ali je uneto novo 
-                        query = query.With("v")
-                                     .Match("(z:Zemlja)")
-                                     .Where("toLower(z.Naziv) = toLower($n)")
-                                     .WithParam("n", vladar.MestoRodjenja)
-                                     .Create("(v)-[:RODJEN_U]->(z)")
-                                     .Set("v.MestoRodjenja = $n");
-                }
-                //else to mesto ne postoji kao da nista nije ni uneto                
-            }
-
-            if (vladar.PocetakVladavineGod != 0)
-            {
-                if (vl.Vladar.PocetakVladavineGod != 0)
-                {
-                    if (vl.Vladar.PocetakVladavineGod != vladar.PocetakVladavineGod || vl.Vladar.PocetakVladavinePNE != vladar.PocetakVladavinePNE)
-                    {
-                        await _godinaService.DodajGodinu(vladar.PocetakVladavineGod, vladar.PocetakVladavinePNE);
-                        query = query.With("v")
-                                     .Match("(gp:Godina {God: $poc, IsPNE: $pnep})")
-                                     .Match("(v)-[r7:VLADAO_OD]->(gpv:Godina)")
-                                     .WithParam("poc", vladar.PocetakVladavineGod)
-                                     .WithParam("pnep", vladar.PocetakVladavinePNE)
-                                     .Delete("r7")
-                                     .Set("v.PocetakVladavineGod = $poc, v.PocetakVladavinePNE = $pnep")
-                                     .Create("(v)-[:VLADAO_OD]->(gp)");
-                    }
-                }
-                else
-                {
-                    await _godinaService.DodajGodinu(vladar.PocetakVladavineGod, vladar.PocetakVladavinePNE);
-                    query = query.With("v")
-                                 .Match("(gp:Godina {God: $poc, IsPNE: $pnep})")
-                                 .WithParam("poc", vladar.PocetakVladavineGod)
-                                 .WithParam("pnep", vladar.PocetakVladavinePNE)
-                                 .Set("v.PocetakVladavineGod = $poc, v.PocetakVladavinePNE = $pnep")
-                                 .Create("(v)-[:VLADAO_OD]->(gp)");
+                        .OptionalMatch("(v)-[r9:PRIPADA_DINASTIJI]->(:Dinastija)")
+                        .Delete("r9")
+                        .With("v")
+                        .Match("(d:Dinastija)")
+                        .Where("toLower(d.Naziv) = toLower($naziv)")
+                        .WithParam("naziv", vladar.Dinastija.Naziv)
+                        .Create("(v)-[:PRIPADA_DINASTIJI]->(d)");
                 }
             }
+        }
 
-            if (vladar.KrajVladavineGod != 0)
-            {
-                if (vl.Vladar.KrajVladavineGod != 0)
-                {
-                    if (vl.Vladar.KrajVladavineGod != vladar.KrajVladavineGod || vl.Vladar.KrajVladavinePNE != vladar.KrajVladavinePNE)
-                    {
-                        await _godinaService.DodajGodinu(vladar.KrajVladavineGod, vladar.KrajVladavinePNE);
-                        query = query.With("v")
-                                     .Match("(gk:Godina {God: $kraj, IsPNE: $kvpne})")
-                                     .Match("(v)-[r8:VLADAO_DO]->(gkv:Godina)")
-                                     .WithParam("kraj", vladar.KrajVladavineGod)
-                                     .WithParam("kvpne", vladar.KrajVladavinePNE)
-                                     .Delete("r8")
-                                     .Set("v.KrajVladavineGod = $kraj, v.KrajVladavinePNE = $kvpne")
-                                     .Create("(v)-[:VLADAO_DO]->(gk)");
-                    }
-                }
-                else
-                {
-                    await _godinaService.DodajGodinu(vladar.KrajVladavineGod, vladar.KrajVladavinePNE);
-                    query = query.With("v")
-                                 .Match("(gk:Godina {God: $kraj, IsPNE: $kvpne})")
-                                 .WithParam("kraj", vladar.KrajVladavineGod)
-                                 .WithParam("kvpne", vladar.KrajVladavinePNE)
-                                 .Set("v.KrajVladavineGod = $kraj, v.KrajVladavinePNE = $kvpne")
-                                 .Create("(v)-[:VLADAO_DO]->(gk)");
-                }
-            }
-            ///////////////////////DO OVDE JOS DINASTIJU NAPRAVI I PREKRSTI SE 
-            if (vladar.Dinastija != null && !string.IsNullOrWhiteSpace(vladar.Dinastija.Naziv) || vladar.Dinastija.Naziv != "string")
-            //napravi DINASTIJASERVICE
-            {
-                var din = (await _client.Cypher.Match("(d:Dinastija)")
-                                               .Where("toLower(d.Naziv) = toLower($naziv)")
-                                               .WithParam("naziv", vladar.Dinastija.Naziv)
-                                               .Return(d => d.As<DinastijaNeo>())
-                                               .ResultsAsync)
-                                               .FirstOrDefault();
-
-                if (din != null)//postoji takva dinastija pa ima smisla da se proverava 
-                {
-                    if (vl.Dinastija != null)//postoji vec neka u bazi 
-                    {
-                        if (vladar.Dinastija.Naziv != vl.Dinastija.Naziv)
-                        {//promenjena
-                            vladar.Dinastija = din;
-                            query = query.With("v")
-                                         .Match("(d:Dinastija)")
-                                         .Where("toLower(d.Naziv) = toLower($naziv)")
-                                         .Match("(v)-[r9:PRIPADA_DINASTIJI]->(d)")
-                                         .WithParam("naziv", vladar.Dinastija.Naziv)
-                                         .Delete("r9")
-                                         .Create("(v)-[:PRIPADA_DINASTIJI]->(d)");
-                            //za setovanje parametara svih.Set("d.Dinastija")
-
-                        }
-                        //else ista je 
-                    }
-                    else //ne postoji nista u bazi samo dodaj novu 
-                    {
-                        vladar.Dinastija = din;
-                        query = query.With("v")
-                                     .Match("(d:Dinastija)")
-                                     .Where("toLower(d.Naziv) = toLower($naziv)")
-                                     .WithParam("naziv", vladar.Dinastija.Naziv)
-                                     .Create("(v)-[:PRIPADA_DINASTIJI]->(d)");
-                        //za setovanje parametara svih.Set("d.Dinastija")
-                    }
-                }
-
-            }
-
-             if (!string.IsNullOrWhiteSpace(vladar.Tekst)|| !string.IsNullOrWhiteSpace(vladar.Slika) || !string.IsNullOrWhiteSpace(vladar.Teritorija))
-            {
-                var filter = Builders<VladarMongo>.Filter.Eq(d => d.ID, id);
-                var existingVladar = await _vladarCollection.Find(filter).FirstOrDefaultAsync();
-                var update = Builders<VladarMongo>.Update.Combine(
+        // ===== MONGO UPDATE =====
+        if (!string.IsNullOrWhiteSpace(vladar.Tekst) || 
+            !string.IsNullOrWhiteSpace(vladar.Slika) || 
+            !string.IsNullOrWhiteSpace(vladar.Teritorija))
+        {
+            var filter = Builders<VladarMongo>.Filter.Eq(d => d.ID, id);
+            var update = Builders<VladarMongo>.Update.Combine(
                 Builders<VladarMongo>.Update.Set(d => d.Tekst, vladar.Tekst),
                 Builders<VladarMongo>.Update.Set(d => d.Slika, vladar.Slika),
                 Builders<VladarMongo>.Update.Set(d => d.Teritorija, vladar.Teritorija));
-                var result = await _vladarCollection.UpdateOneAsync(filter, update);
-            }
-            await query.ExecuteWithoutResultsAsync();
-        
-            return Ok($"Licnost sa id: {id} je uspesno promenjena!");
+            await _vladarCollection.UpdateOneAsync(filter, update);
         }
-        catch (Exception ex)  
-        {
-            return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
-        }        
+
+        await query.ExecuteWithoutResultsAsync();
+        return Ok($"Vladar sa ID {id} uspešno je ažuriran!");
     }
+    catch (Exception ex)
+    {
+        return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
+    }
+}
+
 
     [HttpPut("UpdateVladarBezDinastije/{id}")]
     public async Task<IActionResult> UpdateVladarBezDinastije([FromBody] VladarDto vladar, Guid id)

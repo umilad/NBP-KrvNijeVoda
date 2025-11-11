@@ -154,24 +154,38 @@ public async Task<IActionResult> Login([FromBody] LoginDto loginRequest)
 [HttpPost("track-visit")]
 public async Task<IActionResult> TrackVisit([FromBody] PageDto dto)
 {
-    var authHeader = Request.Headers["Authorization"].ToString();
-    if (string.IsNullOrEmpty(authHeader))
-        return BadRequest("Missing token");
+    try
+    {
+        var authHeader = Request.Headers["Authorization"].ToString();
+        if (string.IsNullOrEmpty(authHeader))
+            return BadRequest("Missing token");
 
-    var token = authHeader.Replace("Bearer ", "").Trim();
-    if (string.IsNullOrEmpty(token))
-        return BadRequest("Invalid token");
+        var token = authHeader.Replace("Bearer ", "").Trim();
+        if (string.IsNullOrEmpty(token))
+            return BadRequest("Invalid token");
 
-    var username = _tokenService.GetUsernameFromToken(token);
-    if (string.IsNullOrEmpty(username))
-        return Unauthorized("Invalid or expired token");
+        var username = _tokenService.GetUsernameFromToken(token);
+        if (string.IsNullOrEmpty(username))
+            return Unauthorized("Invalid or expired token");
 
-    // ⚡️ Prosledi i label
-    await _redisService.IncrementPageVisitAsync(username, dto.Path, dto.Label ?? dto.Path);
+        if (string.IsNullOrEmpty(dto.Path))
+            return BadRequest("Path is required");
 
-    return Ok("Visit tracked");
+        // ⚡️ Ovde pokušavamo da trackujemo posetu
+        await _redisService.IncrementPageVisitAsync(username, dto.Path, dto.Label ?? dto.Path);
+
+        return Ok("Visit tracked");
+    }
+    catch (Exception ex)
+    {
+        // ✅ Log detaljnog errora
+        Console.WriteLine("TrackVisit error: " + ex);
+        Console.WriteLine("StackTrace: " + ex.StackTrace);
+
+        // Opcionalno: vrati error klijentu za debugging
+        return StatusCode(500, "Internal server error: " + ex.Message);
+    }
 }
-
 // 📊 Dohvatanje najposećenijih stranica korisnika
 [HttpGet("top-visits")]
 public async Task<IActionResult> GetTopVisits()

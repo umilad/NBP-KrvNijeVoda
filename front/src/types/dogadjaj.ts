@@ -1,4 +1,4 @@
-import type Godina  from './godina';
+import type { Godina } from "./godina";
 
 export type TipDogadjaja =
     | "Bitka"
@@ -9,7 +9,7 @@ export type TipDogadjaja =
     | "Dokument"
     | "Opsada";
 
-export interface Dogadjaj {
+export interface DogadjajBase {
     id: string;
     tip: TipDogadjaja;
     ime: string;
@@ -18,14 +18,22 @@ export interface Dogadjaj {
     tekst: string;
 }
 
-export interface Bitka extends Dogadjaj {
+export interface Bitka extends DogadjajBase {
+    tip: "Bitka";
     pobednik: string;
     rat?: string;
     brojZrtava: number;
 }
 
-export interface Rat extends Dogadjaj {    
+export interface Rat extends DogadjajBase {
+    tip: "Rat";
     godinaDo?: Godina | null;
     bitke: string[];
     pobednik: string;
 }
+
+export interface OstaliDogadjaj extends DogadjajBase {
+    tip: Exclude<TipDogadjaja, "Bitka" | "Rat">;
+}
+
+export type DogadjajUnion = Bitka | Rat | OstaliDogadjaj;

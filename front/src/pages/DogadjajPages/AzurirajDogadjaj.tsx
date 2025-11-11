@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../AuthContext";
-import type { Dogadjaj, Bitka, Rat, TipDogadjaja } from "../../types/dogadjaj";
+import type { DogadjajUnion, TipDogadjaja, Bitka, Rat } from "../../types/dogadjaj";
 
 interface Zemlja {
   id: string;
@@ -16,87 +16,106 @@ interface RatDropdown {
 }
 
 export default function AzurirajDogadjaj() {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { token } = useAuth();
 
   // Opšta polja Dogadjaj
   const [ime, setIme] = useState("");
   const [tip, setTip] = useState<TipDogadjaja>("Bitka");
-  const [lokacija, setLokacija] = useState<string>("");
-  const [godina, setGodina] = useState<string>(""); // string za input controlled
+  const [lokacija, setLokacija] = useState("");
+  const [godina, setGodina] = useState("");
   const [isPNE, setIsPNE] = useState(false);
   const [tekst, setTekst] = useState("");
 
   // Polja za Bitku
-  const [pobednik, setPobednik] = useState<string>("");
-  const [brojZrtava, setBrojZrtava] = useState<string>(""); // string
-  const [rat, setRat] = useState<string>("");
+  const [pobednik, setPobednik] = useState("");
+  const [brojZrtava, setBrojZrtava] = useState("");
+  const [rat, setRat] = useState("");
 
   // Polja za Rat
-  const [godinaDo, setGodinaDo] = useState<string>(""); // string
-  const [bitke, setBitke] = useState<string>("");
+  const [godinaDo, setGodinaDo] = useState("");
+  const [isPNEDo, setIsPNEDo] = useState(false); // Checkbox za GodinaDo
 
   // Dropdown-i
   const [zemlje, setZemlje] = useState<Zemlja[]>([]);
   const [ratovi, setRatovi] = useState<RatDropdown[]>([]);
 
-  // Učitavanje postojećeg dogadjaja i dropdown-a
   useEffect(() => {
-    async function loadDogadjaj() {
-      if (!id) return;
-      try {
-        const res = await axios.get<Dogadjaj | Bitka | Rat>(
-          `http://localhost:5210/api/GetDogadjaj/${id}`
-        );
-        const d = res.data;
+    if (!id) return;
 
-        setIme(d.ime);
-        setTip(d.tip);
-        setLokacija(d.lokacija ?? "");
-        setGodina(d.godina?.God?.toString() ?? "");
-        setIsPNE(d.godina?.IsPNE ?? false);
-        setTekst(d.tekst);
-
-        if (d.tip === "Bitka") {
-          const b = d as Bitka;
-          setPobednik(b.pobednik ?? "");
-          setBrojZrtava(b.brojZrtava?.toString() ?? "");
-          setRat(b.rat ?? "");
-        }
-
-        if (d.tip === "Rat") {
-          const r = d as Rat;
-          setPobednik(r.pobednik ?? "");
-          setGodinaDo(r.godinaDo?.God?.toString() ?? "");
-          setBitke(r.bitke.join(", ") ?? "");
-        }
-      } catch (err) {
-        console.error("Greška pri učitavanju događaja:", err);
-      }
-    }
-
-    async function fetchZemlje() {
+    const fetchZemlje = async () => {
       try {
         const res = await axios.get<Zemlja[]>("http://localhost:5210/api/GetAllZemlje");
         setZemlje(res.data);
       } catch (err) {
         console.error("Greška pri učitavanju zemalja:", err);
       }
-    }
+    };
 
-    async function fetchRatovi() {
+    const fetchRatovi = async () => {
       try {
         const res = await axios.get<RatDropdown[]>("http://localhost:5210/api/GetAllRatovi");
         setRatovi(res.data);
       } catch (err) {
         console.error("Greška pri učitavanju ratova:", err);
       }
-    }
+    };
 
-    loadDogadjaj();
+    const loadDogadjaj = async () => {
+      try {
+        const tipRes = await axios.get<{ tip: string }>(`http://localhost:5210/api/GetDogadjaj/${id}`);
+        const tipRaw = tipRes.data.tip;
+        const tipDogadjaja: TipDogadjaja =
+          tipRaw === "Rat" ? "Rat" :
+          tipRaw === "Bitka" ? "Bitka" :
+          tipRaw === "Ustanak" ? "Ustanak" :
+          tipRaw === "Sporazum" ? "Sporazum" :
+          tipRaw === "Savez" ? "Savez" :
+          tipRaw === "Dokument" ? "Dokument" :
+          "Opsada";
+        setTip(tipDogadjaja);
+
+        if (tipDogadjaja === "Bitka") {
+          const resBitka = await axios.get<Bitka>(`http://localhost:5210/api/GetBitka/${id}`);
+          const bitka = resBitka.data;
+          setIme(bitka.ime);
+          setLokacija(bitka.lokacija ?? "");
+          setGodina(bitka.godina?.god.toString() ?? "");
+          setIsPNE(bitka.godina?.isPne ?? false);
+          setTekst(bitka.tekst ?? "");
+          setPobednik(bitka.pobednik);
+          setBrojZrtava(bitka.brojZrtava.toString());
+          setRat(bitka.rat ?? "");
+        } else if (tipDogadjaja === "Rat") {
+          const resRat = await axios.get<Rat>(`http://localhost:5210/api/GetRat/${id}`);
+          const ratData = resRat.data;
+          setIme(ratData.ime);
+          setLokacija(ratData.lokacija ?? "");
+          setGodina(ratData.godina?.god.toString() ?? "");
+          setIsPNE(ratData.godina?.isPne ?? false);
+          setTekst(ratData.tekst ?? "");
+          setPobednik(ratData.pobednik);
+          setGodinaDo(ratData.godinaDo?.god.toString() ?? "");
+          setIsPNEDo(ratData.godinaDo?.isPne ?? false); // automatski štiklirano ako je true
+        } else {
+          const resDog = await axios.get<DogadjajUnion>(`http://localhost:5210/api/GetDogadjaj/${id}`);
+          const dog = resDog.data;
+          setIme(dog.ime);
+          setLokacija(dog.lokacija ?? "");
+          setGodina(dog.godina?.god.toString() ?? "");
+          setIsPNE(dog.godina?.isPne ?? false);
+          setTekst(dog.tekst ?? "");
+        }
+      } catch (err) {
+        console.error("Greška pri učitavanju događaja:", err);
+        alert("Greška pri učitavanju događaja!");
+      }
+    };
+
     fetchZemlje();
     fetchRatovi();
+    loadDogadjaj();
   }, [id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -108,7 +127,7 @@ export default function AzurirajDogadjaj() {
       Tip: tip,
       Tekst: tekst || undefined,
       Lokacija: lokacija || undefined,
-      Godina: godina ? { God: Number(godina), IsPNE: isPNE } : undefined,
+      Godina: godina ? { god: Number(godina), isPne: isPNE } : undefined,
     };
 
     if (tip === "Bitka") {
@@ -119,19 +138,23 @@ export default function AzurirajDogadjaj() {
 
     if (tip === "Rat") {
       payload.Pobednik = pobednik || undefined;
-      payload.GodinaDo = godinaDo ? { God: Number(godinaDo), IsPNE: isPNE } : undefined;
-      payload.Bitke = bitke ? bitke.split(",").map((b) => b.trim()) : undefined;
+      payload.GodinaDo = godinaDo ? { god: Number(godinaDo), isPne: isPNEDo } : undefined;
+      // polje Bitke uklonjeno
     }
 
     try {
-      const response = await axios.put(
-        `http://localhost:5210/api/UpdateDogadjaj/${id}`,
-        payload,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      alert(response.data);
+      const endpoint =
+        tip === "Bitka"
+          ? `http://localhost:5210/api/UpdateBitka/${id}`
+          : tip === "Rat"
+          ? `http://localhost:5210/api/UpdateRat/${id}`
+          : `http://localhost:5210/api/UpdateDogadjaj/${id}`;
+
+      await axios.put(endpoint, payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      alert("Uspešno ažurirano!");
       navigate("/dogadjaji");
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
@@ -152,19 +175,18 @@ export default function AzurirajDogadjaj() {
             placeholder="Ime događaja"
             value={ime}
             onChange={(e) => setIme(e.target.value)}
-            className="p-[6px] rounded-[3px] border border-[#3f2b0a] focus:outline-none"
+            className="p-[6px] rounded-[3px] border border-[#3f2b0a]"
             required
           />
 
-          {/* Dropdown za zemlje */}
           <select
             value={lokacija}
             onChange={(e) => setLokacija(e.target.value)}
-            className="p-[6px] rounded-[3px] border border-[#3f2b0a] focus:outline-none"
+            className="p-[6px] rounded-[3px] border border-[#3f2b0a]"
           >
             <option value="">Izaberi lokaciju</option>
             {zemlje.map((z) => (
-              <option key={z.id} value={z.naziv}>
+              <option key={z.naziv} value={z.naziv}>
                 {z.naziv}
               </option>
             ))}
@@ -176,7 +198,7 @@ export default function AzurirajDogadjaj() {
               placeholder="Godina"
               value={godina}
               onChange={(e) => setGodina(e.target.value)}
-              className="p-[6px] rounded-[3px] border border-[#3f2b0a] focus:outline-none flex-1"
+              className="p-[6px] rounded-[3px] border border-[#3f2b0a] flex-1"
             />
             <label className="flex items-center gap-2">
               <input
@@ -195,23 +217,23 @@ export default function AzurirajDogadjaj() {
                 placeholder="Pobednik"
                 value={pobednik}
                 onChange={(e) => setPobednik(e.target.value)}
-                className="p-[6px] rounded-[3px] border border-[#3f2b0a] focus:outline-none"
+                className="p-[6px] rounded-[3px] border border-[#3f2b0a]"
               />
               <input
                 type="number"
                 placeholder="Broj žrtava"
                 value={brojZrtava}
                 onChange={(e) => setBrojZrtava(e.target.value)}
-                className="p-[6px] rounded-[3px] border border-[#3f2b0a] focus:outline-none"
+                className="p-[6px] rounded-[3px] border border-[#3f2b0a]"
               />
               <select
                 value={rat}
                 onChange={(e) => setRat(e.target.value)}
-                className="p-[6px] rounded-[3px] border border-[#3f2b0a] focus:outline-none"
+                className="p-[6px] rounded-[3px] border border-[#3f2b0a]"
               >
                 <option value="">Izaberi rat (opciono)</option>
                 {ratovi.map((r) => (
-                  <option key={r.id} value={r.ime}>
+                  <option key={r.ime} value={r.ime}>
                     {r.ime}
                   </option>
                 ))}
@@ -220,41 +242,45 @@ export default function AzurirajDogadjaj() {
           )}
 
           {tip === "Rat" && (
-            <>
+            <div className="flex flex-col gap-4">
               <input
                 type="text"
                 placeholder="Pobednik"
                 value={pobednik}
                 onChange={(e) => setPobednik(e.target.value)}
-                className="p-[6px] rounded-[3px] border border-[#3f2b0a] focus:outline-none"
+                className="p-[6px] rounded-[3px] border border-[#3f2b0a]"
               />
-              <input
-                type="number"
-                placeholder="Godina do"
-                value={godinaDo}
-                onChange={(e) => setGodinaDo(e.target.value)}
-                className="p-[6px] rounded-[3px] border border-[#3f2b0a] focus:outline-none"
-              />
-              <input
-                type="text"
-                placeholder="Bitke (odvojene zarezom)"
-                value={bitke}
-                onChange={(e) => setBitke(e.target.value)}
-                className="p-[6px] rounded-[3px] border border-[#3f2b0a] focus:outline-none"
-              />
-            </>
+
+              <div className="flex gap-4 items-center">
+                <input
+                  type="number"
+                  placeholder="Godina do"
+                  value={godinaDo}
+                  onChange={(e) => setGodinaDo(e.target.value)}
+                  className="p-[6px] rounded-[3px] border border-[#3f2b0a] flex-1"
+                />
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={isPNEDo}
+                    onChange={(e) => setIsPNEDo(e.target.checked)}
+                  />
+                  p. n. e.
+                </label>
+              </div>
+            </div>
           )}
 
           <textarea
             placeholder="Tekst događaja"
             value={tekst}
             onChange={(e) => setTekst(e.target.value)}
-            className="p-[6px] rounded-[3px] border border-[#3f2b0a] focus:outline-none h-32 resize-none"
+            className="p-[6px] rounded-[3px] border border-[#3f2b0a] h-32 resize-none"
           />
 
           <button
             type="submit"
-            className="bg-[#3f2b0a] text-[#e6cda5] p-[6px] mb-[15px] rounded-[3px] hover:bg-[#2b1d07] transition font-bold"
+            className="bg-[#3f2b0a] text-[#e6cda5] p-[6px] rounded-[3px] hover:bg-[#2b1d07] transition font-bold"
           >
             Sačuvaj promene
           </button>
