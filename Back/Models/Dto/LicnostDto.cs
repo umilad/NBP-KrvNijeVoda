@@ -13,8 +13,9 @@ public class LicnostDto
     //VEZE POSTOJE SA GODINAMA
     public string Pol { get; set; }
     public string? MestoRodjenja { get; set; }
-     public string? Slika { get; set; }//na osnovu pola moze da stavlja one prazne slike kao na fb, MONGO!!
-        
-        //IMA VEZU SA LOKACIJOM
+    public string? Slika { get; set; }//na osnovu pola moze da stavlja one prazne slike kao na fb, MONGO!!
+
+    //IMA VEZU SA LOKACIJOM
     public string? Tekst { get; set; } //MONGO, BIOGRAFIJA
 }
+
