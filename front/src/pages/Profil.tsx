@@ -1,7 +1,7 @@
 import { useAuth } from "./AuthContext";
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 // Tipovi za trackovane stranice i top posete
 type PageDto = {
@@ -16,9 +16,10 @@ type TopVisit = {
 };
 
 export default function Profil() {
-    const { username, token, role } = useAuth();
+    const { username, token, role, logout } = useAuth();
     const [history, setHistory] = useState<PageDto[]>([]);
     const [topVisits, setTopVisits] = useState<TopVisit[]>([]);
+    const navigate = useNavigate();
 
     // Dohvatanje istorije
     useEffect(() => {
@@ -70,6 +71,10 @@ export default function Profil() {
     fetchTopVisits();
 }, [token]);
 
+    const handleLogout = () => {
+        logout();
+        navigate("/"); // preusmeri na početnu stranu
+    };
 
     return (
         <div className="profil my-[100px] w-full flex flex-col items-center">
@@ -78,6 +83,12 @@ export default function Profil() {
             <div className="w-4/5 md:w-2/3 lg:w-1/2 mb-10 p-8 rounded-lg bg-[#e6cda5] border-2 border-[#3f2b0a] text-center text-[#3f2b0a]">
                 <p className="text-3xl font-bold mb-2">USERNAME: {username}</p>
                 <p className="text-2xl">{role}</p>
+                <button
+                    onClick={handleLogout}
+                    className="px-[12px] py-[6px] border border-[#e6cda5] bg-[#3f2b0a] text-[#e6cda5] hover:bg-[#e6cda5] hover:text-[#3f2b0a] transition-all duration-300 transform hover:scale-110 cursor-pointer"
+                >
+                    Odjavi se
+                </button>
             </div>
 
             {/* Istorija poseta */}

@@ -40,7 +40,7 @@ export default function SearchBar({ onSearch }: SearchBarProps) {
     return (
         <input
             type="text"
-            className="absolute start-8 w-50 h-full px-4 py-2 border-none focus:outline-none"
+            className="px-[30px] h-full border-none focus:outline-none"
             placeholder={placeholder}
             value={query}
             onChange={(e) => setQuery(e.target.value)}

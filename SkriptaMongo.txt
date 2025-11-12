@@ -1,0 +1,312 @@
+db.dropDatabase()
+
+
+db.Zemlje.insertMany([
+  {_id: "f47ac10b-58cc-4372-a567-0e02b2c3d479", Grb: "https://upload.wikimedia.org/wikipedia/commons/1/12/Coat_of_arms_of_Serbia.png", BrojStanovnika: 500000},
+  {_id: "9c858901-8a57-4791-81fe-4c455b099bc9", Grb: "https://upload.wikimedia.org/wikipedia/commons/0/0b/Zeta_CoA.png", BrojStanovnika: 150000},
+  {_id: "7c9e6679-7425-40de-944b-e07fc1f90ae7", Grb: "https://upload.wikimedia.org/wikipedia/commons/5/55/Duklja_CoA.png", BrojStanovnika: 120000},
+  {_id: "e902893a-9d22-3c7e-a7b8-d6e313b71d9f", Grb: "https://upload.wikimedia.org/wikipedia/commons/3/3f/Hum_CoA.png", BrojStanovnika: 90000},
+  {_id: "3fa85f64-5717-4562-b3fc-2c963f66afa6", Grb: "https://upload.wikimedia.org/wikipedia/commons/2/27/Bosna_CoA.png", BrojStanovnika: 400000},
+  {_id: "2c6f6cfa-1c22-4b62-9d4f-4c4f1b8b1d12", Grb: "https://upload.wikimedia.org/wikipedia/commons/3/30/SerpskoCarstvo_CoA.png", BrojStanovnika: 350000},
+  {_id: "8f14e45f-ceea-4b88-9b9e-2a1d1f64b15b", Grb: "https://upload.wikimedia.org/wikipedia/commons/4/43/Raska_CoA.png", BrojStanovnika: 300000},
+  {_id: "d94f3f01-8e7a-4d21-bdc2-5e0b1c2d0b2e", Grb: "https://upload.wikimedia.org/wikipedia/commons/5/53/Zahumlje_CoA.png", BrojStanovnika: 180000},
+  {_id: "1a79a4d6-0f64-4d8f-b7f7-7c1a2b8f8d3c", Grb: "https://upload.wikimedia.org/wikipedia/commons/6/66/Travunija_CoA.png", BrojStanovnika: 100000},
+  {_id: "9f61408e-5aeb-4c8b-b2f3-8b3a2f4e2a5d", Grb: "https://upload.wikimedia.org/wikipedia/commons/7/71/Dalmacija_CoA.png", BrojStanovnika: 220000},
+  {_id: "9f61408e-5aeb-4c8b-b2f3-8b3a2f4e2a52", Grb: "https://upload.wikimedia.org/wikipedia/commons/7/71/Vizantija_CoA.png", BrojStanovnika: 440000},
+  {
+    _id: "a2a2a2a2-2222-4a2a-8a2a-222222222222",
+    Grb: "https://upload.wikimedia.org/wikipedia/commons/3/3f/Arms_of_France_%28ancient%29.svg",
+    BrojStanovnika: 15000000
+  },
+  {
+    _id: "a3a3a3a3-3333-4a3a-8a3a-333333333333",
+    Grb: "https://upload.wikimedia.org/wikipedia/commons/7/77/Coa_Hungary_Country_History_%28Bar%C3%A1th%29.svg",
+    BrojStanovnika: 3500000
+  },
+  {
+    _id: "a4a4a4a4-4444-4a4a-8a4a-444444444444",
+    Grb: "https://upload.wikimedia.org/wikipedia/commons/5/5e/Coat_of_arms_of_Bulgaria.svg",
+    BrojStanovnika: 2500000
+  },
+  {
+    _id: "a5a5a5a5-5555-4a5a-8a5a-555555555555",
+    Grb: "https://upload.wikimedia.org/wikipedia/commons/1/15/Coat_of_arms_of_the_Despotate_of_Epirus.svg",
+    BrojStanovnika: 400000
+  },
+  {
+    _id: "a6a6a6a6-6666-4a6a-8a6a-666666666666",
+    Grb: "https://upload.wikimedia.org/wikipedia/commons/3/3c/Coat_of_arms_of_Serres.svg",
+    BrojStanovnika: 150000
+  },
+  {
+    _id: "a7a7a7a7-7777-4a7a-8a7a-777777777777",
+    Grb: "https://upload.wikimedia.org/wikipedia/commons/4/4d/Coat_of_arms_of_Thessaly.svg",
+    BrojStanovnika: 500000
+  },
+  {
+    _id: "a8a8a8a8-8888-4a8a-8a8a-888888888888",
+    Grb: "https://upload.wikimedia.org/wikipedia/commons/8/8d/Coat_of_arms_of_Ioannina.svg",
+    BrojStanovnika: 120000
+  }
+	
+]);
+
+db.Dogadjaji.insertMany([
+  { 
+    _id: "3c3f3c3c-3333-4c3c-8c3c-333333333333", 
+    Tekst: "Tokom druge četvrtine 15. veka, na području Zete, koja je počevši od 1421. godine bila u sastavu Srpske despotovine,[3] dolazi do niza sukoba sa Mlečanima koji su iz svojih primorskih uporišta nastojali da potisnu vlast srpskih despota ne samo sa primorskog područja Donje Zete, već i sa područja Gornje Zete u unutrašnjosti. Tokom ovih sukoba, zetski velikaši i ostali prvaci u gradovima i župama pristajali su uz jednu ili drugu stranu, prema trenutnim prilikama, a istaknutu ulogu u vojnim i političkim zbivanjima na prostorima Zete dobija velikaška porodica Crnojevića, koja se sredinom 15. veka učvrstila u oblastima Gornje Zete. Iako su prvobitno bili u službi srpskog despota Đurđa Brankovića, Crnojevići su u vreme slabljenja Srpske despotovine prešli pod okrilje Mletačke republike, iskoristivši nakon 1451. godine priliku za uspostavljanje sopstvene vlasti u većem delu Gornje Zete, kao i u pojedinim krajevima Donje Zete. Počevši od tog vremena, Stefan Crnojević je postao oblasni gospodar Zete i osnivač dinastije koja će u toj oblasti vladati do kraja 15. veka.\n\nTokom prethodnih borbi za prevlast u oblastima Zete, Stefan Crnojević se prvobitno istakao kao vojvoda u službi raznih zaraćenih strana, kojima se priklanjao prema trenutnim prilikama. Nakon 1441. godine, kada je veliki vojvoda Stefan Vukčić Kosača pokušao da ovlada Zetom, Stefan Crnojević je privremeno pristao uz njega, pošto mu je sin bio talac kod Kosače. Pod Kosačinu vlast je tada privremeno potpala sva Gornja Zeta, kao i deo Donje Zete sa gradom Barom, ali samo privremeno. Nakon 1444. godine, srpski despot Đurađ Branković je postepeno obnovio svoju vlast u oblastima Zete, a uz njega su tada pristali i Crnojevići. Despot je 1448. godine preduzeo niz pohod na mletačka uporišta u Donjoj Zeti, a njegovu vojsku su predvodili vojvoda Altoman i vojvoda Stefan Crnojević, kojima se pridružila većina Paštrovića. Iako pohod na mletački Bar nije uspeo, borbe su nastavljene. Već tokom 1451. godine, Kotorani su pokrenuli akciju za pridobijanje gornjozetskog vojvode Stefana Crnojevića, koji prelazi na stranu Mletačke republike, od koje dobija potvrdu svoje vojvodske službe. To je dovelo do otvorenog sukoba između Stefana Crnojevića i despotovog namesnika u Zeti, vojvode Altomana, koji je uz učešće dela vojske iz Gornje Zete i turskih odreda poharao baštinske posede Crnojevića (od 590, popaljeno je 570 objekata). Uprkos tome, vojvoda Altoman je pretrpeo poraz od Stefana Crnojevića, a ni slanje novih pojačanja, koja je u Zetu uputio srpski despot, nije urodilo plodom. Despotovi odredi pod komandom Tome Kantakuzina doživljavaju 14. septembra 1452. godine novi poraz od Stefanice Crnojevića. Despotove snage bivaju potisnute iz većeg dela Gornje Zete, nakon čega im preostaje samo oblast oko tvrđave Meduna."
+  },
+  { _id: "4d4f4d4d-4444-4d4d-8d4d-444444444444", Tekst: "Sporazum sa Dubrovnikom je najpoznatiji kao Višegradski ugovor iz 1358. godine, koji je uspostavio Dubrovnik kao autonomnu jedinicu pod nominalnom vlašću ugarskih kraljeva, nakon što je ugovorom s Mletačkom Republikom oslobođen mletačke vlasti. Ovim sporazumom dubrovačka republika je dobila zaštitu ugarskog kralja, zadržavši svoju samostalnost i privilegovani položaj, dok je preuzela obaveze koje je do tada imala prema Mlečanima. Pozadina: Zaderskim mirom iz 1358. Mletačka Republika je morala da se odrekne vlasti nad dalmatinskim kopnom i ostrvima, čime je Dubrovnik postao deo ugarskog kraljevstva. Uslovi: Višegradski ugovor je definisao odnos između Dubrovnika i Ugarske. Ugarski kralj Ludovik I Anžuvinski je garantovao Dubrovniku zaštitu i povlašćeni položaj, omogućavajući mu da se samostalno razvija. Posledice: Sporazum je bio ključan korak ka potpunoj samostalnosti Dubrovnika. Od 1358. godine, Dubrovnik je u suštini postao potpuno autonomna jedinica, ali pod nominalnom vlašću ugarskih kraljeva."
+},
+  { _id: "5e5f5e5e-5555-4e5e-8e5e-555555555555", Tekst: "Ustanak protiv Vizantije predstavljao je jedan od ključnih događaja u istoriji Srpske srednjovekovne države, kada su lokalni vladari i velikaši ustali protiv vlasti Vizantijskog carstva. Povod za ustanak bio je težak porez i sve veće nametanje vizantijskih vlasti na teritorijama koje su prethodno bile pod lokalnom autonomijom. Vođe ustanka okupljale su svoje pristalice iz različitih oblasti, oslanjajući se na podršku lokalnog stanovništva koje je bilo nezadovoljno stranim pritiskom. Borbe su se vodile na više frontova, a pobede i porazi smenjivali su se tokom nekoliko godina. Ustanici su uspeli da privremeno oslobode nekoliko gradova i tvrđava, demonstrirajući snagu i organizovanost lokalnih snaga. Vizantija je poslala vojne ekspedicije kako bi ugušila pobunu, ali su lokalni vođe koristili prirodne prepreke i teren u svoju korist. Tokom sukoba razvile su se strategije i taktike koje su kasnije korišćene u drugim sukobima sa Vizantijom. Ustanak je imao i političke posledice, jer je osnažio autonomiju lokalnih vlasti i povećao prestiž vođa pobunjenika. Iako je Vizantija na kraju uspela da povrati kontrolu nad nekim oblastima, ustanak je pokazao ranjivost carstva i ojačao nacionalni identitet Srba. Ovaj događaj je ostao zapamćen u hronikama i zapisima kao primer hrabrosti i borbe za slobodu protiv moćnog imperija." },
+
+  { _id: "8b8b8b8b-8888-4b8b-8b8b-888888888888", Tekst: "Opsada Rasa predstavljala je ključni vojni sukob u srednjovekovnoj Srbiji, kada su neprijateljske snage pokušale da zauzmu glavni grad i tvrđavu Ras. Opsada je počela iznenadnim napadom, koristeći nadmoć u broju i oružju, sa ciljem da slome otpor lokalnih branilaca. Branitelji su se uzdali u jake zidine i dobro poznavanje terena, pružajući žestok otpor protivniku. Tokom opsade razvijale su se razne vojne taktike, uključujući upotrebu opasača, katapulta i blokadu pristupa hrani i vodi. Stanovništvo grada je aktivno učestvovalo u odbrani, snabdevajući vojnike i pomažući u jačanju odbrambenih položaja. Napadi su se smenjivali sa periodima zatišja, tokom kojih su pregovarači pokušavali da postignu kompromis. Opsada je testirala izdržljivost branilaca, ali i strategijsko razmišljanje komandanta odbrane. Na kraju, zahvaljujući kombinaciji hrabrosti, taktičke mudrosti i podrške lokalnog stanovništva, branitelji su uspeli da odbiju napad i sačuvaju kontrolu nad Rasom. Opsada je imala značajne posledice po stabilnost regiona, jer je pokazala da lokalne snage mogu uspešno da se odupru moćnijim neprijateljima. Ovaj događaj je kasnije postao simbol otpora i nacionalnog identiteta u istorijskim zapisima Srbije." },
+
+  { _id: "9c9c9c9c-9999-4c9c-8c9c-999999999999", Tekst: "Sporazum sa Vizantijom predstavljao je važan diplomatski događaj u srednjovekovnoj istoriji Srbije i vizantijskog carstva, kojim su strane pokušale da regulišu međusobne odnose i prestanu sukobe. Ovim sporazumom postavljeni su jasni granicni sporazumi i uspostavljena politika nenapadanja između Srbije i Vizantije. Pored teritorijalnih pitanja, sporazum je regulisao trgovinske i političke odnose, omogućavajući sigurniji protok robe i ljudi. Diplomate sa obe strane su pregovarale mesecima, uz uzajamne kompromise i priznavanje prava lokalnih vladara. Sporazum je imao za cilj očuvanje stabilnosti regiona i smanjenje broja vojnih sukoba, koji su prethodno bili česti. Takođe, definisani su uslovi za vojnu pomoć u slučaju spoljne pretnje, čime je formalizovana odbrambena saradnja. Vizantija je dobila potvrdu svoje prestižne uloge u regionu, dok je Srbija osigurala autonomiju u unutrašnjim pitanjima. Sporazum je značajno uticao na političku situaciju u balkanskim zemljama i bio je temelj za buduće saveze i pregovore. Posledice sporazuma su uključivale smanjenje ratnih sukoba i jačanje ekonomskih veza. Ovaj diplomatski akt je kasnije upamćen u hronikama kao primer uspešne pregovaračke politike između dve moćne sile." },
+
+  { _id: "adadadad-aaaa-4dad-8dad-aaaaaaaaaaaa", Tekst: "Savez Nemanjića i Duklje bio je važan politički i vojni savez tokom srednjeg veka, kojim su dve države nastojale da osiguraju stabilnost i zaštitu svojih teritorija. Savez je nastao kao rezultat međusobnih pregovora i interesa u suočavanju sa spoljnim pretnjama, naročito od strane Mletačke republike i drugih susednih sila. Ugovor je obuhvatao međusobnu podršku u vojnim sukobima, kao i dogovor o trgovinskim i diplomatskim odnosima. Dinastije su kroz ovaj savez nastojale da ojačaju svoju moć i uticaj na Balkanu. Savez je omogućio koordinisane akcije protiv zajedničkih neprijatelja i očuvanje teritorijalnog integriteta obe države. Pored vojnog aspekta, dogovor je uključivao razmenu kulturnih i administrativnih iskustava, što je doprinosilo jačanju unutrašnje organizacije. Savez je bio od strateškog značaja za balans moći u regionu i često se pozivao u kasnijim pregovorima i mirovnim sporazumima. Tokom trajanja saveza, odnosi između vladajućih porodica su se učvrstili, a međusobno poverenje je omogućilo dugoročne političke koristi. Posledice saveza uključivale su stabilizaciju granica, smanjenje unutrašnjih sukoba i jačanje diplomatske pozicije obe strane. Savez Nemanjića i Duklje ostao je zapamćen kao primer uspešne saradnje između balkanskih država u srednjem veku." },
+
+  { _id: "bebebebe-bbbb-4beb-8beb-bbbbbbbbbbbb", Tekst: "Ustanak protiv Ugarske bio je niz oružanih sukoba i pobuna lokalnog stanovništva i vlastelina protiv ugarske vlasti u srednjem veku. Ustanici su se borili za očuvanje svojih prava, teritorijalnu nezavisnost i autonomiju svojih oblasti, dok su Ugari nastojali da učvrste svoj uticaj i priključe teritorije svom kraljevstvu. Borbe su trajale duži period i uključivale su više gradova i tvrđava, a često su se menjale frontove i saveznici. Ustanak je imao i politički i verski karakter, jer je stanovništvo želelo da očuva pravoslavnu tradiciju i lokalne običaje nasuprot centralizovanog ugarskog uticaja. Sukobi su izazvali značajne promene u moći lokalnih velikaša i doveli do reorganizacije administracije u pogođenim oblastima. Ustanak je imao značajne posledice po dalju politiku Ugarske prema Balkanu, dok je lokalno stanovništvo steklo veće iskustvo u samoodbrani i organizaciji otpora. Pored vojne dimenzije, ustanici su razvijali diplomatske kontakte sa susednim državama kako bi osigurali podršku. Ovi događaji su kasnije zabeleženi u hronikama i postali su simbol otpora protiv spoljne dominacije. Ustanak je uticao i na buduće saveze i koalicije u regionu, dok su mirni periodi nakon njega omogućili obnovu ekonomije i trgovine. Konačno, uspeh i neuspeh ustanka oblikovali su regionalnu politiku i odnose sa Ugarskom u narednim decenijama." },
+
+{ _id: "efefefef-eeee-4fef-8fef-eeeeeeeeeeee", Tekst: "Opsada Skadra bila je važna vojna akcija u kojoj su lokalne snage, podržane saveznicima, branile grad Skadar od protivničkih vojski tokom srednjeg veka. Grad je imao strateški značaj zbog svoje lokacije na granici između država i kontrole nad trgovinskim putevima. Opsada je trajala mesecima, tokom kojih su branitelji izdržali napade, opskrbljivali se zalihama i koristili različite odbrambene tehnike. Napadači su primenjivali opsadnu taktiku, uključujući opkoljavanje, blokadu i korišćenje mašina za rušenje zidina. Stanovništvo grada je bilo direktno uključeno u odbranu, pružajući logističku i moralnu podršku vojsci. Opsada Skadra imala je i diplomatsku dimenziju, jer su strane sile pokušavale da pregovorima utiču na ishod sukoba. Posledice opsade uključivale su promene u kontroli nad teritorijom, jačanje odbrambenih strategija i značajnu ljudsku i materijalnu štetu. Ovaj događaj je postao simbol hrabrosti i otpornosti lokalnog stanovništva. Opsada je ostavila trajan uticaj na regionalnu politiku i vojnu strategiju u narednim decenijama. Istorijski izvori beleže opsadu kao ključni trenutak u sukobima između susednih država i mletačkih interesa u regionu." },
+
+{ _id: "fafafafa-ffff-4afa-8afa-ffffffffffff", Tekst: "Izdavanje Zakonika Stefana Nemanje bio je ključan pravni akt kojim je srpski vladar Stefan Nemanja regulisao unutrašnje odnose i pravni poredak u svojim teritorijama. Zakonik je obuhvatao pitanja crkvene i svetovne vlasti, prava i obaveza velikaša i stanovništva, kao i pravila o imovini, nasleđivanju i kaznama. Njegova primena je omogućila standardizaciju i jačanje centralne vlasti, smanjenje sukoba među feudalnim vladarima i bolju administrativnu kontrolu. Zakonik je takođe imao kulturni značaj jer je promovisao pravoslavnu tradiciju i moralne norme u društvu. Tekst zakona je bio zapisivan u vidu pisane forme i čuvan u arhivama, dok je primena kontrolisana od strane vladara i njegovih predstavnika. Ovaj pravni akt je poslužio kao osnova za buduće zakonske regulative i učvrstio vladarsku moć Nemanjića. Zakonik je imao i edukativnu funkciju, jer je učio stanovništvo i velikaše o zakonima i pravilima ponašanja. Posledice njegovog donošenja uključivale su stabilizaciju društvenih odnosa, unapređenje pravde i smanjenje unutrašnjih sukoba. Izdavanje Zakonika Stefana Nemanje ostalo je zapamćeno kao jedan od temelja srpske srednjovekovne države." },
+
+]);
+
+
+db.Dogadjaji.insertMany([
+  
+  { _id: "b1b1b1b1-1111-4b1b-8b1b-111111111111", Tekst: "Bitka kod Pantina bila je značajan sukob u kojem je Stefan Nemanja učvrstio svoju vojnu moć i autoritet u regionu. Bitka se odigrala između vojski koje su se borile za kontrolu nad teritorijama Nemanjića. Stefan Nemanja je pažljivo planirao taktiku i mobilisao svoje snage, koristeći prirodne prepreke i strateške položaje. Napadi neprijatelja su bili snažni, ali su Nemanjine jedinice uspešno odbile sve protivnapade. Ova pobeda je omogućila konsolidaciju njegove vlasti u unutrašnjosti Srbije i povećala poverenje među saveznicima. Bitka je takođe demonstrirala Nemanjine sposobnosti u vođenju vojske i diplomatskom manevru. Posledice bitke su bile stabilizacija unutrašnjih teritorija i oslobađanje od pritiska protivnika. Zabeležena je u hronikama kao ključni trenutak u uspostavljanju državne moći Nemanjića. Vojska je nakon bitke reorganizovana i pripremljena za buduće sukobe. Bitka kod Pantina ostala je simbol odlučnosti i vojničke veštine Stefana Nemanje." },
+
+{ _id: "b2b2b2b2-2222-4b2b-8b2b-222222222222", Tekst: "Bitka kod Morave bila je odlučujući sukob između Srbije i Vizantije u kojem su srpske snage izvojevale pobedu. Vojska Stefana Nemanje koristila je prednosti teritorijalnog znanja i dobro organizovanu strategiju kako bi savladala Vizantince. Bitka se odigravala duž reke Morave, gde su rečne prepreke korišćene u odbrambene svrhe. Sukob je imao veliki uticaj na stabilnost regiona i omogućio jačanje vlasti Nemanjića. Posledice bitke uključivale su povećanje teritorijalne kontrole i jačanje političkog ugleda vođe Srbije. Stanovništvo je pružalo logističku podršku vojsci i pomagalo u održavanju opskrbe. Ova pobeda je takođe imala moralni efekat, podižući borbeni duh i samopouzdanje srpskih jedinica. Bitka kod Morave je zabeležena u istorijskim izvorima kao primer uspešne vojne strategije. Nakon bitke, pregovori sa Vizantijom omogućili su miran period i konsolidaciju vlasti. Bitka je ostavila trajan uticaj na regionalnu politiku i buduće sukobe sa susednim državama." },
+
+{ _id: "b3b3b3b3-3333-4b3b-8b3b-333333333333", Tekst: "Bitka kod Skadra predstavljala je važan vojni okršaj između Zete i neprijateljskih snaga. Grad Skadar imao je strateški značaj zbog kontrole nad primorskim putevima i trgovinom. Branitelji su koristili gradske zidine i prirodne prepreke za odbranu od napadača. Bitka je trajala više meseci, sa stalnim napadima i protunapadima. Lokalne snage i saveznici su koordinisali taktike kako bi odbili opsadu. Ovaj sukob je imao političke implikacije jer je kontrola Skadra bila ključna za regionalni uticaj. Posledice bitke uključivale su značajnu materijalnu štetu i ljudske gubitke, ali i jačanje odbrambenih sposobnosti grada. Bitka kod Skadra je zabeležena u hronikama kao simbol otpornosti i borbenog duha. Napadi su testirali sposobnosti vojske i gradskih branitelja, koji su pokazali izuzetnu izdržljivost. Ova bitka ostala je važna referenca za buduće sukobe u regionu i diplomatiju između susednih država." },
+
+{ _id: "b4b4b4b4-4444-4b4b-8b4b-444444444444", Tekst: "Bitka kod Velbužda bila je odlučujuća pobeda srpske vojske nad bugarskom vojskom. Sukob je imao veliki strateški značaj za kontrolu nad Balkanskim regionom i osiguravanje teritorijalne stabilnosti. Vojska Nemanjića koristila je prednosti terena, dobro koordinisanu taktiku i organizovane jedinice kako bi savladala protivnika. Bitka je trajala više dana, sa razmenom napada i manevra, a vođa srpskih snaga pažljivo je predviđao poteze protivnika. Posledice pobede uključivale su konsolidaciju vlasti i povećanje političkog ugleda Srbije. Stanovništvo je pružalo logističku podršku vojsci i učestvovalo u obezbeđivanju opskrbe. Bitka je zabeležena u hronikama kao primer vojne strategije i odlučnosti. Nakon sukoba, teritorije pogođene bitkom su reorganizovane i ojačane administrativno. Bitka kod Velbužda ostala je simbol moći Nemanjića i sposobnosti u odbrani svojih granica. Uticaj ove pobede bio je dugotrajan na regionalnu politiku i odnose sa susednim državama." },
+
+{ _id: "b5b5b5b5-5555-4b5b-8b5b-555555555555", Tekst: "Bitka kod Pelagonije bila je značajna pobeda srpske vojske nad Vizantijom, koja je omogućila konsolidaciju teritorija i jačanje političkog autoriteta Nemanjića. Vojska je primenila sofisticirane taktike i koristila prednosti terena kako bi pobedila protivničke snage. Bitka je trajala više dana, sa stalnom razmenom napada i protunapada. Posledice pobede uključivale su povećanje teritorijalnog uticaja i jačanje odbrambenih kapaciteta. Stanovništvo je učestvovalo u logistici i podršci vojsci, dok su saveznici osiguravali dodatnu podršku. Bitka kod Pelagonije zabeležena je u istorijskim izvorima kao primer uspešne strategije i odlučnosti vođa. Nakon sukoba, teritorije su stabilizovane i administrativno ojačane. Ova bitka je imala dugoročne posledice na regionalnu politiku i diplomatske odnose. Ostala je simbol vojne moći i sposobnosti Nemanjića u odbrani svojih interesa." },
+
+{ _id: "b6b6b6b6-6666-4b6b-8b6b-666666666666", Tekst: "Bitka na Marici bila je katastrofalan poraz srpskih velikaša od Osmanlija 1371. godine, koji je imao dubok uticaj na regionalnu politiku. Vojska je bila iznenađena taktikama Osmanlija i nedostatkom koordinacije među jedinicama. Poraz je doveo do gubitka teritorija i smanjenja političkog uticaja srpskih vladara. Posledice bitke uključivale su reorganizaciju vojske i jačanje odbrambenih kapaciteta. Lokalne vlasti su morale da se prilagode novim okolnostima i da traže saveznike za zaštitu. Bitka je imala psihološki efekat, smanjujući moral stanovništva i vojske. Istorijski izvori beleže bitku kao upozorenje o snazi Osmanlija i važnosti strateškog planiranja. Nakon sukoba, promene u teritorijalnoj kontroli dovele su do novih sukoba i pregovora. Bitka na Marici je ostala simbol katastrofalnog poraza, ali i pouke o vojnim strategijama. Uticaj ove bitke oblikovao je buduće sukobe i saveze u regionu." },
+
+{ _id: "b7b7b7b7-7777-4b7b-8b7b-777777777777", Tekst: "Bitka na Kosovu bila je čuveni sukob između Srbije i Osmanlija 1389. godine, koji je imao veliki istorijski značaj za region. Vojska je bila dobro pripremljena, ali su Osmanlije primenile snažne ofanzivne taktike. Bitka je trajala ceo dan, sa velikim brojem gubitaka sa obe strane, uključujući poznate vladare i vojvode. Posledice bitke uključivale su promene u političkom pejzažu Balkana i početak osmanske dominacije u regionu. Stanovništvo i lokalni vladari morali su da reorganizuju svoje odbrane i traže saveznike. Bitka na Kosovu zabeležena je u hronikama kao simbol hrabrosti, odlučnosti i nacionalnog identiteta. Nakon sukoba, teritorije su stabilizovane pod novim uslovima vlasti. Ova bitka je ostavila dugoročan uticaj na kulturu, tradiciju i kolektivnu svest. Ostala je simbol otpora i vojničke časti za naredne generacije." },
+
+{ _id: "b8b8b8b8-8888-4b8b-8b8b-888888888888", Tekst: "Bitka kod Nikopolja bila je poslednji veliki pokušaj evropskih sila da zaustave Osmanlije, koji se odigrao krajem 14. i početkom 15. veka. Vojske hrišćanskih sila organizovale su se kako bi sprečile širenje osmanske moći na Balkanu. Bitka je uključivala koordinaciju različitih kontingenata iz Evrope, dok su Osmanlije primenile stratešku ofanzivu. Sukob je imao veliki broj gubitaka i značajan uticaj na moral vojski. Posledice bitke uključivale su jačanje osmanske dominacije i oslabljenje evropskih sila u regionu. Bitka kod Nikopolja zabeležena je u istorijskim izvorima kao primer neuspeha hrišćanskih koalicija. Nakon sukoba, teritorijalni i politički pejzaž Balkana se značajno promenio. Bitka je ostavila trajan uticaj na vojne strategije i planiranje budućih sukoba. Ovaj događaj je simbol opasnosti i izazova koje su evropske sile morale da savladaju. Ostala je u kolektivnoj svesti kao ključni trenutak u sukobu sa Osmanlijama." },
+
+{ _id: "b9b9b9b9-9999-4b9b-8b9b-999999999999", Tekst: "Bitka kod Varne bila je sukob između krstaške vojske i Osmanlija 1444. godine, koji je imao veliki strateški značaj za kontrolu Balkana. Vojska krstaša pokušala je da zaustavi osmansku ekspanziju, dok su Osmanlije primenile superiornu taktiku i brojčanu nadmoć. Bitka je rezultirala porazom krstaških snaga i omogućila Osmanlijama jačanje moći u regionu. Posledice bitke uključivale su reorganizaciju evropskih vojski i promene u diplomatskim odnosima. Lokalno stanovništvo je bilo pogođeno sukobom i promenom vlasti. Bitka kod Varne zabeležena je u hronikama kao simbol neuspeha hrišćanskog saveza i snage Osmanlija. Nakon sukoba, teritorije pod kontrolom Osmanlija stabilizovane su i ojačane. Bitka je uticala na buduće sukobe i vojne strategije u regionu. Ostala je važan istorijski trenutak i simbol vojne i političke dinamike Balkana. Zabeležena je i u umetničkim i književnim delima kao simbol epohe." },
+
+{ _id: "b0b0b0b0-0000-4b0b-8b0b-000000000000", Tekst: "Bitka kod Beograda bila je odbrana Beograda od Osmanlija 1456. godine pod vođstvom Janoša Hunjadija, koja je imala veliki strateški i politički značaj. Grad je bio ključna tačka za kontrolu teritorija i trgovinskih puteva. Branitelji su organizovali odbranu, koristeći gradske zidine, opkoljene položaje i opskrbu hranom i oružjem. Sukob je trajao nekoliko nedelja, sa stalnim napadima i protunapadima. Posledice bitke uključivale su očuvanje teritorijalnog integriteta, jačanje odbrambenih kapaciteta i podizanje morala stanovništva. Bitka kod Beograda zabeležena je u istorijskim izvorima kao primer hrabrosti i odlučnosti vođa i vojske. Nakon sukoba, teritorija je stabilizovana i zaštita grada ojačana. Grad je postao simbol otpora protiv Osmanlija i primer koordinacije i strategije u odbrani. Ova bitka je imala dugoročne posledice po regionalnu politiku i buduće sukobe. Ostala je trajni simbol vojničke časti i otpornosti u kolektivnoj svesti." },
+
+
+  
+  { _id: "a1111111-1111-4111-8111-111111111111", Tekst: "Rat sa Vizantijom predstavljao je sukobe Stefana Nemanje sa Vizantijskim carstvom, koji su vođeni krajem 12. veka i završeni mirom 1186. godine. Sukobi su uključivali vojne okršaje na granicama i kontrolu nad važnim teritorijama. Stefan Nemanja je koristio taktičke manevarske sposobnosti i organizovao vojsku za efikasne odbrane. Bitke su bile praćene diplomatskim pregovorima i saveznicima u regionu. Posledice rata uključivale su konsolidaciju srpske vlasti i jačanje političkog ugleda Nemanjića. Gradovi i tvrđave su ojačani radi odbrane od budućih sukoba. Stanovništvo je pružalo logističku i materijalnu podršku vojsci. Rat je imao dugoročan uticaj na odnose Srbije i Vizantije. Nakon završetka sukoba, mir je omogućio ekonomski razvoj i stabilnost granica. Rat sa Vizantijom ostao je upamćen kao primer uspešne vojne i diplomatske strategije Stefana Nemanje." },
+
+{ _id: "a2222222-2222-4222-8222-222222222222", Tekst: "Rat za Zetu bio je borba za prevlast u oblasti Zete između Nemanjića i lokalnih velikaša, koja se odigravala tokom 12. i 13. veka. Konflikti su obuhvatali kontrolu nad teritorijama, uticaj u primorskim gradovima i sigurnost trgovinskih puteva. Stefan Nemanja je koristio vojne snage i diplomatske metode kako bi neutralisao protivnike. Bitke su uključivale strateške manevre, opsade tvrđava i sukobe u planinskim oblastima. Posledice rata bile su jačanje centralne vlasti i integracija Zete u državu Nemanjića. Lokalni vlastodršci su primorani da priznaju autoritet Nemanjića i sarađuju u administraciji. Stanovništvo je učestvovalo u logističkoj podršci vojske i održavanju linija snabdevanja. Rat za Zetu imao je dugoročne političke i ekonomske posledice. Nakon sukoba, oblast je stabilizovana i ojačana administrativno. Ovaj rat ostao je upamćen kao primer odlučnosti Nemanjića u širenju državne moći." },
+
+{ _id: "a3333333-3333-4333-8333-333333333333", Tekst: "Srpsko-bugarski rat bio je oružani sukob Srbije i Bugarske tokom 14. veka, koji je obuhvatao kontrolu nad teritorijama i strateškim gradovima. Vojske su se sukobile u više bitaka, sa značajnim gubicima na obe strane. Stefan Nemanja i njegovi naslednici primenili su taktičke manevre kako bi osigurali pobedu. Bitke su uključivale odbrane tvrđava, napade na neprijateljske položaje i koordinaciju saveznika. Posledice rata uključivale su promene granica i jačanje srpske političke moći. Lokalne vlasti i stanovništvo učestvovali su u logistici i odbrani. Rat je imao dugoročne efekte na regionalnu stabilnost i diplomatske odnose sa susednim državama. Nakon sukoba, teritorije su reorganizovane i administrativno ojačane. Srpsko-bugarski rat zabeležen je u hronikama kao važan događaj za razvoj vojne strategije. Ovaj sukob ostavio je trajan uticaj na političku mapu Balkana i buduće sukobe." },
+
+{ _id: "a4444444-4444-4444-8444-444444444444", Tekst: "Rat za Makedoniju obuhvatao je sukobe Srbije i Vizantije oko kontrole nad Makedonijom, koje su se odigravale tokom 13. i 14. veka. Ovi sukobi uključivali su opsade gradova, manevre vojske i strateške bitke na važnim putevima. Stefan Nemanja i njegovi naslednici koristili su vojne taktike i saveznike kako bi osigurali pobedu. Posledice rata uključivale su promene u kontroli teritorija i jačanje političkog autoriteta Nemanjića. Stanovništvo i lokalne vlasti bili su aktivno uključeni u podršku vojsci i održavanje opskrbe. Rat za Makedoniju imao je dugoročne političke, vojne i ekonomske posledice. Nakon sukoba, oblasti su stabilizovane i administrativno ojačane. Rat je zabeležen u istorijskim izvorima kao primer vojničke veštine i odlučnosti. Sukobi su oblikovali buduće odnose sa Vizantijom i drugim regionalnim silama. Ovaj rat ostao je simbol strateške borbe za kontrolu Balkana." },
+
+{ _id: "a5555555-5555-4555-8555-555555555555", Tekst: "Rat sa Osmanlijama predstavljao je niz sukoba između srpskih i osmanskih snaga tokom druge polovine 14. veka. Ovi sukobi uključivali su bitke, opsade gradova i manevre vojske na važnim teritorijama. Srpski vladari i velikaši pokušavali su da zaustave širenje Osmanlija, koristeći taktičke prednosti i saveznike u regionu. Bitke su bile teške i sa velikim gubicima sa obe strane, dok su Osmanlije primenjivale superiornu strategiju i brojčanu nadmoć. Posledice rata uključivale su gubitak teritorija i promene u političkoj strukturi. Stanovništvo je učestvovalo u logistici i pružanju pomoći vojsci. Rat sa Osmanlijama imao je dugoročne političke, vojne i ekonomske posledice. Nakon sukoba, srpski vladari morali su reorganizovati odbranu i tražiti saveznike. Sukobi su oblikovali buduće vojne strategije i diplomaciju. Ovaj rat ostao je upamćen kao izazovan period i primer borbe protiv moćne sile." },
+
+{ _id: "a6666666-6666-4666-8666-666666666666", Tekst: "Kosovski rat bio je ratni sukob koji je kulminirao Kosovskom bitkom 1389. godine, gde su se sukobile srpske snage i Osmanlije. Bitka je imala veliki broj gubitaka i uključivala je poznate vladare i vojvode sa obe strane. Sukob je imao dubok uticaj na politički pejzaž Balkana i početak osmanske dominacije u regionu. Srpski vojnici su pokazali hrabrost i odlučnost u odbrani svojih teritorija. Posledice rata uključivale su reorganizaciju vojske i promene u teritorijalnoj kontroli. Stanovništvo i lokalni vladari morali su da prilagode strategije odbrane i traže saveznike. Kosovski rat zabeležen je u hronikama i narodnoj tradiciji kao simbol hrabrosti i nacionalnog identiteta. Nakon bitke, region je suočen sa novim političkim i vojnim izazovima. Rat je imao dugoročne kulturne i simbolične posledice za Srbiju. Ovaj sukob ostao je trajni simbol otpora i borbenog duha." },
+
+{ _id: "a7777777-7777-4777-8777-777777777777", Tekst: "Rat protiv Osmanlija predstavljao je pokušaje balkanskih država da suzbiju osmanski uticaj krajem 14. veka, uključujući brojne bitke i sukobe. Vojske regiona koordinisale su odbrane i saveznike kako bi zaustavile ekspanziju Osmanlija. Bitke su uključivale opsade gradova, manevarske sukobe i strateške napade. Posledice rata uključivale su gubitak teritorija, promene političkog autoriteta i reorganizaciju vojske. Stanovništvo je pružalo logističku i materijalnu podršku, dok su lokalni vladari tražili diplomatska rešenja. Rat protiv Osmanlija imao je dugoročne političke, vojne i ekonomske posledice. Nakon sukoba, teritorije su stabilizovane pod novim uslovima vlasti. Ovi sukobi oblikovali su buduće odnose između balkanskih država i Osmanlija. Rat je zabeležen u hronikama kao period borbe protiv moćne sile. Ostao je simbol otpora i važnosti strateškog planiranja u odbrani." },
+
+{ _id: "a8888888-8888-4888-8888-888888888888", Tekst: "Rat kod Varne bio je krstaški pohod hrišćanskih sila protiv Osmanlija 1444. godine, sa ciljem zaustavljanja osmanske ekspanzije na Balkanu. Vojska krstaša je uključivala jedinice iz različitih evropskih zemalja i pokušala da primeni koordinisane strategije. Sukob je rezultirao porazom krstaških snaga zbog superiorne taktike Osmanlija i njihovog brojčanog nadmoćstva. Posledice bitke uključivale su jačanje osmanske dominacije i oslabljenje evropskih sila u regionu. Stanovništvo je bilo pogođeno sukobom i promenom vlasti. Rat kod Varne zabeležen je u istorijskim izvorima kao primer neuspeha hrišćanskog saveza. Nakon bitke, teritorijalna kontrola Osmanlija stabilizovana je i ojačana. Bitka je oblikovala buduće vojne strategije i diplomatske odnose. Ostala je simbol izazova sa kojima su se evropske sile suočavale. Bitka kod Varne ostala je važan istorijski trenutak u sukobu sa Osmanlijama." },
+
+{ _id: "a9999999-9999-4999-8999-999999999999", Tekst: "Rat za Beograd predstavljao je sukobe između Ugarske i Osmanlija, koji su kulminirali opsadom Beograda 1456. godine pod vođstvom Janoša Hunjadija. Grad je imao strateški značaj zbog kontrole nad teritorijama i trgovinskim putevima. Branitelji su organizovali odbranu grada, koristeći zidine i opskrbu hranom i oružjem. Bitka je trajala nekoliko nedelja i uključivala stalne napade i protunapade. Posledice rata uključivale su očuvanje teritorijalnog integriteta i jačanje odbrambenih kapaciteta. Stanovništvo je učestvovalo u odbrani i logistici, dok su saveznici pružali podršku. Rat za Beograd zabeležen je u hronikama kao primer hrabrosti, odlučnosti i vojne strategije. Nakon sukoba, grad je stabilizovan i ojačan za buduće odbrane. Ovaj sukob imao je dugoročne posledice po regionalnu politiku i kontrolu teritorija. Ostao je simbol otpornosti i vojničke časti u kolektivnoj svesti." }
+
+]);
+
+db.Dinastije.insertMany([
+  { _id: "d1d1d1d1-1111-4d1d-8d1d-111111111111", Slika: "https://upload.wikimedia.org/wikipedia/commons/5/5b/Nemanjici_CoA.png" },
+  { _id: "d2d2d2d2-2222-4d2d-8d2d-222222222222", Slika: "https://upload.wikimedia.org/wikipedia/commons/4/4e/Vojislavljevici_CoA.png" },
+  { _id: "d3d3d3d3-3333-4d3d-8d3d-333333333333", Slika: "https://upload.wikimedia.org/wikipedia/commons/3/33/Balsici_CoA.png" },
+  { _id: "d4d4d4d4-4444-4d4d-8d4d-444444444444", Slika: "https://upload.wikimedia.org/wikipedia/commons/2/2b/Kotromanici_CoA.png" },
+  { _id: "d6d6d6d6-6666-4d6d-8d6d-666666666666", Slika: "https://upload.wikimedia.org/wikipedia/commons/6/6c/Hohenstauf_CoA.png" },
+  { _id: "d7d7d7d7-7777-4d7d-8d7d-777777777777", Slika: "https://upload.wikimedia.org/wikipedia/commons/7/7f/Asenovci_CoA.png" },
+  { _id: "d8d8d8d8-8888-4d8d-8d8d-888888888888", Slika: "https://upload.wikimedia.org/wikipedia/commons/8/8a/Komnini_CoA.png" },
+  {
+    _id: "d0d0d0d0-0000-4d0d-8d0d-000000000000",
+    Slika: "https://upload.wikimedia.org/wikipedia/commons/5/56/Arpad_CoA.svg"
+  },
+  {
+    _id: "d1d2d1d2-1111-4d1d-8d1d-121212121212",
+    Slika: "https://upload.wikimedia.org/wikipedia/commons/b/b9/Anjou_CoA.svg"
+  },
+  {
+    _id: "d2d3d2d3-2222-4d2d-8d2d-232323232323",
+    Slika: "https://upload.wikimedia.org/wikipedia/commons/8/8c/Dandolo_CoA.svg"
+  },
+  {
+    _id: "d3d4d3d4-3333-4d3d-8d3d-343434343434",
+    Slika: "https://upload.wikimedia.org/wikipedia/commons/1/1a/Smilac_family_arms.png"
+  },
+  {
+    _id: "d4d5d4d5-4444-4d4d-8d4d-454545454545",
+    Slika: "https://upload.wikimedia.org/wikipedia/commons/5/57/Orsini_CoA.svg"
+  },
+  {
+    _id: "d5d6d5d6-5555-4d5d-8d5d-565656565656",
+    Slika: "https://upload.wikimedia.org/wikipedia/commons/f/f1/Doukas_dynasty_CoA.svg"
+  }
+]);
+
+
+db.Licnosti.insertMany([
+
+{ _id: "c4c4c4c4-4444-4c4c-8c4c-444444444444", Slika: "placeholder_muski.png", Tekst: "Vukašin Nemanja je bio diplomata iz dinastije Nemanjić, poznat po svojoj veštini u pregovorima i političkoj mudrosti. Zastupao je interese dinastije u diplomatskim misijama prema susednim državama. Njegov rad je uključivao organizovanje saveza i sklapanje sporazuma. Bio je uključen u rešavanje unutrašnjih i spoljnopolitičkih konflikata. Vukašin Nemanja je učestvovao u savetovanju vladara i planiranju strategija. Njegova sposobnost kompromisa i pregovaranja bila je ključna za jačanje dinastije. Doprineo je stabilnosti i očuvanju teritorijalne celovitosti Srbije. Njegovo znanje i iskustvo uticali su na buduće političke odluke. Ostao je upamćen kao primer mudrog i pravednog diplomate. Njegovo nasleđe oblikovalo je diplomatske tradicije u Nemanjićkoj državi." },
+
+{ _id: "c8c8c8c8-8888-4c8c-8c8c-888888888888", Slika: "placeholder_muski.png", Tekst: "Miloš Kotromanić je bio sveštenik iz dinastije Kotromanić, poznat po svojoj pobožnosti i učenosti. Učestvovao je u crkvenim i kulturnim aktivnostima. Posvetio je život obrazovanju, prepisivanju spisa i vođenju manastira. Bio je savetnik vladara i član porodice koji je imao uticaj na crkvena pitanja. Miloš je bio uključen u diplomatske misije i pregovore sa susednim državama. Njegova dela doprinela su jačanju crkvene organizacije i kulture. Stanovništvo i monasi poštovali su njegov autoritet i mudrost. Ostao je upamćen kao učen i pobožan sveštenik. Njegovo nasleđe oblikovalo je crkvenu i kulturnu tradiciju. Miloš Kotromanić simbolizuje duhovni uticaj svoje dinastije." },
+
+{ _id: "c9c9c9c9-9999-4c9c-8c9c-999999999999", Slika: "placeholder_zenski.png", Tekst: "Katarina Kotromanić je bila vojvotkinja iz dinastije Kotromanić, poznata po svom društvenom i političkom uticaju. Aktivno je učestvovala u diplomatskim pregovorima i sklapanju saveza. Promovisala je obrazovanje, kulturu i religijske vrednosti. Katarina je savetovala vladare i članove porodice u vođenju države. Njena uloga doprinela je stabilnosti i jačanju moći dinastije. Bila je poznata po mudrosti, pravednosti i sposobnosti upravljanja posedom. Njena dela ostavila su dugotrajan trag u istoriji i crkvi. Ostala je simbol ženske moći i uticaja u srednjovekovnoj Bosni. Njeno nasleđe inspirisalo je buduće generacije plemkinja i vladarki. Katarina Kotromanić ostala je upamćena po sposobnosti vođenja i diplomatskoj veštini." },
+
+{ _id: "c4d4c4d4-4444-4d4d-8d4d-444444444444", Slika: "placeholder_muski.png", Tekst: "Miloš Nemanja je bio vojvoda iz dinastije Nemanjić, poznat po vojničkim sposobnostima i hrabrosti. Vodio je bitke za očuvanje teritorija i jačanje moći dinastije. Učestvovao je u strateškom planiranju sukoba i organizovanju vojske. Bio je savetnik vladara i učestvovao u diplomatskim misijama. Njegove akcije doprinele su stabilnosti države i autoritetu dinastije. Stanovništvo i saveznici poštovali su njegovu hrabrost i odlučnost. Ostao je upamćen kao sposoban vojvoda i strateški mislilac. Njegovo nasleđe oblikovalo je vojnu tradiciju i politiku Srbije. Miloš Nemanja simbolizuje odanost i hrabrost svoje porodice. Njegove vojne akcije imale su dugoročne posledice po teritorijalnu kontrolu i stabilnost države." },
+
+{
+    _id: "c1c2c1c1-1111-4c1c-8c1c-111111111111",
+    Slika: "placeholder_muski.png",
+    Tekst: "Stefan Nemanja bio je veliki župan Raške i osnivač dinastije Nemanjić. Ujedinio je srpske zemlje, učvrstio centralnu vlast i oslobodio teritorije od vizantijske vlasti. Njegova vladavina obeležena je političkom stabilnošću, graditeljstvom manastira i jačanjem pravoslavlja. Odrekao se prestola u korist sina Stefana i zamonašio kao Simeon Mirotočivi, ostavivši dubok duhovni i politički trag."
+  },
+  {
+    _id: "c2c3c2c2-2222-4c2c-8c2c-222222222222",
+    Slika: "placeholder_zenski.png",
+    Tekst: "Ana Anastasija Nemanjić bila je supruga Stefana Nemanje i velika kneginja. Poznata po pobožnosti i brizi za narod, podržavala je osnivanje manastira i crkava. Nakon smrti muža zamonašila se pod imenom Anastasija. Njena duhovnost i blagost ostavile su snažan pečat u srpskoj istoriji i kulturi."
+  },
+  {
+    _id: "c5c6c5c5-5555-4c5c-8c5c-555555555555",
+    Slika: "placeholder_muski.png",
+    Tekst: "Sveti Sava Nemanjić bio je prvi arhiepiskop srpski i najvažnija ličnost srpske srednjovekovne crkve. Osnivač Srpske pravoslavne crkve, diplomata, zakonodavac i prosvetitelj. Njegov rad postavio je temelje srpske državnosti i kulture. Bio je posrednik mira među braćom i tvorac Zakonopravila, prvog srpskog pravnog spisa."
+  },
+  {
+    _id: "c6c7c6c6-6666-4c6c-8c6c-666666666666",
+    Slika: "placeholder_zenski.png",
+    Tekst: "Neimenovana princeza Nemanjić bila je kći Stefana Nemanje. Iako njeno ime nije sačuvano u izvorima, poznato je da je imala značajnu ulogu u učvršćivanju dinastičkih veza kroz brak. Njena uloga simbolizuje diplomatsku snagu i važnost ženidbenih saveza u srednjovekovnoj politici."
+  },
+  {
+    _id: "c7c8c7c7-7777-4c7c-8c7c-777777777777",
+    Slika: "placeholder_zenski.png",
+    Tekst: "Neimenovana2 princeza Nemanjić, takođe kći Stefana Nemanje, predstavljala je deo šireg političkog plana dinastije kroz brakove i saveze. Njena istorijska uloga se vezuje za jačanje odnosa sa susednim zemljama i učvršćivanje položaja Nemanjića na Balkanu."
+  },
+  {
+    _id: "c8c9c8c8-8888-4c8c-8c8c-888888888888",
+    Slika: "placeholder_muski.png",
+    Tekst: "Dimitrije Nemanjić bio je župan iz loze Nemanjića koji je učestvovao u upravljanju delovima Raške. Njegova vladavina obeležena je miroljubivom politikom i saradnjom sa crkvenim vlastima. Nastavio je tradiciju porodice u održavanju reda i zaštiti teritorijalne celovitosti."
+  },
+  {
+    _id: "c9c1c9c9-9999-4c9c-8c9c-999999999999",
+    Slika: "placeholder_muski.png",
+    Tekst: "Vratislav Nemanjić bio je župan iz mlađe grane dinastije. Vodio je lokalne oblasti i učestvovao u učvršćivanju političkog uticaja Nemanjića na prostoru Raške. Poznat je po odanosti porodici i doprinosu stabilnosti feudalnog sistema."
+  },
+  {
+    _id: "c0c1c0c0-0000-4c0c-8c0c-000000000000",
+    Slika: "placeholder_muski.png",
+    Tekst: "Knez Vratko Nemanjić, poznat i kao Jug Bogdan u narodnim pesmama, bio je unuk Stefana Nemanje. Istakao se kao ratnik i državnik, učestvovao u odbrani Srbije i simbolizuje viteštvo i čast u srpskoj tradiciji."
+  },
+  {
+    _id: "c1c1c1c2-1111-4c1c-8c1c-222222222222",
+    Slika: "placeholder_muski.png",
+    Tekst: "Župan Nikola Nemanjić bio je predstavnik kasnije generacije dinastije. Vodio je manje oblasti i održavao veze sa vladarskim dvorom. Njegova uloga bila je upravna i diplomatska, doprinoseći kontinuitetu vlasti i stabilnosti države."
+  },
+  {
+    _id: "c2c3c2c3-2222-4c2c-8c2c-333333333333",
+    Slika: "placeholder_zenski.png",
+    Tekst: "Kneginja Milica Nemanjić, supruga kneza Lazara, poticala je iz loze Nemanjića. Bila je poznata po mudrosti, pobožnosti i političkom umeću. Nakon Kosovske bitke preuzela je vođenje Srbije i očuvala državnost u teškim vremenima. Kasnije se zamonašila kao monahinja Jevgenija."
+  },
+  {
+    _id: "c7c8c7c8-7777-4c7c-8c7c-888888888888",
+    Slika: "placeholder_zenski.png",
+    Tekst: "Princeza Komnina Nemanjić bila je potomak Stefana Nemanje i povezana sa vizantijskom dinastijom Komnina. Njeno ime svedoči o važnim dinastičkim vezama između Srbije i Vizantije. Kroz brakove je doprinosila diplomatskim odnosima i kulturnim razmenama između dve države."
+  }
+
+]);
+
+db.Vladari.insertMany([
+
+{ _id: "22222222-2222-4222-8222-222222222222", Tekst: "Stefan Radoslav je bio kralj Nemanjića, poznat po svom uticaju u političkom i crkvenom životu Srbije. Vodio je vojsku u odbrani teritorija i učvršćivanju granica. Bio je aktivan u diplomatskim pregovorima i sklapanju saveza. Njegova vladavina doprinela je stabilnosti države i jačanju dinastije. Učestvovao je u razvoju pravne i crkvene infrastrukture. Njegove odluke oblikovale su unutrašnju politiku i upravljanje. Bio je poštovan i od plemstva i od stanovništva. Ostao je upamćen kao pravedan, mudar i sposoban vladar. Njegove akcije doprinele su kulturnom i duhovnom razvoju zemlje. Stefan Radoslav je simbol stabilnosti i kontinuiteta Nemanjićke dinastije.", Slika: "placeholder_muski.png", Teritorija: "raskaska_teritorija.png" },
+
+{ _id: "44444444-4444-4444-8444-444444444444", Tekst: "Jelena Nemanjić je bila kraljica Nemanjića, poznata po svojoj mudrosti, diplomatskoj veštini i uticaju u političkom životu. Savetovala je vladare i učestvovala u sklapanju saveza. Promovisala je obrazovanje, religijske vrednosti i kulturu. Njena uloga doprinela je jačanju autoriteta dinastije i stabilnosti države. Aktivno je učestvovala u humanitarnim i kulturnim projektima. Njeni postupci ostavili su dugotrajan trag u istoriji i crkvi. Bila je poštovana i od plemstva i od naroda. Njeno nasleđe oblikovalo je žensku moć i uticaj u srednjovekovnoj Srbiji. Ostala je simbol mudrosti, pravednosti i diplomatije. Jelena Nemanjić je inspirisala buduće generacije plemkinja i vladarki.", Slika: "placeholder_zenski.png", Teritorija: "raskaska_teritorija.png" },
+
+{ _id: "55555555-5555-4555-8555-555555555555", Tekst: "Balša Balšić je bio knez Balšića, poznat po svojoj hrabrosti i sposobnosti da vodi teritorije i vojsku. Bio je uključen u brojne bitke za očuvanje teritorije i moći dinastije. Vodio je vojsku i učestvovao u strateškom planiranju sukoba. Učestvovao je u diplomatskim pregovorima i sklapanju saveza. Njegove akcije doprinele su stabilnosti i jačanju autoriteta dinastije. Bio je poštovan od strane stanovništva i lokalnih velikaša. Ostao je upamćen kao sposoban vojvoda i strateški mislilac. Njegove odluke oblikovale su regionalnu politiku i vojnu tradiciju. Balša Balšić simbolizuje moć, hrabrost i vojničke sposobnosti. Njegove akcije imale su dugoročne posledice po teritorijalnu kontrolu.", Slika: "placeholder_muski.png", Teritorija: "zeta_teritorija.png" },
+
+{ _id: "66666666-6666-4666-8666-666666666666", Tekst: "Đurađ Balšić je bio kralj Balšića, poznat po vojnim i političkim sposobnostima. Vodio je borbe za očuvanje teritorija i jačanje dinastije. Bio je uključен u strateško planiranje sukoba i organizovanje vojske. Učestvovao je u diplomatskim pregovorima i sklapanju saveza. Njegove odluke doprinele su stabilnosti i jačanju moći dinastije. Bio je poštovan od strane plemstva i stanovništva. Ostao je upamćen kao sposoban vojvoda i lider. Njegovo nasleđe oblikovalo je regionalnu politiku i vojne tradicije. Đurađ Balšić simbolizuje snagu i autoritet svoje porodice. Njegove akcije imale su dugoročne posledice po političke i teritorijalne odnose.", Slika: "placeholder_muski.png", Teritorija: "zeta_teritorija.png" },
+
+{ _id: "77777777-7777-4777-8777-777777777777", Tekst: "Tvrtko Kotromanić je bio kralj Kotromanića, poznat po jačanju države i autoriteta svoje dinastije. Vodio je teritorije kroz diplomatske i vojne izazove. Bio je inicijator kulturnih i crkvenih projekata. Učestvovao je u sklapanju saveza i pregovorima sa susednim državama. Njegove akcije doprinele su stabilnosti i razvoju Bosne. Bio je poštovan od plemstva i naroda. Ostao je upamćen kao sposoban vladar i vizionar. Njegovo nasleđe oblikovalo je političke i kulturne tradicije. Tvrtko Kotromanić simbolizuje moć, mudrost i vođstvo. Njegove odluke imale su dugoročne posledice po teritorijalnu kontrolu i stabilnost države.", Slika: "placeholder_muski.png", Teritorija: "bosna_teritorija.png" },
+
+{ _id: "88888888-8888-4888-8888-888888888888", Tekst: "Louis Vizantijski je bio kralj Vizantije, poznat po vojničkim sposobnostima i diplomatskoj veštini. Vodio je vojsku u odbrani teritorija i učestvovao u strateškom planiranju sukoba. Bio je uključen u diplomatske pregovore i sklapanje saveza. Njegove akcije doprinele su jačanju moći i stabilnosti carstva. Bio je poštovan od strane plemstva i stanovništva. Ostao je upamćen kao sposoban vojvoda i vođa. Njegovo nasleđe oblikovalo je vizantijsku vojnu i političku tradiciju. Louis Vizantijski simbolizuje moć, strateško razmišljanje i autoritet. Njegove odluke imale su dugoročne posledice po teritorijalnu kontrolu i sigurnost carstva.", Slika: "placeholder_muski.png", Teritorija: "vizantija_teritorija.png" },
+
+{ _id: "99999999-9999-4999-8999-999999999999", Tekst: "Ferdinand Dalmacija je bio kralj Dalmacije, poznat po diplomatskoj veštini i upravljanju teritorijama. Vodio je teritorije kroz političke i vojne izazove. Učestvovao je u sklapanju saveza i pregovorima sa susednim državama. Njegove odluke doprinele su stabilnosti i razvoju Dalmacije. Bio je poštovan od plemstva i stanovništva. Ostao je upamćen kao sposoban vladar i vizionar. Njegovo nasleđe oblikovalo je regionalnu politiku i diplomatske tradicije. Ferdinand Dalmacija simbolizuje moć, mudrost i autoritet. Njegove odluke imale su dugoročne posledice po teritorijalnu kontrolu i stabilnost države.", Slika: "placeholder_muski.png", Teritorija: "dalmacija_teritorija.png" },
+
+{ _id: "10101010-1010-4a10-8a10-101010101010", Tekst: "Stefan Radoslav II je bio kralj Nemanjića, poznat po svojoj vojničkoj i političkoj sposobnosti. Vodio je borbe za očuvanje teritorija i jačanje moći dinastije. Učestvovao je u diplomatskim pregovorima i sklapanju saveza. Njegove odluke doprinele su stabilnosti i razvoju države. Bio je poštovan od plemstva i stanovništva. Ostao je upamćen kao sposoban i pravedan vladar. Njegovo nasleđe oblikovalo je vojnu i političku tradiciju. Stefan Radoslav II simbolizuje mudrost, hrabrost i odanost dinastiji. Njegove akcije imale su dugoročne posledice po teritorijalnu kontrolu i stabilnost države.", Slika: "placeholder_muski.png", Teritorija: "raskaska_teritorija.png" },
+
+{ _id: "11111111-1111-4a11-8a11-111111111111", Tekst: "Vuk Nemanja je bio kralj Nemanjića, poznat po svojoj hrabrosti, vojničkim sposobnostima i mudrosti. Vodio je teritorije kroz brojne sukobe i bitke. Učestvovao je u diplomatskim pregovorima i strateškom planiranju. Bio je poštovan od plemstva i naroda. Njegove akcije doprinele su stabilnosti i jačanju dinastije. Ostao je upamćen kao sposoban vojvoda i pravedan vladar. Njegovo nasleđe oblikovalo je vojnu, političku i kulturnu tradiciju. Vuk Nemanja simbolizuje hrabrost, mudrost i odanost svojoj porodici. Njegove odluke imale su dugoročne posledice po teritorijalnu kontrolu i sigurnost države.", Slika: "placeholder_muski.png", Teritorija: "raskaska_teritorija.png" },
+
+{ _id: "12121212-1212-4a12-8a12-121212121212", Tekst: "Sava Nemanja je bio kralj Nemanjića, poznat po svojoj pobožnosti, mudrosti i duhovnom uticaju. Vodio je teritorije kroz diplomatske pregovore i savete vladarima. Učestvovao je u crkvenim i kulturnim projektima. Njegove odluke doprinele su jačanju stabilnosti i autoriteta dinastije. Bio je poštovan od plemstva i naroda. Ostao je upamćen kao sposoban i pravedan vladar. Njegovo nasleđe oblikovalo je crkvenu, političku i kulturnu tradiciju. Sava Nemanja simbolizuje mudrost, pobožnost i odanost dinastiji. Njegove akcije imale su dugoročne posledice po stabilnost države i duhovni život.", Slika: "placeholder_muski.png", Teritorija: "raskaska_teritorija.png" },
+
+{ _id: "13131313-1313-4a13-8a13-131313131313", Tekst: "Stefan Radoslav je bio kralj Kotromanića, poznat po svojoj hrabrosti, diplomatskoj veštini i sposobnosti vođenja teritorija. Vodio je države kroz političke i vojne izazove. Učestvovao je u sklapanju saveza i pregovorima sa susednim državama. Njegove odluke doprinele su stabilnosti i jačanju autoriteta dinastije. Bio je poštovan od plemstva i stanovništva. Ostao je upamćen kao sposoban, pravedan i vizionarski vladar. Njegovo nasleđe oblikovalo je regionalnu politiku i upravljanje državom. Stefan Radoslav simbolizuje moć, mudrost i odanost svojoj porodici. Njegove akcije imale su dugoročne posledice po stabilnost i teritorijalnu kontrolu.", Slika: "placeholder_muski.png", Teritorija: "bosna_teritorija.png" },
+
+{ _id: "14141414-1414-4a14-8a14-141414141414", Tekst: "Vukan Nemanjić je bio kralj Kotromanića, poznat po svojoj mudrosti, vojničkim sposobnostima i diplomatskoj veštini. Vodio je teritorije kroz bitke i diplomatske pregovore. Učestvovao je u organizovanju vojske i strateškom planiranju sukoba. Bio je poštovan od plemstva i stanovništva. Njegove akcije doprinele su stabilnosti i jačanju autoriteta dinastije. Ostao je upamćen kao sposoban, pravedan i mudri vladar. Njegovo nasleđe oblikovalo je vojnu, političku i kulturnu tradiciju. Vukan Nemanjić simbolizuje hrabrost, mudrost i odanost svojoj porodici. Njegove odluke imale su dugoročne posledice po teritorijalnu kontrolu i sigurnost države.", Slika: "placeholder_muski.png", Teritorija: "bosna_teritorija.png" },
+
+{ _id: "15151515-1515-4a15-8a15-151515151515", Tekst: "Miloš Nemanja je bio kralj Nemanjića, poznat po hrabrosti, vojničkim sposobnostima i mudrosti. Vodio je teritorije kroz bitke i diplomatske izazove. Učestvovao je u organizovanju vojske i strateškom planiranju sukoba. Bio je poštovan od plemstva i stanovništva. Njegove akcije doprinele su jačanju stabilnosti i autoriteta dinastije. Ostao je upamćen kao sposoban vojvoda i pravedan vladar. Njegovo nasleđe oblikovalo je vojnu, političku i kulturnu tradiciju. Miloš Nemanja simbolizuje hrabrost, mudrost i odanost svojoj porodici. Njegove odluke imale su dugoročne posledice po teritorijalnu kontrolu i sigurnost države.", Slika: "placeholder_muski.png", Teritorija: "raskaska_teritorija.png" },
+
+{
+    _id: "c3c4c3c3-3333-4c3c-8c3c-333333333333",
+    Slika: "placeholder_muski.png",
+    Teritorija: "raskaska_teritorija.png",
+    Tekst: "Vukan Nemanjić bio je najstariji sin Stefana Nemanje i vladar Duklje. Učestvovao je u sukobima za presto sa bratom Stefanom Prvovenčanim, uz podršku Ugarske. Njegova vladavina bila je kratka, ali značajna za formiranje srpske državnosti. Iako je izgubio presto, sačuvao je status kneza i uticaj u političkom životu."
+  },
+  {
+    _id: "c4c5c4c4-4444-4c4c-8c4c-444444444444",
+    Slika: "placeholder_muski.png",
+    Teritorija: "raskaska_teritorija.png",
+    Tekst: "Stefan Prvovenčani bio je prvi kralj Srbije i sin Stefana Nemanje. Krunisan 1217. godine, obezbedio je međunarodno priznanje srpske države. Njegova vladavina donela je političku stabilnost, razvoj kulture i jačanje crkve. Bio je diplomata, književnik i osnivač državne tradicije krunisanja. Nakon smrti proglašen je za sveca."
+  },
+  {
+    _id: "c4c5c4c5-4444-4c4c-8c4c-555555555555",
+    Slika: "placeholder_muski.png",
+    Teritorija: "raskaska_teritorija.png",
+    Tekst: "Kralj Vladislav Nemanjić bio je sin Stefana Prvovenčanog i treći kralj Srbije. Tokom njegove vladavine ojačane su veze sa Bugarskom i Vizantijom. Premestio je mošti Svetog Save u Mileševu, čime je učvrstio kult svetitelja i nacionalno jedinstvo. Bio je poznat po pobožnosti i podršci crkvi."
+  },
+  {
+    _id: "c6c7c6c7-6666-4c6c-8c6c-777777777777",
+    Slika: "placeholder_muski.png",
+    Teritorija: "raskaska_teritorija.png",
+    Tekst: "Uroš I Nemanjić bio je sin Stefana Prvovenčanog i kralj Srbije od 1243. do 1277. godine. Učvrstio je centralnu vlast, reformisao administraciju i podsticao razvoj rudnika i trgovine. Njegova vladavina označila je ekonomski uspon države. Otac kraljeva Dragutina i Milutina, koji su nastavili dinastičku liniju."
+  },
+  {
+    _id: "c8c9c8c9-8888-4c8c-8c8c-999999999999",
+    Slika: "placeholder_muski.png",
+    Teritorija: "raskaska_teritorija.png",
+    Tekst: "Dragutin Nemanjić bio je sin kralja Uroša I i kralj Srbije od 1277. do 1282. godine. Nakon sukoba s ocem preuzeo je presto, ali ga je kasnije predao bratu Milutinu. Zadržao je vlast u severnim oblastima i Mačvi kao vazal ugarskog kralja. Njegova vladavina bila je period političke podele, ali i kulturnog razvoja."
+  },
+  {
+    _id: "c9c0c9c0-9999-4c9c-8c9c-000000000000",
+    Slika: "placeholder_muski.png",
+    Teritorija: "raskaska_teritorija.png",
+    Tekst: "Kralj Milutin Nemanjić bio je jedan od najmoćnijih srpskih vladara. Vladao od 1282. do 1321. godine, šireći državu prema Makedoniji i Kosovu. Poznat po velikom broju zadužbina, među kojima su Gračanica i Bogorodica Ljeviška. Njegova politika obeležena je dinastičnim brakovima i diplomatskom veštinom."
+  },
+  {
+    _id: "c1c3c1c3-1111-4c1c-8c1c-333333333333",
+    Slika: "placeholder_muski.png",
+    Teritorija: "raskaska_teritorija.png",
+    Tekst: "Stefan Dečanski bio je kralj Srbije od 1321. do 1331. godine i sin kralja Milutina. Poznat po hrabrosti i mudrosti, pobedio je bugarsku vojsku u bici kod Velbužda. Podigao je manastir Visoki Dečani, jedno od najlepših dela srpske srednjovekovne umetnosti. Njegova vladavina bila je kratka, ali značajna za jačanje države."
+  },
+  {
+    _id: "c2c4c2c4-2222-4c2c-8c2c-444444444444",
+    Slika: "placeholder_muski.png",
+    Teritorija: "raskaska_teritorija.png",
+    Tekst: "Car Dušan Nemanjić bio je najmoćniji srpski vladar, krunisan za cara 1346. godine. Proširio Srbiju do Egejskog mora, uveo Zakonik cara Dušana i reformisao državu po vizantijskom uzoru. Njegova vladavina označila je vrhunac moći srednjovekovne Srbije i kulturni procvat. Umro je tokom pohoda na Carigrad."
+  },
+  {
+    _id: "c3c5c3c5-3333-4c3c-8c3c-555555555555",
+    Slika: "placeholder_muski.png",
+    Teritorija: "raskaska_teritorija.png",
+    Tekst: "Uroš V Nemanjić, poznat kao Uroš Ne jaki, bio je poslednji car iz dinastije Nemanjić. Vladao od 1355. do 1371. godine. Nasledio je moćno carstvo, ali nije uspeo da zadrži jedinstvo države. Tokom njegove vladavine moć velikaša je porasla, a carstvo se raspalo. Umro je bez naslednika, čime je ugašena dinastija Nemanjića."
+  }
+
+]);
+
+
+
+

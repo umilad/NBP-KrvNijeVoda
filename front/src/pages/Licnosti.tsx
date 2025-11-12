@@ -53,7 +53,7 @@ export default function Licnosti() {
                 <div className="flex justify-center mb-8">
                     <button
                         onClick={() => navigate("/dodaj-licnost")}
-                        className="bg-[#3f2b0a] text-[#e6cda5] px-8 py-4 text-lg rounded-lg shadow-md hover:bg-[#2b1d07] transition font-bold"
+                        className="px-[12px] py-[6px] border border-[#e6cda5] bg-[#3f2b0a] text-[#e6cda5] hover:bg-[#e6cda5] hover:text-[#3f2b0a] transition-all duration-300 transform hover:scale-110 cursor-pointer"
                     >
                         Dodaj Ličnost
                     </button>

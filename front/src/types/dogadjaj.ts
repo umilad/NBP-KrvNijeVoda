@@ -15,7 +15,7 @@ export interface DogadjajBase {
     ime: string;
     godina?: Godina | null;
     lokacija?: string | null;
-    tekst: string;
+    tekst?: string;
 }
 
 export interface Bitka extends DogadjajBase {
@@ -36,4 +36,4 @@ export interface OstaliDogadjaj extends DogadjajBase {
     tip: Exclude<TipDogadjaja, "Bitka" | "Rat">;
 }
 
-export type DogadjajUnion = Bitka | Rat | OstaliDogadjaj;
+export type Dogadjaj = DogadjajBase | Bitka | Rat | OstaliDogadjaj;

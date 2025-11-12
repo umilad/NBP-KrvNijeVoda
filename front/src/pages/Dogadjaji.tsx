@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import type { Dogadjaj, Rat, Bitka } from "../types";
 import { useSearch } from "../components/SearchContext";
 import { useAuth } from "../pages/AuthContext"; // ✅ import auth konteksta
+//import { isRat } from "../utils/typeChecks";
+import DogadjajPrikaz from '../components/DogadjajPrikaz';
 
 export default function Dogadjaji() {
     const [dogadjaji, setDogadjaji] = useState<Dogadjaj[]>([]);
@@ -64,7 +66,7 @@ export default function Dogadjaji() {
         loadAllDogadjaji();
     }, []);
 
-    const handleNavigate = (id: string) => navigate(`/dogadjaj/${id}`);
+    //const handleNavigate = (tip: string, id: string) => navigate(`/dogadjaj/${tip}/${id}`);
     const handleAddDogadjaj = () => navigate("/dodaj-dogadjaj"); // ✅ navigacija na stranicu za dodavanje
 
     // Filtriranje po search query
@@ -76,33 +78,20 @@ export default function Dogadjaji() {
         <div className="dogadjaji my-[100px]">
             {/* Dugme Dodaj događaj, vidi ga samo admin */}
             {role === "admin" && (
-    <div className="flex justify-center mb-12">
-        <button
-            onClick={handleAddDogadjaj}
-            className="px-12 py-6 bg-[#3f2b0a] text-[#e6cda5] text-3xl font-extrabold rounded-3xl shadow-2xl hover:bg-[#e6cda5] hover:text-[#3f2b0a] transition-all duration-300 transform hover:scale-110"
-        >
-            Dodaj događaj
-        </button>
-    </div>
-)}
+                <div className="flex justify-center mb-[12px]">
+                    <button
+                        onClick={handleAddDogadjaj}
+                        className="px-[12px] py-[6px] border border-[#e6cda5] bg-[#3f2b0a] text-[#e6cda5] hover:bg-[#e6cda5] hover:text-[#3f2b0a] transition-all duration-300 transform hover:scale-110 cursor-pointer"
+                    >
+                        Dodaj događaj
+                    </button>
+                </div>
+            )}
 
             <div className='dogadjaji-grid grid grid-cols-[repeat(auto-fit,minmax(400px,1fr))] gap-6 justify-items-center'>
                 {filteredDogadjaji.map((dogadjaj) => (
-                    <div key={dogadjaj.id} onClick={() => handleNavigate(dogadjaj.id)}
-                        className="dogadjaj-div w-[400px] flex flex-col items-center justify-center relative border-2 border-[#3f2b0a] bg-[#e6cda5] p-[20px] m-[20px] rounded-lg text-center text-[#3f2b0a] shadow-md overflow-hidden transition-transform hover:scale-110 cursor-pointer">
-                        
-                        <span className='dogadjaj-header text-xl font-bold mt-2'>{dogadjaj.ime}</span>
-                        <span className='dogadjaj-godina text-l font-bold mt-2'>
-                            {dogadjaj.godina ? `${dogadjaj.godina.god}.` : ""}
-                            {dogadjaj
-                                ? (("godinaDo" in dogadjaj && dogadjaj.godinaDo)
-                                    ? ` - ${dogadjaj.godinaDo}. ${dogadjaj.godinaDo ? " p.n.e." : ""}`
-                                    : dogadjaj.godina
-                                        ? `${dogadjaj.godina ? " p. n. e." : ""}`
-                                        : "")
-                                : ""}
-                        </span>
-                    </div>
+                    <DogadjajPrikaz key={dogadjaj.id} dogadjaj={dogadjaj} variant="short" />
+                    
                 ))}
             </div>
         </div>

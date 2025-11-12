@@ -52,6 +52,7 @@ function App() {
             {/* Dogadjaji */}
             <Route path="/dogadjaji" element={<Dogadjaji />} />
             <Route path="/dogadjaj/:id" element={<Dogadjaj />} />
+            <Route path="/dogadjaj/:tip/:id" element={<Dogadjaj />} />
             <Route path="/dogadjaj/edit/:id" element={<AzurirajDogadjaj />} />
             <Route path="/dodaj-dogadjaj" element={<DodajDogadjaj />} />
 

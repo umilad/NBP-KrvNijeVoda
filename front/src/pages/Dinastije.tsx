@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSearch } from "../components/SearchContext";
 import { useAuth } from "../pages/AuthContext"; // ✅ import AuthContext
 import type { Dinastija } from "../types";
+import DinastijaPrikaz from "../components/DinastijaPrikaz"
 
 export default function Dinastije() {
     const [dinastije, setDinastije] = useState<Dinastija[]>([]);
@@ -31,7 +32,7 @@ export default function Dinastije() {
         loadAllDinastije();
     }, []);
 
-    const handleNavigate = (id: string) => navigate(`/dinastija/${id}`);
+    //const handleNavigate = (id: string) => navigate(`/dinastija/${id}`);
     const handleDodaj = () => navigate("/dodaj-dinastiju"); // ruta za dodavanje
 
     const filteredDinastije = dinastije.filter(d =>
@@ -45,7 +46,7 @@ export default function Dinastije() {
             <div className="flex justify-center mb-6">
                 <button
                     onClick={handleDodaj}
-                    className="bg-[#3f2b0a] text-[#e6cda5] px-6 py-2 rounded-lg shadow-md hover:bg-[#2b1d07] transition"
+                    className="px-[12px] py-[6px] border border-[#e6cda5] bg-[#3f2b0a] text-[#e6cda5] hover:bg-[#e6cda5] hover:text-[#3f2b0a] transition-all duration-300 transform hover:scale-110 cursor-pointer"
                 >
                     Dodaj Dinastiju
                 </button>
@@ -54,27 +55,8 @@ export default function Dinastije() {
 
             <div className='dinastije-grid grid grid-cols-[repeat(auto-fit,minmax(400px,1fr))] gap-6 justify-items-center'>
                 {filteredDinastije.map((dinastija) => (
-                    <div 
-                        key={dinastija.id} 
-                        onClick={() => handleNavigate(dinastija.id)}
-                        className="dinastija-div w-[400px] flex flex-col items-center justify-center relative border-2 border-[#3f2b0a] bg-[#e6cda5] p-[20px] m-[20px] rounded-lg text-center text-[#3f2b0a] shadow-md overflow-hidden transition-transform hover:scale-110 cursor-pointer"
-                    >
-                        <span className='dogadjaj-header text-xl font-bold mt-2'>{dinastija.naziv}</span>
-                        <span className='dogadjaj-godina text-l font-bold mt-2'>
-                            {dinastija.pocetakVladavineGod} - {dinastija.krajVladavineGod}. 
-                            {dinastija.krajVladavinePNE ? " p. n. e." : ""}
-                        </span>
-
-                        <div className="relative w-[300px] h-[355px] m-auto">
-                            <div className="absolute inset-0 top-0 flex items-center justify-center z-0">
-                                <img
-                                    src={`/src/images/${dinastija?.slika}`}
-                                    alt={dinastija.naziv}
-                                    className="w-[190px] h-[235px] object-cover"
-                                />
-                            </div>
-                        </div>
-                    </div>
+                    <DinastijaPrikaz key={dinastija?.id}
+                                     dinastija={dinastija} />
                 ))}
             </div>
         </div>                

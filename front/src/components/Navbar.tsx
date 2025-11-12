@@ -7,11 +7,6 @@ export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logout();
-    navigate("/"); // preusmeri na početnu stranu
-  };
-
   // Sakrij search bar na /profil stranici
   const hideSearch = location.pathname === "/profil";
 
@@ -106,18 +101,12 @@ export default function Navbar() {
         <div className="ml-4 h-full flex items-center gap-2">
           {username ? (
             <>
-             <NavLink
-  to="/profil"
-  className="px-4 h-10 flex items-center justify-center rounded-lg bg-[#3f2b0af0] text-[#e6cda5] font-bold text-lg hover:bg-[#e6cda5f0] hover:text-[#3f2b0af0] transition-colors duration-300 ease-in-out"
->
-  Profil
-</NavLink>
-<button
-  onClick={handleLogout}
-  className="px-4 h-10 flex items-center justify-center rounded-lg bg-[#3f2b0af0] text-[#e6cda5] font-bold text-lg hover:bg-[#e6cda5f0] hover:text-[#3f2b0af0] transition-colors duration-300 ease-in-out"
->
-  Logout
-</button>
+              <NavLink
+                to="/profil"
+                className="px-4 h-full flex min-w-[80px] items-center justify-center text-[#e6cda5] font-bold text-lg hover:bg-[#e6cda5f0] hover:text-[#3f2b0af0] transition-colors duration-300 ease-in-out"
+              >
+                {username}
+              </NavLink>                
             </>
           ) : (
             <NavLink

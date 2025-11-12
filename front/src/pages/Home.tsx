@@ -88,10 +88,8 @@ export default function Home() {
             ...allActiveYearEvents.dogadjaji,
             ...allActiveYearEvents.bitke,
             ...allActiveYearEvents.ratovi
-          ].map(e => (
-            <div key={e.id} >
-              <DogadjajPrikaz dogadjaj={e} />
-            </div>
+          ].map(dogadjaj => (
+            <DogadjajPrikaz key={dogadjaj.id} dogadjaj={dogadjaj} variant="short" />
           ))}
         </div>
        

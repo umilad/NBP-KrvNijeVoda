@@ -1,11 +1,15 @@
 import type { Licnost } from "../types";
 import { useNavigate } from 'react-router-dom';
+//import { useAuth } from '../pages/AuthContext';
+//import axios from 'axios';
 
 interface LicnostPrikazProps {
   licnost: Licnost;
+  //variant?: "full" | "short";
 }
 
 export default function LicnostPrikaz({ licnost }: LicnostPrikazProps){
+    //const { token, role } = useAuth();  
     const navigate = useNavigate();
     const handleNavigate = (id: string) => navigate(`/licnost/${id}`);
 

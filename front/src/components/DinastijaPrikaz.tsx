@@ -15,7 +15,7 @@ export default function DinastijaPrikaz({ dinastija }: DinastijaPrikazProps){
         <div 
             key={dinastija.id} 
             onClick={() => handleNavigate(dinastija.id)}
-            className="dinastija-div w-[400px] flex flex-col items-center justify-center relative border-2 border-[#3f2b0a] bg-[#e6cda5] p-[20px] m-[20px] rounded-lg text-center text-[#3f2b0a] shadow-md overflow-hidden transition-transform hover:scale-110 cursor-pointer"
+            className="dinastija-div w-[350px] h-[400px] flex flex-col items-center justify-center relative border-2 border-[#3f2b0a] bg-[#e6cda5] p-[20px] m-[20px] rounded-lg text-center text-[#3f2b0a] shadow-md overflow-hidden transition-transform hover:scale-110 cursor-pointer"
         >
             <span className='dogadjaj-header text-xl font-bold mt-2'>{dinastija.naziv}</span>
             <span className='dogadjaj-godina text-l font-bold mt-2'>

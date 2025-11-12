@@ -107,8 +107,8 @@ export default function Licnost() {
 
                 {role === "admin" && (
                     <div className="flex gap-4 justify-center mt-4">
-                        <button onClick={handleDelete} className="px-6 py-3 text-white bg-red-600 hover:bg-red-700 rounded-lg text-lg font-bold">Obriši</button>
-                        <button onClick={handleUpdate} className="px-6 py-3 text-white bg-blue-600 hover:bg-blue-700 rounded-lg text-lg font-bold">Ažuriraj</button>
+                        <button onClick={handleDelete} className="px-[12px] py-[6px] border border-[#e6cda5] bg-[#3f2b0a] text-[#e6cda5] hover:bg-[#e6cda5] hover:text-[#3f2b0a] transition-all duration-300 transform hover:scale-110 cursor-pointer">Obriši</button>
+                        <button onClick={handleUpdate} className="px-[12px] py-[6px] border border-[#e6cda5] bg-[#3f2b0a] text-[#e6cda5] hover:bg-[#e6cda5] hover:text-[#3f2b0a] transition-all duration-300 transform hover:scale-110 cursor-pointer">Ažuriraj</button>
                     </div>
                 )}
             </div>
