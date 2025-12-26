@@ -16,10 +16,10 @@ builder.Services.AddSingleton<MongoService>(sp =>
 new MongoService("mongodb://localhost:27017", "KrvNijeVodaDB");
 builder.Services.AddSingleton<RedisService>(sp =>
     new RedisService(
-        "redis-13125.c311.eu-central-1-1.ec2.redns.redis-cloud.com",
-        13125,
+        "redis-10165.c300.eu-central-1-1.ec2.cloud.redislabs.com",
+        10165,
         "default",
-        "olHTtzdeV5iMAuV081w4jWAwRZIRiLkR"
+        "u2CMbepHd3ojAmph1vYgQNq0SRbqzCHB"
     )
 );
 

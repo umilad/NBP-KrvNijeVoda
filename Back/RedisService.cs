@@ -17,9 +17,9 @@ public class RedisService
             // Connect to Redis
             var muxer = ConnectionMultiplexer.Connect(new ConfigurationOptions
             {
-                EndPoints = { { "redis-13125.c311.eu-central-1-1.ec2.redns.redis-cloud.com", 13125 } },
+                EndPoints = { { "redis-10165.c300.eu-central-1-1.ec2.cloud.redislabs.com", 10165 } },
                 User = "default",
-                Password = "olHTtzdeV5iMAuV081w4jWAwRZIRiLkR"
+                Password = "u2CMbepHd3ojAmph1vYgQNq0SRbqzCHB"
             }
         );
 

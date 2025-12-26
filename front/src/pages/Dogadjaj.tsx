@@ -33,17 +33,18 @@ export default function Dogadjaj() {
                     hasTracked.current = true;
 
                     // track za history list
+                    const path = `/dogadjaj/${tip}/${id}`;
+
                     await axios.post(
-                        "http://localhost:5210/api/Auth/track",
-                        { path: `/dogadjaj/${id}`, label: response.data.ime || "" },
-                        { headers: { Authorization: `Bearer ${token}` } }
+                    "http://localhost:5210/api/Auth/track",
+                    { path, label: response.data.ime || "" },
+                    { headers: { Authorization: `Bearer ${token}` } }
                     );
 
-                    // track za broj poseta (hash)
                     await axios.post(
-                        "http://localhost:5210/api/Auth/track-visit",
-                        { path: `/dogadjaj/${id}`, label: response.data.ime || "" },
-                        { headers: { Authorization: `Bearer ${token}` } }
+                    "http://localhost:5210/api/Auth/track-visit",
+                    { path, label: response.data.ime || "" },
+                    { headers: { Authorization: `Bearer ${token}` } }
                     );
                 }
             } catch (err) {
