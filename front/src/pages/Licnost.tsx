@@ -106,7 +106,7 @@ export default function Licnost() {
 
                 <p className="text-xl font-bold mt-2">
                     {licnost.godinaRodjenja ?? ""}
-                    {licnost.godinaSmrti ? ` - ${licnost.godinaSmrti}` : ""}
+                    {licnost.godinaSmrti ? ` - ${licnost.godinaSmrti}.` : ""}
                     {(licnost.godinaRodjenjaPNE || licnost.godinaSmrtiPNE) ? " p.n.e." : ""}
                 </p>
 

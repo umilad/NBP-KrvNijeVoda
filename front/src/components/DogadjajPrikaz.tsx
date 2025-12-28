@@ -63,7 +63,7 @@ export default function DogadjajPrikaz({ dogadjaj, variant = "short" }: Dogadjaj
         <div
             key={dogadjaj.id}
             onClick={() => handleNavigate(dogadjaj.tip, dogadjaj.id)}
-            className={`dogadjaj-div flex flex-col border-2 border-[#3f2b0a] bg-[#e6cda5] p-[20px] text-[#3f2b0a] rounded-lg text-center ${
+            className={`dogadjaj-div flex flex-col border-2 border-[#3f2b0a] bg-[#e6cda5]/70 p-[20px] text-[#3f2b0a] rounded-lg text-center ${
                 variant === "full"
                     ? "absolute top-30 w-5/6 mx-[100px] mt-4"
                     : "w-[400px] items-center justify-center relative m-[20px] shadow-md overflow-hidden transition-transform hover:scale-110 cursor-pointer"

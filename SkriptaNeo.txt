@@ -25,15 +25,15 @@ CREATE (:Zemlja {ID:"a7a7a7a7-7777-4a7a-8a7a-777777777777", Naziv: "Tesalija", T
 CREATE (:Zemlja {ID:"a8a8a8a8-8888-4a8a-8a8a-888888888888", Naziv: "Janjina", Trajanje:"1300-1450"});
 
 // --- Dogadjaji ---
-CREATE (d3:Dogadjaj:Opsada {ID: "3c3f3c3c-3333-4c3c-8c3c-333333333333", Ime: "Opsada Zete"});
-CREATE (d4:Dogadjaj:Sporazum {ID: "4d4f4d4d-4444-4d4d-8d4d-444444444444", Ime: "Sporazum sa Dubrovnikom"});
-CREATE (d5:Dogadjaj:Ustanak {ID: "5e5f5e5e-5555-4e5e-8e5e-555555555555", Ime: "Ustanak protiv Vizantije"});
-CREATE (d8:Dogadjaj:Opsada {ID: "8b8b8b8b-8888-4b8b-8b8b-888888888888", Ime: "Opsada Ras"});
-CREATE (d9:Dogadjaj:Sporazum {ID: "9c9c9c9c-9999-4c9c-8c9c-999999999999", Ime: "Sporazum sa Vizantijom"});
-CREATE (d10:Dogadjaj:Savez {ID: "adadadad-aaaa-4dad-8dad-aaaaaaaaaaaa", Ime: "Savez Nemanjica i Duklje"});
-CREATE (d11:Dogadjaj:Ustanak {ID: "bebebebe-bbbb-4beb-8beb-bbbbbbbbbbbb", Ime: "Ustanak protiv Ugarske"});
-CREATE (d14:Dogadjaj:Opsada {ID: "efefefef-eeee-4fef-8fef-eeeeeeeeeeee", Ime: "Opsada Skadra"});
-CREATE (d15:Dogadjaj:Dokument {ID: "fafafafa-ffff-4afa-8afa-ffffffffffff", Ime: "Izdavanje Zakonika Stefana Nemanje"});
+CREATE (d3:Dogadjaj:Opsada {ID: "3c3f3c3c-3333-4c3c-8c3c-333333333333", Tip:"Opsada", Ime: "Opsada Zete"});
+CREATE (d4:Dogadjaj:Sporazum {ID: "4d4f4d4d-4444-4d4d-8d4d-444444444444", Tip:"Sporazum", Ime: "Sporazum sa Dubrovnikom"});
+CREATE (d5:Dogadjaj:Ustanak {ID: "5e5f5e5e-5555-4e5e-8e5e-555555555555", Tip:"Ustanak", Ime: "Ustanak protiv Vizantije"});
+CREATE (d8:Dogadjaj:Opsada {ID: "8b8b8b8b-8888-4b8b-8b8b-888888888888", Tip:"Opsada", Ime: "Opsada Ras"});
+CREATE (d9:Dogadjaj:Sporazum {ID: "9c9c9c9c-9999-4c9c-8c9c-999999999999", Tip:"Sporazum", Ime: "Sporazum sa Vizantijom"});
+CREATE (d10:Dogadjaj:Savez {ID: "adadadad-aaaa-4dad-8dad-aaaaaaaaaaaa", Tip:"Savez", Ime: "Savez Nemanjica i Duklje"});
+CREATE (d11:Dogadjaj:Ustanak {ID: "bebebebe-bbbb-4beb-8beb-bbbbbbbbbbbb", Tip:"Ustanak", Ime: "Ustanak protiv Ugarske"});
+CREATE (d14:Dogadjaj:Opsada {ID: "efefefef-eeee-4fef-8fef-eeeeeeeeeeee", Tip:"Opsada", Ime: "Opsada Skadra"});
+CREATE (d15:Dogadjaj:Dokument {ID: "fafafafa-ffff-4afa-8afa-ffffffffffff", Tip:"Dokument", Ime: "Izdavanje Zakonika Stefana Nemanje"});
 
 // --- Veze sa Zemljama ---
 MATCH (d:Dogadjaj:Opsada {ID: "3c3f3c3c-3333-4c3c-8c3c-333333333333"}), (z:Zemlja {Naziv: "Zeta"}) CREATE (d)-[:DESIO_SE_U]->(z);
@@ -304,19 +304,19 @@ CREATE (:Dogadjaj:Bitka {ID:"b6b6b6b6-6666-4b6b-8b6b-666666666666", Tip:"Bitka",
 CREATE (:Dogadjaj:Bitka {ID:"b7b7b7b7-7777-4b7b-8b7b-777777777777", Tip:"Bitka", Ime:"Bitka na Kosovu", Pobednik:"Osmansko carstvo", BrojZrtava:25000});
 CREATE (:Dogadjaj:Bitka {ID:"b8b8b8b8-8888-4b8b-8b8b-888888888888", Tip:"Bitka", Ime:"Bitka kod Nikopolja", Pobednik:"Osmansko carstvo", BrojZrtava:10000});
 CREATE (:Dogadjaj:Bitka {ID:"b9b9b9b9-9999-4b9b-8b9b-999999999999", Tip:"Bitka", Ime:"Bitka kod Varne",Pobednik:"Osmansko carstvo", BrojZrtava:12000});
-CREATE (:Dogadjaj:Bitka {ID:"b0b0b0b0-0000-4b0b-8b0b-000000000000", Tip:"Bitka", Ime:"Bitka na Marici",Pobednik:"Ugarska", BrojZrtava:8000});
+//CREATE (:Dogadjaj:Bitka {ID:"b0b0b0b0-0000-4b0b-8b0b-000000000000", Tip:"Bitka", Ime:"Bitka na Marici",Pobednik:"Ugarska", BrojZrtava:8000});
 
 
 // --- Kreiranje Ratova ---
-CREATE (:Dogadjaj:Rat {ID:"a1111111-1111-4111-8111-111111111111", Tip:"Rat", Ime:"Rat sa Vizantijom", Bitke:["b1111111-1111-4111-8111-111111111111","b2222222-2222-4222-8222-222222222222"], Pobednik:"Srbija"});
-CREATE (:Dogadjaj:Rat {ID:"a2222222-2222-4222-8222-222222222222", Tip:"Rat", Ime:"Rat za Zetu", Bitke:["b3333333-3333-4333-8333-333333333333"], Pobednik:"Zeta"});
-CREATE (:Dogadjaj:Rat {ID:"a3333333-3333-4333-8333-333333333333", Tip:"Rat", Ime:"Srpsko-bugarski rat", Bitke:["b4444444-4444-4444-8444-444444444444"], Pobednik:"Srbija"});
-CREATE (:Dogadjaj:Rat {ID:"a4444444-4444-4444-8444-444444444444", Tip:"Rat", Ime:"Rat za Makedoniju", Bitke:["b5555555-5555-4555-8555-555555555555"], Pobednik:"Srbija"});
-CREATE (:Dogadjaj:Rat {ID:"a5555555-5555-4555-8555-555555555555", Tip:"Rat", Ime:"Rat sa Osmanlijama", Bitke:["b6666666-6666-4666-8666-666666666666"], Pobednik:"Osmansko carstvo"});
-CREATE (:Dogadjaj:Rat {ID:"a6666666-6666-4666-8666-666666666666", Tip:"Rat", Ime:"Kosovski rat", Bitke:["b7777777-7777-4777-8777-777777777777"], Pobednik:"Osmansko carstvo"});
-CREATE (:Dogadjaj:Rat {ID:"a7777777-7777-4777-8777-777777777777", Tip:"Rat", Ime:"Rat protiv Osmanlija", Bitke:["b8888888-8888-4888-8888-888888888888"], Pobednik:"Osmansko carstvo"});
-CREATE (:Dogadjaj:Rat {ID:"a8888888-8888-4888-8888-888888888888", Tip:"Rat", Ime:"Rat kod Varne", Bitke:["b9999999-9999-4999-8999-999999999999"], Pobednik:"Osmansko carstvo"});
-CREATE (:Dogadjaj:Rat {ID:"a9999999-9999-4999-8999-999999999999", Tip:"Rat", Ime:"Rat za Beograd", Bitke:["b0000000-0000-4000-8000-000000000000"], Pobednik:"Ugarska"});
+CREATE (:Dogadjaj:Rat {ID:"a1111111-1111-4111-8111-111111111111", Tip:"Rat", Ime:"Rat sa Vizantijom", Bitke:["b1b1b1b1-1111-4b1b-8b1b-111111111111","b2b2b2b2-2222-4b2b-8b2b-222222222222"], Pobednik:"Srbija"});
+CREATE (:Dogadjaj:Rat {ID:"a2222222-2222-4222-8222-222222222222", Tip:"Rat", Ime:"Rat za Zetu", Bitke:["b3b3b3b3-3333-4b3b-8b3b-333333333333"], Pobednik:"Zeta"});
+CREATE (:Dogadjaj:Rat {ID:"a3333333-3333-4333-8333-333333333333", Tip:"Rat", Ime:"Srpsko-bugarski rat", Bitke:["b4b4b4b4-4444-4b4b-8b4b-444444444444"], Pobednik:"Srbija"});
+CREATE (:Dogadjaj:Rat {ID:"a4444444-4444-4444-8444-444444444444", Tip:"Rat", Ime:"Rat za Makedoniju", Bitke:["b5b5b5b5-5555-4b5b-8b5b-555555555555"], Pobednik:"Srbija"});
+CREATE (:Dogadjaj:Rat {ID:"a5555555-5555-4555-8555-555555555555", Tip:"Rat", Ime:"Rat sa Osmanlijama", Bitke:["b6b6b6b6-6666-4b6b-8b6b-666666666666"], Pobednik:"Osmansko carstvo"});
+CREATE (:Dogadjaj:Rat {ID:"a6666666-6666-4666-8666-666666666666", Tip:"Rat", Ime:"Kosovski rat", Bitke:["b7b7b7b7-7777-4b7b-8b7b-777777777777"], Pobednik:"Osmansko carstvo"});
+CREATE (:Dogadjaj:Rat {ID:"a7777777-7777-4777-8777-777777777777", Tip:"Rat", Ime:"Rat protiv Osmanlija", Bitke:["b8b8b8b8-8888-4b8b-8b8b-888888888888"], Pobednik:"Osmansko carstvo"});
+CREATE (:Dogadjaj:Rat {ID:"a8888888-8888-4888-8888-888888888888", Tip:"Rat", Ime:"Rat kod Varne", Bitke:["b9b9b9b9-9999-4b9b-8b9b-999999999999"], Pobednik:"Osmansko carstvo"});
+CREATE (:Dogadjaj:Rat {ID:"a9999999-9999-4999-8999-999999999999", Tip:"Rat", Ime:"Rat za Beograd", Pobednik:"Ugarska"});//Bitke:["b0b0b0b0-0000-4b0b-8b0b-000000000000"],
 
 
 // --- Veze Bitke -> Rat ---
@@ -347,8 +347,8 @@ CREATE (b)-[:BITKA_U_RATU]->(r);
 MATCH (b:Bitka {ID:"b9b9b9b9-9999-4b9b-8b9b-999999999999"}), (r:Rat {ID:"a8888888-8888-4888-8888-888888888888"})
 CREATE (b)-[:BITKA_U_RATU]->(r);
 
-MATCH (b:Bitka {ID:"b0b0b0b0-0000-4b0b-8b0b-000000000000"}), (r:Rat {ID:"a9999999-9999-4999-8999-999999999999"})
-CREATE (b)-[:BITKA_U_RATU]->(r);
+//MATCH (b:Bitka {ID:"b0b0b0b0-0000-4b0b-8b0b-000000000000"}), (r:Rat {ID:"a9999999-9999-4999-8999-999999999999"})
+//CREATE (b)-[:BITKA_U_RATU]->(r);
 
 
 // --- Veze sa Zemljama za Bitke ---
@@ -361,7 +361,7 @@ MATCH (b:Dogadjaj:Bitka {ID: "b6b6b6b6-6666-4b6b-8b6b-666666666666"}), (z:Zemlja
 MATCH (b:Dogadjaj:Bitka {ID: "b7b7b7b7-7777-4b7b-8b7b-777777777777"}), (z:Zemlja {Naziv: "Srbija"}) CREATE (b)-[:DESIO_SE_U]->(z);
 MATCH (b:Dogadjaj:Bitka {ID: "b8b8b8b8-8888-4b8b-8b8b-888888888888"}), (z:Zemlja {Naziv: "Raska"}) CREATE (b)-[:DESIO_SE_U]->(z);
 MATCH (b:Dogadjaj:Bitka {ID: "b9b9b9b9-9999-4b9b-8b9b-999999999999"}), (z:Zemlja {Naziv: "Zeta"}) CREATE (b)-[:DESIO_SE_U]->(z);
-MATCH (b:Dogadjaj:Bitka {ID: "b0b0b0b0-0000-4b0b-8b0b-000000000000"}), (z:Zemlja {Naziv: "Srbija"}) CREATE (b)-[:DESIO_SE_U]->(z);
+//MATCH (b:Dogadjaj:Bitka {ID: "b0b0b0b0-0000-4b0b-8b0b-000000000000"}), (z:Zemlja {Naziv: "Srbija"}) CREATE (b)-[:DESIO_SE_U]->(z);
 
 // --- Veze sa Godinama za Bitke (1166-1371) ---
 MATCH (b:Dogadjaj:Bitka {ID: "b1b1b1b1-1111-4b1b-8b1b-111111111111"}), (g:Godina {God: 1186}) CREATE (b)-[:DESIO_SE]->(g);
@@ -373,7 +373,7 @@ MATCH (b:Dogadjaj:Bitka {ID: "b6b6b6b6-6666-4b6b-8b6b-666666666666"}), (g:Godina
 MATCH (b:Dogadjaj:Bitka {ID: "b7b7b7b7-7777-4b7b-8b7b-777777777777"}), (g:Godina {God: 1389}) CREATE (b)-[:DESIO_SE]->(g);
 MATCH (b:Dogadjaj:Bitka {ID: "b8b8b8b8-8888-4b8b-8b8b-888888888888"}), (g:Godina {God: 1370}) CREATE (b)-[:DESIO_SE]->(g);
 MATCH (b:Dogadjaj:Bitka {ID: "b9b9b9b9-9999-4b9b-8b9b-999999999999"}), (g:Godina {God: 1365}) CREATE (b)-[:DESIO_SE]->(g);
-MATCH (b:Dogadjaj:Bitka {ID: "b0b0b0b0-0000-4b0b-8b0b-000000000000"}), (g:Godina {God: 1370}) CREATE (b)-[:DESIO_SE]->(g);
+//MATCH (b:Dogadjaj:Bitka {ID: "b0b0b0b0-0000-4b0b-8b0b-000000000000"}), (g:Godina {God: 1370}) CREATE (b)-[:DESIO_SE]->(g);
 
 /// --- Veze Dogadjaj:Rat -> Zemlja ---
 MATCH (r:Dogadjaj:Rat {ID:"a1111111-1111-4111-8111-111111111111"}), (z:Zemlja {Naziv:"Vizantija"}) CREATE (r)-[:DESIO_SE_U]->(z);
