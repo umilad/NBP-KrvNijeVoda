@@ -954,30 +954,6 @@ CREATE (v)-[:PRIPADA_DINASTIJI]->(d);
 MATCH (v:Licnost:Vladar {ID:"c3c5c3c5-3333-4c3c-8c3c-555555555555"}), (d:Dinastija {Naziv:"Nemanjići"})
 CREATE (v)-[:PRIPADA_DINASTIJI]->(d);
 
-// --- Veze Nemanjića sa drugim dinastijama ---
-
-
-// Stefan Dečanski -> Arpadovci
-MATCH (v:Licnost:Vladar {ID:"c1c3c1c3-1111-4c1c-8c1c-333333333333"}), (d:Dinastija {Naziv:"Arpadovci"})
-CREATE (v)-[:PRIPADA_DINASTIJI]->(d);
-
-// Komnina Nemanjić -> Komnini
-MATCH (l:Licnost {ID:"c7c8c7c8-7777-4c7c-8c7c-888888888888"}), (d:Dinastija {Naziv:"Komnini"})
-CREATE (l)-[:PRIPADA_DINASTIJI]->(d);
-
-// Vukan Nemanjić -> Vojislavljevići
-MATCH (v:Licnost:Vladar {ID:"c3c4c3c3-3333-4c3c-8c3c-333333333333"}), (d:Dinastija {Naziv:"Vojislavljevići"})
-CREATE (v)-[:PRIPADA_DINASTIJI]->(d);
-
-
-// Uroš Nemanjić (1355-1371) -> Asenovci
-MATCH (v:Licnost:Vladar {ID:"c3c5c3c5-3333-4c3c-8c3c-555555555555"}), (d:Dinastija {Naziv:"Asenovci"})
-CREATE (v)-[:PRIPADA_DINASTIJI]->(d);
-
-
-
-
-
 //JE_RODITELJ
 //Nemanjici 
 // Stefan Nemanja i Ana (Anastasija) – deca

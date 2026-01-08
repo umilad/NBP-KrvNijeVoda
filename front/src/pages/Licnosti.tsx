@@ -47,6 +47,9 @@ export default function Licnosti() {
         `${l.ime} ${l.prezime} ${l.titula}`.toLowerCase().includes(query.toLowerCase())
     );
 
+    filteredLicnosti.forEach(l => {
+  console.log("LICNOST:", l.id, l.ime, l.prezime, "isVladar:", l.isVladar);
+});
     return (
         <div className="licnosti my-[100px]">
             {role?.toLowerCase() === "admin" && (
