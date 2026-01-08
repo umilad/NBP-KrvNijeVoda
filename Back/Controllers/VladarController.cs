@@ -709,16 +709,11 @@ public async Task<IActionResult> UpdateVladar([FromBody] VladarDto vladar, Guid 
                 return BadRequest($"Vladar sa ID: {id} nije pronadjen u bazi!");
             }
 
-            await _client.Cypher.Match("(v:Licnost:Vladar)")
-                                .Where((VladarNeo v) => v.ID == id)
-                                .OptionalMatch("(v)-[r:RODJEN]->(gr:Godina)")
-                                .OptionalMatch("(v)-[r2:UMRO]->(gs:Godina)")
-                                .OptionalMatch("(v)-[r3:RODJEN_U]->(m:Zemlja)")
-                                .OptionalMatch("(v)-[r4:VLADAO_OD]->(gpv:Godina)")
-                                .OptionalMatch("(v)-[r5:VLADAO_DO]->(gkv:Godina)")
-                                .OptionalMatch("(v)-[r6:PRIPADA_DINASTIJI]->(d:Dinastija)")
-                                .Delete("r, r2, r3, r4, r5, r6, v")
-                                .ExecuteWithoutResultsAsync();
+            await _client.Cypher
+            .Match("(v:Licnost:Vladar)")
+            .Where((VladarNeo v) => v.ID == id)
+            .DetachDelete("v")  // briše čvor i sve njegove relacije
+            .ExecuteWithoutResultsAsync();
             await _vladarCollection.DeleteOneAsync(d => d.ID == id);
             return Ok($"Vladar sa id:{id} uspesno obrisan iz baze!");
         }

@@ -122,10 +122,11 @@ public async Task<IActionResult> CreateDogadjaj([FromBody] DogadjajDto dogadjaj)
                 .Where((DogadjajNeo d) => d.ID == id)
                 .OptionalMatch("(d)-[:DESIO_SE]->(g:Godina)")
                 .OptionalMatch("(d)-[:DESIO_SE_U]->(z:Zemlja)")
-                .Return((d, g) => new
+                .Return((d, g, z) => new
                 {
                     Dogadjaj = d.As<DogadjajNeo>(),
-                    Godina = g.As<GodinaNeo>()
+                    Godina = g.As<GodinaNeo>(),
+                    Zemlja = z.As<ZemljaNeo>(),
                 })
                 .ResultsAsync)
                 .FirstOrDefault();
@@ -141,7 +142,7 @@ public async Task<IActionResult> CreateDogadjaj([FromBody] DogadjajDto dogadjaj)
                 ID = dog.Dogadjaj.ID,
                 Ime = dog.Dogadjaj.Ime,
                 Tip = dog.Dogadjaj.Tip,
-                Lokacija = dog.Dogadjaj.Lokacija,
+                Lokacija = dog.Zemlja.Naziv,
                 Godina = dog.Godina,
                 Tekst = mongo?.Tekst
             };

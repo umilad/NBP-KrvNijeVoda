@@ -7,7 +7,7 @@ import { useAuth } from "../pages/AuthContext";
 import LicnostPrikaz from "../components/LicnostPrikaz";
 
 export default function Licnosti() {
-    const [licnosti, setLicnosti] = useState<(Licnost | Vladar & { isVladar: boolean })[]>([]);
+    const [licnosti, setLicnosti] = useState<(Licnost | Vladar)[]>([]);
     const navigate = useNavigate();
     const { query } = useSearch();
     const { role } = useAuth();
@@ -35,9 +35,7 @@ export default function Licnosti() {
 
         async function loadAll() {
             const [vladariData, licnostiData] = await Promise.all([GetAllVladare(), GetAllLicnosti()]);
-            const vladariWithFlag = (vladariData ?? []).map(v => ({ ...v, isVladar: true }));
-            const licnostiWithFlag = (licnostiData ?? []).map(l => ({ ...l, isVladar: false }));
-            setLicnosti([...vladariWithFlag, ...licnostiWithFlag]);
+            setLicnosti([...(vladariData ?? []), ...(licnostiData ?? [])]);
         }
 
         loadAll();
@@ -47,9 +45,6 @@ export default function Licnosti() {
         `${l.ime} ${l.prezime} ${l.titula}`.toLowerCase().includes(query.toLowerCase())
     );
 
-    filteredLicnosti.forEach(l => {
-  console.log("LICNOST:", l.id, l.ime, l.prezime, "isVladar:", l.isVladar);
-});
     return (
         <div className="licnosti my-[100px]">
             {role?.toLowerCase() === "admin" && (
@@ -67,7 +62,7 @@ export default function Licnosti() {
                 {filteredLicnosti.map((licnost) => (
                     <div
                         key={licnost.id}
-                        onClick={() => navigate(`/licnost/${licnost.id}`, { state: { isVladar: licnost.isVladar } })}
+                        onClick={() => navigate(`/licnost/${licnost.id}`)} // više NE šaljemo state
                         className="cursor-pointer"
                     >
                         <LicnostPrikaz licnost={licnost} />

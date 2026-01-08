@@ -165,14 +165,16 @@ public class RatController : ControllerBase
                 .Where((RatNeo r) => r.ID == id)
                 .OptionalMatch("(r)-[:DESIO_SE]->(g:Godina)")
                 .OptionalMatch("(r)-[:RAT_TRAJAO_DO]->(gdo:Godina)")
+                .OptionalMatch("(r)-[:DESIO_SE_U]->(z:Zemlja)")
                 .OptionalMatch("(b:Dogadjaj:Bitka)-[:BITKA_U_RATU]->(r)")
-                .With("r, g, gdo, collect(b.Ime) as imenaBitki") // <- pravi alias imena
-                .Return((r, g, gdo, imenaBitki) => new
+                .With("r, g, z, gdo, collect(b.Ime) as imenaBitki") // <- pravi alias imena
+                .Return((r, g, gdo, imenaBitki, z) => new
                 {
                     rat = r.As<RatNeo>(),
                     godinaOd = g.As<GodinaNeo>(),
                     godinaDo = gdo.As<GodinaNeo>(),
-                    imenaBitki = imenaBitki.As<List<string>>() // <- koristi alias
+                    imenaBitki = imenaBitki.As<List<string>>(), // <- koristi alias
+                    Zemlja = z.As<ZemljaNeo>()
                 })
                 .ResultsAsync).FirstOrDefault();
 
@@ -183,7 +185,7 @@ public class RatController : ControllerBase
             rat.Godina = result.godinaOd;
             rat.GodinaDo = result.godinaDo;
             rat.Bitke = result.imenaBitki ?? new List<string>();
-
+            var zemljaNaziv = result.Zemlja?.Naziv ?? ""; // fallback ako ne postoji
             var mongoDoc = await _dogadjajiCollection.Find(d => d.ID == id).FirstOrDefaultAsync();
 
             // 🔹 Kreiranje DTO objekta
@@ -192,7 +194,7 @@ public class RatController : ControllerBase
                 ID = rat.ID,
                 Ime = rat.Ime,
                 Tip = rat.Tip,
-                Lokacija = rat.Lokacija,
+                Lokacija = zemljaNaziv,
                 Godina = rat.Godina,
                 GodinaDo = rat.GodinaDo,
                 Pobednik = rat.Pobednik,

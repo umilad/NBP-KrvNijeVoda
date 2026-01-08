@@ -18,23 +18,31 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("register")]
-    public async Task<IActionResult> Register([FromBody] RegisterDto dto)
+public async Task<IActionResult> Register([FromBody] RegisterDto dto)
+{
+    if (!ModelState.IsValid)
+        return BadRequest(ModelState);
+
+    var existing = await _mongoService.Users
+        .Find(u => u.Username == dto.Username)
+        .FirstOrDefaultAsync();
+
+    if (existing != null)
+        return BadRequest("Username already exists");
+
+    var user = new UserMongo
     {
-        var existing = await _mongoService.Users.Find(u => u.Username == dto.Username).FirstOrDefaultAsync();
-        if (existing != null) return BadRequest("Username already exists");
+        Username = dto.Username,
+        PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
+        Role = dto.CustomClaims.Role,
+        FirstName = dto.FirstName,
+        LastName = dto.LastName
+    };
 
-        var user = new UserMongo
-        {
-            Username = dto.Username,
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-            Role = dto.CustomClaims.Role,
-            FirstName = dto.FirstName,
-            LastName = dto.LastName
-        };
+    await _mongoService.Users.InsertOneAsync(user);
+    return Ok("User registered");
+}
 
-        await _mongoService.Users.InsertOneAsync(user);
-        return Ok("User registered");
-    }
 
    [HttpPost("login")]
 public async Task<IActionResult> Login([FromBody] LoginDto loginRequest)

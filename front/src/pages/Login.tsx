@@ -8,18 +8,25 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [usernameInput, setUsernameInput] = useState("");
   const [passwordInput, setPasswordInput] = useState("");
+  const [loading, setLoading] = useState(false); // ✅ dodali loading
   const { login } = useAuth(); // globalni login iz AuthContext
   const navigate = useNavigate();
 
   const handleLogin = async () => {
     try {
-      const response = await axios.post("http://localhost:5210/api/Auth/login", {
-        Username: usernameInput,
-        Password: passwordInput,
-        CustomClaims: { Role: "admin" } // isto kao u registraciji
-      }, {
-        headers: { "Content-Type": "application/json" }
-      });
+      setLoading(true); // ✅ setujemo loading na true kad kliknemo dugme
+
+      const response = await axios.post(
+        "http://localhost:5210/api/Auth/login",
+        {
+          Username: usernameInput,
+          Password: passwordInput,
+          CustomClaims: { Role: "admin" } // isto kao u registraciji
+        },
+        {
+          headers: { "Content-Type": "application/json" }
+        }
+      );
 
       const token = response.data.token;
       const role = response.data.role || "user";
@@ -39,6 +46,8 @@ export default function Login() {
         console.error(error.message);
         alert("Login failed: " + error.message);
       }
+    } finally {
+      setLoading(false); // ✅ isključujemo loading kad je završeno
     }
   };
 
@@ -47,7 +56,10 @@ export default function Login() {
       <div className="pozadinaForme flex flex-col items-center justify-center relative w-1/3 border-2 border-[#3f2b0a] bg-[#e6cda5] p-[20px] rounded-lg text-center text-[#3f2b0a]">
         <p className="text-2xl font-bold mb-[15px]">Prijava</p>
 
-        <form className="w-full flex flex-col gap-4" onSubmit={(e) => { e.preventDefault(); handleLogin(); }}>
+        <form
+          className="w-full flex flex-col gap-4"
+          onSubmit={(e) => { e.preventDefault(); handleLogin(); }}
+        >
           <input
             type="text"
             placeholder="Korisničko ime ili email"
@@ -75,14 +87,18 @@ export default function Login() {
 
           <button
             type="submit"
-            className="bg-[#3f2b0a] text-[#e6cda5] p-[6px] mb-[15px] rounded-[3px] hover:bg-[#2b1d07] transition"
+            disabled={loading} // ✅ dugme disable dok traje login
+            className="bg-[#3f2b0a] text-[#e6cda5] p-[6px] mb-[15px] rounded-[3px] hover:bg-[#2b1d07] transition disabled:opacity-50"
           >
-            Prijavi se
+            {loading ? "Prijavljivanje..." : "Prijavi se"} {/* ✅ tekst dugmeta */}
           </button>
         </form>
 
         <p className="mt-4 text-sm">
-          Nemaš nalog? <Link to="/registracija" className="font-bold underline cursor-pointer">Registruj se</Link>
+          Nemaš nalog?{" "}
+          <Link to="/registracija" className="font-bold underline cursor-pointer">
+            Registruj se
+          </Link>
         </p>
       </div>
     </div>

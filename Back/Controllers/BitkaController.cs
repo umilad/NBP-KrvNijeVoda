@@ -173,13 +173,13 @@ public class BitkaController : ControllerBase
                 .Match("(b:Dogadjaj:Bitka)")
                 .Where((BitkaNeo b) => b.ID == id)
                 .OptionalMatch("(b)-[:DESIO_SE]->(g:Godina)")
-                //.OptionalMatch("(b)-[:DESIO_SE_U]->(z:Zemlja)")
-                //.OptionalMatch("(b)-[:BITKA_U_RATU]->(r:Dogadjaj:Rat)")
-                .Return((b, g/*, z, r*/) => new
+                .OptionalMatch("(b)-[:DESIO_SE_U]->(z:Zemlja)")
+                .OptionalMatch("(b)-[:BITKA_U_RATU]->(r:Dogadjaj:Rat)")
+                .Return((b, g , z, r) => new
                 {
                     Bitka = b.As<BitkaNeo>(),
-                    //Zemlja = z.As<Zemlja>(),
-                    //RatID = r.As<Rat>().ID,
+                    Zemlja = z.As<ZemljaNeo>(),
+                    Rat = r.As<DogadjajNeo>(),
                     Godina = g.As<GodinaNeo>()
                 })
                 .ResultsAsync)
@@ -197,9 +197,9 @@ public class BitkaController : ControllerBase
                 //Tip = bitkaResult.Bitka.Tip,
                 Pobednik = bitkaResult.Bitka.Pobednik,
                 BrojZrtava = bitkaResult.Bitka.BrojZrtava,
-                Rat = bitkaResult.Bitka.Rat,
+                Rat = bitkaResult.Rat.Ime,
                 Godina = bitkaResult.Godina,
-                Lokacija = bitkaResult.Bitka.Lokacija,
+                Lokacija = bitkaResult.Zemlja.Naziv,
                 Tekst = mongoDoc?.Tekst
             };
 
@@ -299,205 +299,140 @@ public async Task<IActionResult> GetAllBitke()
     // }
 
     [HttpPut("UpdateBitka/{id}")]
-    public async Task<IActionResult> UpdateBitka(Guid id, [FromBody] BitkaDto updatedBitka)
+public async Task<IActionResult> UpdateBitka(Guid id, [FromBody] BitkaDto updatedBitka)
+{
+    try
     {
-        try
-        {
-            var bitka = (await _client.Cypher
-                                        .Match("(b:Dogadjaj:Bitka)")
-                                        .Where((BitkaNeo b) => b.ID == id)
-                                        .OptionalMatch("(b)-[:DESIO_SE]->(g1:Godina)")
-                                        //.OptionalMatch("(b)-[:BITKA_U_RATU]->(r:Rat)")             
-                                        .Return((b, g1/*, r*/) => new
-                                        {
-                                            Bitka = b.As<BitkaNeo>(),
-                                            //Rat = r.As<Rat>(),
-                                            Godina = g1.As<GodinaNeo>()
-                                        })
-                                        .ResultsAsync)
-                                        .FirstOrDefault();
-
-            if (bitka == null)
-                return NotFound($"Bitka sa ID: {id} nije pronađena!");
-
-            //ako naziv ostaje isti to je ta ista 
-            var duplikat = (await _client.Cypher
-                .Match("(b:Dogadjaj:Bitka)")
-                .Where("toLower(b.Ime) = toLower($naziv) AND b.ID <> $id")
-                .WithParam("naziv", updatedBitka.Ime)
-                .WithParam("id", id)
-                .Return(b => b.As<BitkaNeo>())
-                .ResultsAsync)
-                .Any();
-
-            if (duplikat)
+        // 1️⃣ Učitaj postojeću bitku
+        var bitkaResult = (await _client.Cypher
+            .Match("(b:Dogadjaj:Bitka)")
+            .Where((BitkaNeo b) => b.ID == id)
+            .OptionalMatch("(b)-[:DESIO_SE]->(g:Godina)")
+            .Return((b, g) => new
             {
-                return BadRequest($"Bitka sa nazivom '{updatedBitka.Ime}' već postoji u bazi!");
-            }
+                Bitka = b.As<BitkaNeo>(),
+                Godina = g.As<GodinaNeo>()
+            })
+            .ResultsAsync)
+            .FirstOrDefault();
 
-            var cypher = _client.Cypher
+        if (bitkaResult == null)
+            return NotFound($"Bitka sa ID: {id} nije pronađena!");
+
+        var bitka = bitkaResult.Bitka;
+
+        // 2️⃣ Provera duplikata imena
+        var duplikat = (await _client.Cypher
+            .Match("(b:Dogadjaj:Bitka)")
+            .Where("toLower(b.Ime) = toLower($ime) AND b.ID <> $id")
+            .WithParams(new { ime = updatedBitka.Ime, id })
+            .Return(b => b.As<BitkaNeo>())
+            .ResultsAsync)
+            .Any();
+
+        if (duplikat)
+            return BadRequest($"Bitka sa nazivom '{updatedBitka.Ime}' već postoji!");
+
+        // 3️⃣ Ažuriraj osnovna polja u Bitka nodu
+        await _client.Cypher
+            .Match("(b:Dogadjaj:Bitka)")
+            .Where((BitkaNeo b) => b.ID == id)
+            .Set("b.Ime = $ime, b.Tip = 'Bitka', b.Pobednik = $pobednik, b.BrojZrtava = $brojZrtava")
+            .WithParams(new
+            {
+                ime = updatedBitka.Ime,
+                pobednik = updatedBitka.Pobednik,
+                brojZrtava = updatedBitka.BrojZrtava
+            })
+            .ExecuteWithoutResultsAsync();
+
+        // 4️⃣ Ažuriranje Lokacije (Zemlja)
+        // Obriši postojeće veze
+        await _client.Cypher
+            .Match("(b:Dogadjaj:Bitka)-[rel:DESIO_SE_U]->()")
+            .Where((BitkaNeo b) => b.ID == id)
+            .Delete("rel")
+            .ExecuteWithoutResultsAsync();
+
+        if (!string.IsNullOrEmpty(updatedBitka.Lokacija) && updatedBitka.Lokacija != "string")
+        {
+            await _client.Cypher
+                .Match("(b:Dogadjaj:Bitka)", "(z:Zemlja)")
+                .Where((BitkaNeo b) => b.ID == id)
+                .AndWhere("toLower(z.Naziv) = toLower($imeZemlje)")
+                .WithParam("imeZemlje", updatedBitka.Lokacija)
+                .Create("(b)-[:DESIO_SE_U]->(z)")
+                .Set("b.Lokacija = $imeZemlje")
+                .ExecuteWithoutResultsAsync();
+        }
+        else
+        {
+            // Ako ništa nije uneto, postavi "string" ili ostavi staru
+            await _client.Cypher
                 .Match("(b:Dogadjaj:Bitka)")
                 .Where((BitkaNeo b) => b.ID == id)
-                .Set("b.Ime = $ime, b.Tip = 'Bitka', b.Pobednik = $pobednik, b.BrojZrtava = $brojZrtava, b.Lokacija = $lokacija, b.Rat = $rat")
-                .WithParams(new
-                {
-                    ime = updatedBitka.Ime,
-                    pobednik = updatedBitka.Pobednik,
-                    lokacija = bitka.Bitka.Lokacija, //NAMERNO STARA DA BI OSTALA ONA AKO UNETA NE POSTOJI
-                    rat = bitka.Bitka.Rat,//ISTO KAO ZA LOKACIJU 
-                    brojZrtava = updatedBitka.BrojZrtava
-                });
-
-            if (!string.IsNullOrEmpty(updatedBitka.Lokacija) && updatedBitka.Lokacija != "string")//uneto je nesto
-            {
-                var zemljaPostoji = (await _client.Cypher
-                            .Match("(z:Zemlja)")
-                            .Where("toLower(z.Naziv) = toLower($naziv)")
-                            .WithParam("naziv", updatedBitka.Lokacija)
-                            .Return(z => z.As<ZemljaNeo>())
-                            .ResultsAsync)
-                            .Any();
-
-                if (zemljaPostoji)//ta lokacija postoji u bazi 
-                {
-                    if (!string.IsNullOrEmpty(bitka.Bitka.Lokacija) && bitka.Bitka.Lokacija != "string")//postoji vec neka lokacija u bazi
-                    {
-                        if (bitka.Bitka.Lokacija.ToLower() != updatedBitka.Lokacija.ToLower())//promenjena lokacija
-                        {
-                            cypher = cypher
-                                .With("b")
-                                .OptionalMatch("(b)-[rel:DESIO_SE_U]->()")
-                                .Match("(z:Zemlja)")
-                                .Where("toLower(z.Naziv) = toLower($nazivZemlje)")
-                                .Delete("rel")
-                                .WithParam("nazivZemlje", updatedBitka.Lokacija)
-                                .Create("(b)-[:DESIO_SE_U]->(z)")
-                                .Set("b.Lokacija = $nazivZemlje");
-                        }
-                        //else ista je lokacija
-                    }
-                    else//nista nije bilo samo dodajemo 
-                    {
-                        cypher = cypher
-                                .With("b")
-                                .Match("(z:Zemlja)")
-                                .Where("toLower(z.Naziv) = toLower($nazivZemlje)")
-                                .WithParam("nazivZemlje", updatedBitka.Lokacija)
-                                .Create("(b)-[:DESIO_SE_U]->(z)")
-                                .Set("b.Lokacija = $nazivZemlje");
-                    }
-                }
-                //else//lokacija nije nadjena u bazi ostavlja staru lokaciju jer sam na nju postavila na pocetku 
-            }
-            else //nije uneto nista 
-            {
-                cypher = cypher
-                    .With("b")
-                    .OptionalMatch("(b)-[rel:DESIO_SE_U]->()")
-                    .Delete("rel")
-                    .Set("b.Lokacija = 'string'");
-            }
-
-            if (!string.IsNullOrEmpty(updatedBitka.Rat) && updatedBitka.Rat != "string")//nesto je uneto 
-            {//da li to ima smisla
-                var ratPostoji = (await _client.Cypher.Match("(r:Dogadjaj:Rat)")
-                                                      .Where("toLower(r.Ime) = toLower($imeRata)")
-                                                      .WithParam("imeRata", updatedBitka.Rat)
-                                                      .Return(r => r.As<RatNeo>())
-                                                      .ResultsAsync)
-                                                      .FirstOrDefault();
-                if (ratPostoji != null)//smislen unos
-                {
-                    if (!string.IsNullOrEmpty(bitka.Bitka.Rat) && bitka.Bitka.Rat != "string")//nesto je postojalo u bazi 
-                    {//da li je isto kao novo 
-                        if (bitka.Bitka.Rat.ToLower() != updatedBitka.Rat.ToLower())
-                        {//promenjeno je 
-                            cypher = cypher
-                                .With("b")
-                                .OptionalMatch("(b)-[rel:BITKA_U_RATU]->()")
-                                .Match("(r:Dogadjaj:Rat)")
-                                .Where("toLower(r.Ime) = toLower($imeRata)")
-                                .Delete("rel")
-                                .WithParam("imeRata", updatedBitka.Rat)
-                                .Create("(b)-[:BITKA_U_RATU]->(r)")
-                                .Set("b.Rat = $imeRata");
-                        }
-                        //else isto je 
-                    }
-                    else //samo unesi update
-                    {
-                        cypher = cypher
-                                .With("b")
-                                .Match("(r:Dogadjaj:Rat)")
-                                .Where("toLower(r.Ime) = toLower($imeRata)")
-                                .WithParam("imeRata", updatedBitka.Rat)
-                                .Create("(b)-[:BITKA_U_RATU]->(r)")
-                                .Set("b.Rat = $imeRata");
-                    }
-                }
-                //else nije smislen unos treba da ostane ono sto je bilo                 
-            }
-            else //nista nije uneto 
-            {
-                cypher = cypher
-                    .With("b")
-                    .OptionalMatch("(b)-[rel:BITKA_U_RATU]->()")
-                    .Delete("rel")
-                    .Set("b.Rat = 'string'");
-            }
-
-            if (updatedBitka.Godina != null)//uneta godina 
-            {
-                if (bitka.Godina != null)//vec je bila neka godina 
-                {
-                    if (bitka.Godina.God != updatedBitka.Godina.God || bitka.Godina.IsPNE != updatedBitka.Godina.IsPNE)
-                    {//promenjena je 
-                        var godina = await _godinaService.DodajGodinu(updatedBitka.Godina.God, updatedBitka.Godina.IsPNE);
-                        cypher = cypher
-                            .With("b")
-                            .OptionalMatch("(b)-[rel:DESIO_SE]->()")
-                            .Match("(g:Godina {ID: $godinaId})")
-                            .Delete("rel")
-                            .WithParam("godinaId", godina.ID)
-                            .Create("(b)-[:DESIO_SE]->(g)");
-                    }
-                    //else nije promenjena nista ne diramo 
-                }
-                else//nije bila godina samo unosimo novu 
-                {
-                    var godina = await _godinaService.DodajGodinu(updatedBitka.Godina.God, updatedBitka.Godina.IsPNE);
-                    cypher = cypher
-                        .With("b")
-                        .Match("(g:Godina {ID: $godinaId})")
-                        .WithParam("godinaId", godina.ID)
-                        .Create("(b)-[:DESIO_SE]->(g)");
-                }
-            }
-            else
-            {
-                cypher = cypher
-                    .With("b")
-                    .OptionalMatch("(b)-[rel:DESIO_SE]->()")
-                    .Delete("rel");
-            }
-
-            await cypher.ExecuteWithoutResultsAsync();
-
-            if (!string.IsNullOrWhiteSpace(updatedBitka.Tekst))
-            {
-                var filter = Builders<DogadjajMongo>.Filter.Eq(d => d.ID, id);
-                var update = Builders<DogadjajMongo>.Update.Set(d => d.Tekst, updatedBitka.Tekst);
-                var result = await _dogadjajiCollection.UpdateOneAsync(filter, update);
-
-            }
-
-            return Ok($"Bitka '{updatedBitka.Ime}' je uspešno ažurirana!");
+                .Set("b.Lokacija = 'string'")
+                .ExecuteWithoutResultsAsync();
         }
-        catch (Exception ex)
+
+        // 5️⃣ Ažuriranje veze ka Ratu
+        // Obriši sve postojeće veze
+        await _client.Cypher
+            .Match("(b:Dogadjaj:Bitka)-[rel:BITKA_U_RATU]->()")
+            .Where((BitkaNeo b) => b.ID == id)
+            .Delete("rel")
+            .ExecuteWithoutResultsAsync();
+
+        // Kreiraj novu vezu ako je smislen unos
+        if (!string.IsNullOrEmpty(updatedBitka.Rat) && updatedBitka.Rat != "string")
         {
-            return StatusCode(500, $"Došlo je do greške pri radu sa bazom: {ex.Message}");
+            await _client.Cypher
+                .Match("(b:Dogadjaj:Bitka)", "(r:Dogadjaj:Rat)")
+                .Where((BitkaNeo b) => b.ID == id)
+                .AndWhere("toLower(r.Ime) = toLower($imeRata)")
+                .WithParam("imeRata", updatedBitka.Rat)
+                .Create("(b)-[:BITKA_U_RATU]->(r)")
+                .Set("b.Rat = $imeRata")
+                .ExecuteWithoutResultsAsync();
         }
+
+        // 6️⃣ Ažuriranje Godine
+        if (updatedBitka.Godina != null)
+        {
+            var godina = await _godinaService.DodajGodinu(updatedBitka.Godina.God, updatedBitka.Godina.IsPNE);
+
+            // Obriši staru vezu
+            await _client.Cypher
+                .Match("(b:Dogadjaj:Bitka)-[rel:DESIO_SE]->()")
+                .Where((BitkaNeo b) => b.ID == id)
+                .Delete("rel")
+                .ExecuteWithoutResultsAsync();
+
+            // Kreiraj novu
+            await _client.Cypher
+                .Match("(b:Dogadjaj:Bitka)", "(g:Godina)")
+                .Where((BitkaNeo b) => b.ID == id)
+                .AndWhere((GodinaNeo g) => g.ID == godina.ID)
+                .Create("(b)-[:DESIO_SE]->(g)")
+                .ExecuteWithoutResultsAsync();
+        }
+
+        // 7️⃣ Ažuriranje Teksta u MongoDB
+        if (!string.IsNullOrWhiteSpace(updatedBitka.Tekst))
+        {
+            var filter = Builders<DogadjajMongo>.Filter.Eq(d => d.ID, id);
+            var update = Builders<DogadjajMongo>.Update.Set(d => d.Tekst, updatedBitka.Tekst);
+            await _dogadjajiCollection.UpdateOneAsync(filter, update);
+        }
+
+        return Ok($"Bitka '{updatedBitka.Ime}' je uspešno ažurirana!");
     }
+    catch (Exception ex)
+    {
+        return StatusCode(500, $"Došlo je do greške pri radu sa bazom: {ex.Message}");
+    }
+}
+
     
     // [HttpGet("GetAllBitke")]
     // public async Task<IActionResult> GetAllBitke()

@@ -4,128 +4,194 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "./AuthContext";
 
+/* =========================
+   VALIDACIJA
+========================= */
+function validateRegister(
+  username: string,
+  password: string,
+  firstName: string,
+  lastName: string
+) {
+  const errors: Record<string, string> = {};
+
+  if (firstName.trim().length < 2)
+    errors.firstName = "Ime mora imati najmanje 2 karaktera";
+
+  if (lastName.trim().length < 2)
+    errors.lastName = "Prezime mora imati najmanje 2 karaktera";
+
+  if (username.trim().length < 5)
+    errors.username = "Korisničko ime mora imati najmanje 5 karaktera";
+
+  if (password.length < 6)
+    errors.password = "Lozinka mora imati najmanje 6 karaktera";
+
+  if (!/[A-Za-z]/.test(password) || !/\d/.test(password))
+    errors.password = "Lozinka mora sadržati bar jedno slovo i jedan broj";
+
+  return errors;
+}
+
+/* =========================
+   KOMPONENTA
+========================= */
 export default function Registracija() {
   const [showPassword, setShowPassword] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
   const navigate = useNavigate();
   const { login } = useAuth();
 
+  const errors = validateRegister(username, password, firstName, lastName);
+  const isValid = Object.keys(errors).length === 0;
+
+  /* =========================
+     LOGIN NAKON REGISTRACIJE
+  ========================= */
   const handleLogin = async (username: string, password: string) => {
-    try {
-      const response = await axios.post("http://localhost:5210/api/Auth/login", {
+    const response = await axios.post(
+      "http://localhost:5210/api/Auth/login",
+      {
         Username: username,
         Password: password,
-        CustomClaims: { Role: "user" }
-      });
-
-      const token = response.data.token;
-      const role = response.data.role || "user"; // uzmi role iz odgovora ili default
-
-      // Poziv globalnog login iz AuthContext sa 3 parametra
-      login(username, token, role);
-
-      navigate("/"); 
-    } catch (err: unknown) {
-      if (axios.isAxiosError(err)) {
-        console.error("Axios login error:", err.response?.status, err.response?.data);
-        alert(`Login failed: ${err.response?.data || err.message}`);
-      } else {
-        const error = err as Error;
-        console.error(error.message);
-        alert("Login failed: " + error.message);
+        CustomClaims: { Role: "user" },
       }
-    }
+    );
+
+    const token = response.data.token;
+    const role = response.data.role || "user";
+
+    login(username, token, role);
+    navigate("/");
   };
 
+  /* =========================
+     REGISTER
+  ========================= */
   const handleRegister = async () => {
+    setSubmitted(true);
+
+    if (!isValid) return; // ne šalji ako greške postoje
+
     const registerData = {
-      Username: username,
+      Username: username.trim(),
       Password: password,
-      FirstName: firstName,
-      LastName: lastName,
-      CustomClaims: { Role: "admin" },
+      FirstName: firstName.trim(),
+      LastName: lastName.trim(),
+      CustomClaims: { Role: "admin" }, // backend bi realno trebao dodeliti
     };
 
     try {
-      const response = await axios.post("http://localhost:5210/api/Auth/register", registerData, {
-        headers: { "Content-Type": "application/json" },
-      });
+      setLoading(true);
 
-      console.log("Registration successful", response.data);
+      await axios.post(
+        "http://localhost:5210/api/Auth/register",
+        registerData,
+        { headers: { "Content-Type": "application/json" } }
+      );
 
-      // odmah login nakon registracije
+      // auto-login nakon uspešne registracije
       await handleLogin(username, password);
-    } catch (err: unknown) {
-      if (axios.isAxiosError(err)) {
-        console.error("Axios registration error:", err.response?.status, err.response?.data);
-        alert(`Registration failed: ${err.response?.data || err.message}`);
-      } else {
-        const error = err as Error;
-        console.error(error.message);
-        alert("Registration failed: " + error.message);
-      }
+    } catch (err: any) {
+      alert(err.response?.data || "Registracija nije uspela");
+    } finally {
+      setLoading(false);
     }
   };
 
+  /* =========================
+     UI
+  ========================= */
   return (
     <div className="login my-[180px] w-full flex justify-center">
       <div className="pozadinaForme flex flex-col items-center justify-center relative w-1/3 border-2 border-[#3f2b0a] bg-[#e6cda5] p-[20px] rounded-lg text-center text-[#3f2b0a]">
+
         <p className="text-2xl font-bold mb-[15px]">Registracija</p>
 
-        <form className="w-full flex flex-col gap-4" onSubmit={(e) => { e.preventDefault(); handleRegister(); }}>
+        <form
+          className="w-full flex flex-col gap-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleRegister();
+          }}
+        >
+          {/* Ime */}
           <input
             type="text"
             placeholder="Ime"
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
-            className="p-[6px] rounded-[3px] border border-[#3f2b0a] focus:outline-none"
+            className="p-[6px] rounded-[3px] border border-[#3f2b0a]"
           />
+          {submitted && errors.firstName && (
+            <p className="text-red-600 text-xs mt-1">{errors.firstName}</p>
+          )}
+
+          {/* Prezime */}
           <input
             type="text"
             placeholder="Prezime"
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
-            className="p-[6px] rounded-[3px] border border-[#3f2b0a] focus:outline-none"
+            className="p-[6px] rounded-[3px] border border-[#3f2b0a]"
           />
+          {submitted && errors.lastName && (
+            <p className="text-red-600 text-xs mt-1">{errors.lastName}</p>
+          )}
+
+          {/* Username */}
           <input
             type="text"
             placeholder="Korisničko ime ili email"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            className="p-[6px] rounded-[3px] border border-[#3f2b0a] focus:outline-none"
+            className="p-[6px] rounded-[3px] border border-[#3f2b0a]"
           />
+          {submitted && errors.username && (
+            <p className="text-red-600 text-xs mt-1">{errors.username}</p>
+          )}
 
+          {/* Lozinka */}
           <div className="relative">
             <input
               type={showPassword ? "text" : "password"}
               placeholder="Lozinka"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="p-[6px] rounded-[3px] border border-[#3f2b0a] focus:outline-none w-full pr-10"
+              className="p-[6px] rounded-[3px] border border-[#3f2b0a] w-full pr-10"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-[#3f2b0a] hover:opacity-70"
+              className="absolute right-2 top-1/2 -translate-y-1/2"
             >
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </div>
+          {submitted && errors.password && (
+            <p className="text-red-600 text-xs mt-1">{errors.password}</p>
+          )}
 
           <button
             type="submit"
-            className="bg-[#3f2b0a] text-[#e6cda5] p-[6px] mb-[15px] rounded-[3px] hover:bg-[#2b1d07] transition"
+            disabled={loading}
+            className="bg-[#3f2b0a] text-[#e6cda5] p-[6px] mb-[15px] rounded-[3px] hover:bg-[#2b1d07] transition disabled:opacity-50"
           >
-            Registruj se
+            {loading ? "Registracija..." : "Registruj se"}
           </button>
         </form>
 
         <p className="mt-4 text-sm">
-          Imaš nalog? <Link to="/prijava" className="font-bold underline cursor-pointer">Prijavi se</Link>
+          Imaš nalog?{" "}
+          <Link to="/prijava" className="font-bold underline">
+            Prijavi se
+          </Link>
         </p>
       </div>
     </div>

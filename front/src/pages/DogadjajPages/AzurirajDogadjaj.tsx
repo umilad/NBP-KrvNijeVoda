@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../AuthContext";
-import type { DogadjajUnion, TipDogadjaja, Bitka, Rat } from "../../types/dogadjaj";
+import type { Dogadjaj, TipDogadjaja, Bitka, Rat } from "../../types/dogadjaj";
 
 interface Zemlja {
   id: string;
@@ -99,7 +99,7 @@ export default function AzurirajDogadjaj() {
           setGodinaDo(ratData.godinaDo?.god.toString() ?? "");
           setIsPNEDo(ratData.godinaDo?.isPne ?? false); // automatski štiklirano ako je true
         } else {
-          const resDog = await axios.get<DogadjajUnion>(`http://localhost:5210/api/GetDogadjaj/${id}`);
+          const resDog = await axios.get<Dogadjaj>(`http://localhost:5210/api/GetDogadjaj/${id}`);
           const dog = resDog.data;
           setIme(dog.ime);
           setLokacija(dog.lokacija ?? "");

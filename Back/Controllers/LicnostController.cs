@@ -323,13 +323,11 @@ public async Task<IActionResult> UpdateLicnost([FromBody] LicnostDto licnost, Gu
                 return BadRequest($"Licnost sa ID: {id} nije pronadjena u bazi!");
             }
 
-            await _client.Cypher.Match("(l:Licnost)")
-                                .Where((LicnostNeo l) => l.ID == id)
-                                .OptionalMatch("(l)-[r:RODJEN]->(gr:Godina)")
-                                .OptionalMatch("(l)-[r2:UMRO]->(gs:Godina)")
-                                .OptionalMatch("(l)-[r3:RODJEN_U]->(m:Zemlja)")
-                                .Delete("r, r2, r3, l")
-                                .ExecuteWithoutResultsAsync();
+            await _client.Cypher
+                            .Match("(l:Licnost)")
+                            .Where((LicnostNeo l) => l.ID == id)
+                            .DetachDelete("l") // briše čvor i sve njegove veze
+                            .ExecuteWithoutResultsAsync();
             await _licnostCollection.DeleteOneAsync(d => d.ID == id);
             return Ok($"Licnost sa id:{id} uspesno obrisana iz baze!");
         }

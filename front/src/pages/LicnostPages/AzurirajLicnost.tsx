@@ -10,7 +10,14 @@ export default function AzurirajLicnost() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { token } = useAuth();
-  const location = useLocation<{ isVladar?: boolean }>();
+  type LocationState = {
+  isVladar?: boolean;
+};
+
+const location = useLocation();
+const state = location.state as LocationState;
+
+console.log(state?.isVladar);
 
   const [titula, setTitula] = useState("");
   const [ime, setIme] = useState("");
@@ -25,6 +32,8 @@ export default function AzurirajLicnost() {
   const [tekst, setTekst] = useState("");
   const [slika, setSlika] = useState<File | null>(null);
   const [slikaPreview, setSlikaPreview] = useState<string | null>(null);
+
+  
 
   // Vladar
   const [dodajVladara, setDodajVladara] = useState(location.state?.isVladar ?? false);
@@ -155,185 +164,189 @@ export default function AzurirajLicnost() {
   };
 
   return (
-    <div className="flex justify-center mt-[100px]">
-      <div className="bg-[#e6cda5] border-2 border-[#3f2b0a] rounded-2xl shadow-lg w-[600px] p-8 text-[#3f2b0a]">
-        <h1 className="text-3xl font-bold mb-6 text-center">
-          Ažuriraj {dodajVladara ? "Vladara" : "Ličnost"}
-        </h1>
+  <div className="dodaj-dogadjaj my-[180px] w-full flex justify-center">
+    <div className="pozadinaForme flex flex-col items-center justify-center relative w-1/3 border-2 border-[#3f2b0a] bg-[#e6cda5] p-[20px] rounded-lg text-center text-[#3f2b0a] shadow-md">
+      <h1 className="text-2xl font-bold mb-[15px]">
+        Ažuriraj {dodajVladara ? "Vladara" : "Ličnost"}
+      </h1>
 
-        <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-          <input
-            className="p-2 rounded border border-[#3f2b0a]"
-            type="text"
-            placeholder="Titula"
-            value={titula}
-            onChange={(e) => setTitula(e.target.value)}
-          />
-          <input
-            className="p-2 rounded border border-[#3f2b0a]"
-            type="text"
-            placeholder="Ime"
-            value={ime}
-            onChange={(e) => setIme(e.target.value)}
-            required
-          />
-          <input
-            className="p-2 rounded border border-[#3f2b0a]"
-            type="text"
-            placeholder="Prezime"
-            value={prezime}
-            onChange={(e) => setPrezime(e.target.value)}
-            required
-          />
+      <form className="w-full flex flex-col gap-4" onSubmit={handleSubmit}>
+        <input
+          type="text"
+          placeholder="Titula"
+          value={titula}
+          onChange={(e) => setTitula(e.target.value)}
+          className="p-[6px] rounded-[3px] border border-[#3f2b0a]"
+        />
 
-          <select
-            className="p-2 rounded border border-[#3f2b0a]"
-            value={pol}
-            onChange={(e) => setPol(e.target.value)}
-          >
-            <option value="M">Muški</option>
-            <option value="Ž">Ženski</option>
-          </select>
+        <input
+          type="text"
+          placeholder="Ime"
+          value={ime}
+          onChange={(e) => setIme(e.target.value)}
+          required
+          className="p-[6px] rounded-[3px] border border-[#3f2b0a]"
+        />
 
-          <div className="flex gap-2 items-center">
+        <input
+          type="text"
+          placeholder="Prezime"
+          value={prezime}
+          onChange={(e) => setPrezime(e.target.value)}
+          required
+          className="p-[6px] rounded-[3px] border border-[#3f2b0a]"
+        />
+
+        <select
+          value={pol}
+          onChange={(e) => setPol(e.target.value)}
+          className="p-[6px] rounded-[3px] border border-[#3f2b0a]"
+        >
+          <option value="M">Muški</option>
+          <option value="Ž">Ženski</option>
+        </select>
+
+        <div className="flex gap-4 items-center">
+          <input
+            type="number"
+            placeholder="Godina rođenja"
+            value={godinaRodjenja}
+            onChange={(e) => setGodinaRodjenja(Number(e.target.value))}
+            className="p-[6px] rounded-[3px] border border-[#3f2b0a] flex-1"
+          />
+          <label className="flex items-center gap-2">
             <input
-              className="p-2 w-full rounded border border-[#3f2b0a]"
-              type="number"
-              placeholder="Godina rođenja"
-              value={godinaRodjenja}
-              onChange={(e) => setGodinaRodjenja(Number(e.target.value))}
+              type="checkbox"
+              checked={godinaRodjenjaPNE}
+              onChange={(e) => setGodinaRodjenjaPNE(e.target.checked)}
             />
-            <label className="flex items-center gap-1">
-              <input
-                type="checkbox"
-                checked={godinaRodjenjaPNE}
-                onChange={(e) => setGodinaRodjenjaPNE(e.target.checked)}
-              />
-              p.n.e.
-            </label>
-          </div>
+            p. n. e.
+          </label>
+        </div>
 
-          <div className="flex gap-2 items-center">
-            <input
-              className="p-2 w-full rounded border border-[#3f2b0a]"
-              type="number"
-              placeholder="Godina smrti"
-              value={godinaSmrti}
-              onChange={(e) => setGodinaSmrti(Number(e.target.value))}
-            />
-            <label className="flex items-center gap-1">
-              <input
-                type="checkbox"
-                checked={godinaSmrtiPNE}
-                onChange={(e) => setGodinaSmrtiPNE(e.target.checked)}
-              />
-              p.n.e.
-            </label>
-          </div>
-
-          <select
-            className="p-2 rounded border border-[#3f2b0a]"
-            value={mestoRodjenja}
-            onChange={(e) => setMestoRodjenja(e.target.value)}
-          >
-            <option value="">-- Odaberi zemlju rođenja --</option>
-            {zemlje.map((z) => (
-              <option key={z.naziv} value={z.naziv}>
-                {z.naziv}
-              </option>
-            ))}
-          </select>
-
-          <textarea
-            className="p-2 rounded border border-[#3f2b0a]"
-            placeholder="Tekst"
-            rows={4}
-            value={tekst}
-            onChange={(e) => setTekst(e.target.value)}
+        <div className="flex gap-4 items-center">
+          <input
+            type="number"
+            placeholder="Godina smrti"
+            value={godinaSmrti}
+            onChange={(e) => setGodinaSmrti(Number(e.target.value))}
+            className="p-[6px] rounded-[3px] border border-[#3f2b0a] flex-1"
           />
-
-          <input type="file" accept="image/*" onChange={handleFileChange} />
-          {slikaPreview && (
-            <img
-              src={slikaPreview}
-              alt="Preview"
-              className="h-[150px] mt-2 mx-auto rounded-lg shadow-md"
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={godinaSmrtiPNE}
+              onChange={(e) => setGodinaSmrtiPNE(e.target.checked)}
             />
-          )}
+            p. n. e.
+          </label>
+        </div>
 
-          {dodajVladara && (
-            <>
-              <h2 className="text-xl font-semibold mt-4 border-t border-[#3f2b0a] pt-4">
-                Podaci o vladavini
-              </h2>
+        <select
+          value={mestoRodjenja}
+          onChange={(e) => setMestoRodjenja(e.target.value)}
+          className="p-[6px] rounded-[3px] border border-[#3f2b0a]"
+        >
+          <option value="">-- Odaberi zemlju rođenja --</option>
+          {zemlje.map((z) => (
+            <option key={z.naziv} value={z.naziv}>
+              {z.naziv}
+            </option>
+          ))}
+        </select>
 
-              <div className="flex gap-2 items-center">
-                <input
-                  className="p-2 w-full rounded border border-[#3f2b0a]"
-                  type="number"
-                  placeholder="Početak vladavine"
-                  value={pocetakVladavineGod}
-                  onChange={(e) => setPocetakVladavineGod(Number(e.target.value))}
-                />
-                <label className="flex items-center gap-1">
-                  <input
-                    type="checkbox"
-                    checked={pocetakVladavinePNE}
-                    onChange={(e) => setPocetakVladavinePNE(e.target.checked)}
-                  />
-                  p.n.e.
-                </label>
-              </div>
+        <textarea
+          placeholder="Tekst"
+          value={tekst}
+          onChange={(e) => setTekst(e.target.value)}
+          className="p-[6px] rounded-[3px] border border-[#3f2b0a] h-32 resize-none"
+        />
 
-              <div className="flex gap-2 items-center">
-                <input
-                  className="p-2 w-full rounded border border-[#3f2b0a]"
-                  type="number"
-                  placeholder="Kraj vladavine"
-                  value={krajVladavineGod}
-                  onChange={(e) => setKrajVladavineGod(Number(e.target.value))}
-                />
-                <label className="flex items-center gap-1">
-                  <input
-                    type="checkbox"
-                    checked={krajVladavinePNE}
-                    onChange={(e) => setKrajVladavinePNE(e.target.checked)}
-                  />
-                  p.n.e.
-                </label>
-              </div>
+        <input type="file" accept="image/*" onChange={handleFileChange} />
+        {slikaPreview && (
+          <img
+            src={slikaPreview}
+            alt="Preview"
+            className="h-[150px] mt-2 mx-auto rounded-lg shadow-md"
+          />
+        )}
 
-              <select
-                className="p-2 rounded border border-[#3f2b0a]"
-                value={dinastija?.naziv || ""}
-                onChange={(e) => setDinastija(dinastije.find((d) => d.naziv === e.target.value) || null)}
-              >
-                <option value="">-- Odaberi dinastiju --</option>
-                {dinastije.map((d) => (
-                  <option key={d.naziv} value={d.naziv}>
-                    {d.naziv}
-                  </option>
-                ))}
-              </select>
+        {dodajVladara && (
+          <>
+            <h2 className="text-xl font-semibold mt-4 border-t border-[#3f2b0a] pt-4">
+              Podaci o vladavini
+            </h2>
 
+            <div className="flex gap-4 items-center">
               <input
-                className="p-2 rounded border border-[#3f2b0a]"
-                type="text"
-                placeholder="Teritorija"
-                value={teritorija}
-                onChange={(e) => setTeritorija(e.target.value)}
+                type="number"
+                placeholder="Početak vladavine"
+                value={pocetakVladavineGod}
+                onChange={(e) => setPocetakVladavineGod(Number(e.target.value))}
+                className="p-[6px] rounded-[3px] border border-[#3f2b0a] flex-1"
               />
-            </>
-          )}
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={pocetakVladavinePNE}
+                  onChange={(e) => setPocetakVladavinePNE(e.target.checked)}
+                />
+                p. n. e.
+              </label>
+            </div>
 
-          <button
-            type="submit"
-            className="px-6 py-3 text-white bg-[#3f2b0a] hover:bg-[#2b1d07] rounded-lg text-lg font-bold mt-6"
-          >
-            Sačuvaj izmene
-          </button>
-        </form>
-      </div>
+            <div className="flex gap-4 items-center">
+              <input
+                type="number"
+                placeholder="Kraj vladavine"
+                value={krajVladavineGod}
+                onChange={(e) => setKrajVladavineGod(Number(e.target.value))}
+                className="p-[6px] rounded-[3px] border border-[#3f2b0a] flex-1"
+              />
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={krajVladavinePNE}
+                  onChange={(e) => setKrajVladavinePNE(e.target.checked)}
+                />
+                p. n. e.
+              </label>
+            </div>
+
+            <select
+              value={dinastija?.naziv || ""}
+              onChange={(e) =>
+                setDinastija(dinastije.find((d) => d.naziv === e.target.value) || null)
+              }
+              className="p-[6px] rounded-[3px] border border-[#3f2b0a]"
+            >
+              <option value="">-- Odaberi dinastiju --</option>
+              {dinastije.map((d) => (
+                <option key={d.naziv} value={d.naziv}>
+                  {d.naziv}
+                </option>
+              ))}
+            </select>
+
+            <input
+              type="text"
+              placeholder="Teritorija"
+              value={teritorija}
+              onChange={(e) => setTeritorija(e.target.value)}
+              className="p-[6px] rounded-[3px] border border-[#3f2b0a]"
+            />
+          </>
+        )}
+
+        <button
+          type="submit"
+          className="bg-[#3f2b0a] text-[#e6cda5] p-[6px] rounded-[3px] hover:bg-[#2b1d07] transition font-bold"
+        >
+          Sačuvaj promene
+        </button>
+      </form>
     </div>
-  );
+  </div>
+);
+
 }
