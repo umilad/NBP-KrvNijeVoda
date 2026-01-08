@@ -2,10 +2,11 @@ import axios from 'axios';
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
-import type { Dinastija } from "../types";
+import type { Dinastija, Licnost } from "../types";
 
 export default function Dinastija() {
     const [dinastija, setDinastija] = useState<Dinastija | null>(null);
+    const [clanoviDinastije, setClanoviDinastije] = useState<Licnost[]>([]);
     const { id } = useParams();
     const { token } = useAuth(); // token je opcionalan
     const hasTracked = useRef(false); // flag da ne pošaljemo više puta
@@ -52,6 +53,24 @@ export default function Dinastija() {
 
         loadDinastija();
     }, [id, token]);
+
+    useEffect(() => {
+        if (!id) return;
+
+        async function loadClanovi() {
+            try {
+                const res = await axios.get<Licnost[]>(
+                    `http://localhost:5210/api/GetLicnostiByDinastija/${id}`
+                );
+                setClanoviDinastije(res.data);
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        loadClanovi();
+    }, [id]);
+
 
     const handleDelete = async () => {
         if (!id || !token) return;

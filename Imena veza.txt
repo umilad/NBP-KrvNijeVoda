@@ -1,0 +1,14 @@
+BITKA -> RAT (u kom se desila)          ---------- PRIPADA_RATU
+DINASTIJA -> GODINA (pocetak vladavine) ---------- POCETAK_VLADAVINE
+DINASTIJA -> GODINA (kraj vladavine)    ---------- KRAJ_VLADAVINE
+DOGADJAJ -> GODINA (kad se desio)       ---------- DESIO_SE 
+DOGADJAJ -> LOKACIJA (gde se desio)     ---------- DESIO_SE_U
+LICNOST -> GODINA (kad se rodio)        ---------- RODJEN
+LICNOST -> GODINA (kad je umro)         ---------- UMRO
+LICNOST -> LOKACIJA (gde se rodio)      ---------- RODJEN_U
+LICNOST -> LICNOST (roditelj dete)      ---------- JE_RODITELJ
+LOKACIJA -> ZEMLJA (kojoj pripada)      ---------- PRIPADA_ZEMLJI
+RAT -> GODINA (do kad je trajao)        ---------- RAT_TRAJAO_DO
+VLADAR -> DINASTIJA (kojoj pripada)     ---------- PRIPADA_DINASTJI
+VLADAR -> GODINA (vladao od)            ---------- VLADAO_OD
+VLADAR -> GODINA (vladao do)            ---------- VLADAO_DO
