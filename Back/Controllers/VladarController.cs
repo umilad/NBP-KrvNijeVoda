@@ -799,4 +799,73 @@ public async Task<IActionResult> UpdateVladar([FromBody] VladarDto vladar, Guid 
         }
     }
 
+    [HttpGet("GetVladareByDinastija")]
+    public async Task<IActionResult> GetVladareByDinastija(Guid id)
+    {
+        try
+        {
+            //za svakog vracam njegovu decu i ID-jeve njegovih roditelja
+            var vladari = (await _client.Cypher.Match("(v:Licnost:Vladar)-[:PRIPADA_DINASTIJI]->(d:Dinastija { ID: $id })")
+                                          .WithParam("id", id)
+                                          .OptionalMatch("(v)-[r3:JE_RODITELJ]->(dete:Licnost)")
+                                          .OptionalMatch("(v)<-[r4:JE_RODITELJ]-(rod:Licnost)")
+                                          .OptionalMatch("(v)-[r6:PRIPADA_DINASTIJI]->(d:Dinastija)")
+                                          .With("v, d, collect(DISTINCT dete) as deca, collect(DISTINCT rod.ID) as roditeljiID")
+                                          .Return((v, d, deca, roditeljiID) => new
+                                          {
+                                              Vladar = v.As<VladarNeo>(),
+                                              Dinastija = d.As<DinastijaNeo>(),
+                                              Deca = deca.As<List<LicnostNeo>>(),
+                                              RoditeljiID = roditeljiID.As<List<Guid>>()
+                                          })
+                                          .ResultsAsync)
+                                          .ToList();
+
+
+            if (!vladari.Any())
+            {
+                return BadRequest($"Nijedan vladar nije pronađen u bazi!");
+            }
+
+            var ids = vladari.Select(v => v.Vladar.ID).ToList();
+            var mongoList = await _vladarCollection.Find(m => ids.Contains(m.ID)).ToListAsync();
+
+            var result = vladari.Select(vl =>
+            {
+                var mongo = mongoList.FirstOrDefault(m => m.ID == vl.Vladar.ID);
+                return new VladarTreeDto
+                {
+                    ID = vl.Vladar.ID,
+                    Titula = vl.Vladar.Titula,
+                    Ime = vl.Vladar.Ime,
+                    Prezime = vl.Vladar.Prezime,
+                    GodinaRodjenja = vl.Vladar.GodinaRodjenja,
+                    GodinaRodjenjaPNE = vl.Vladar.GodinaRodjenjaPNE,
+                    GodinaSmrti = vl.Vladar.GodinaSmrti,
+                    GodinaSmrtiPNE = vl.Vladar.GodinaSmrtiPNE,
+                    Pol = vl.Vladar.Pol,
+                    MestoRodjenja = vl.Vladar.MestoRodjenja,
+                    Dinastija = vl.Dinastija, // ?? new Dinastija() ne moze jer mora da ima naziv da bi kreirao novu zato sad ostavljam ovako 
+                    //ali takodje i stoji u modelu da dinastija moze da bude null tkd???
+                    
+                    // PocetakVladavineGod = vl.Vladar.PocetakVladavineGod,
+                    // PocetakVladavinePNE = vl.Vladar.PocetakVladavinePNE,
+                    // KrajVladavineGod = vl.Vladar.KrajVladavineGod,
+                    // KrajVladavinePNE = vl.Vladar.KrajVladavinePNE,
+
+                    Tekst = mongo?.Tekst,
+                    Slika = mongo?.Slika,
+                    //Teritorija = mongo.Teritorija,
+                    Deca = vl.Deca,
+                    RoditeljiID = vl.RoditeljiID
+                };
+            });
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
+        }
+    }
+
 }
