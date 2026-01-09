@@ -799,6 +799,32 @@ public async Task<IActionResult> UpdateVladar([FromBody] VladarDto vladar, Guid 
         }
     }
 
+    // private static LicnostTreeDto ToTreeDto(
+    //     LicnostNeo neo,
+    //     string? tekst,
+    //     string? slika,
+    //     List<Guid> roditeljiID)
+    //     {
+    //         return new LicnostTreeDto
+    //         {
+    //             ID = neo.ID,
+    //             Titula = neo.Titula,
+    //             Ime = neo.Ime,
+    //             Prezime = neo.Prezime,
+    //             GodinaRodjenja = neo.GodinaRodjenja,
+    //             GodinaRodjenjaPNE = neo.GodinaRodjenjaPNE,
+    //             GodinaSmrti = neo.GodinaSmrti,
+    //             GodinaSmrtiPNE = neo.GodinaSmrtiPNE,
+    //             Pol = neo.Pol,
+    //             MestoRodjenja = neo.MestoRodjenja,
+    //             RoditeljiID = roditeljiID,
+    //             Tekst = tekst,
+    //             Slika = slika,
+    //             Deca = new List<LicnostTreeDto>()
+    //         };
+    //     }
+
+
     [HttpGet("GetVladareByDinastija")]
     public async Task<IActionResult> GetVladareByDinastija(Guid id)
     {
@@ -810,12 +836,12 @@ public async Task<IActionResult> UpdateVladar([FromBody] VladarDto vladar, Guid 
                                           .OptionalMatch("(v)-[r3:JE_RODITELJ]->(dete:Licnost)")
                                           .OptionalMatch("(v)<-[r4:JE_RODITELJ]-(rod:Licnost)")
                                           .OptionalMatch("(v)-[r6:PRIPADA_DINASTIJI]->(d:Dinastija)")
-                                          .With("v, d, collect(DISTINCT dete) as deca, collect(DISTINCT rod.ID) as roditeljiID")
-                                          .Return((v, d, deca, roditeljiID) => new
+                                          .With("v, d, collect(DISTINCT rod.ID) as roditeljiID, collect(DISTINCT dete.ID) as decaID")
+                                          .Return((v, d, decaID, roditeljiID) => new
                                           {
                                               Vladar = v.As<VladarNeo>(),
                                               Dinastija = d.As<DinastijaNeo>(),
-                                              Deca = deca.As<List<LicnostNeo>>(),
+                                              DecaID = decaID.As<List<Guid>>(),
                                               RoditeljiID = roditeljiID.As<List<Guid>>()
                                           })
                                           .ResultsAsync)
@@ -856,7 +882,7 @@ public async Task<IActionResult> UpdateVladar([FromBody] VladarDto vladar, Guid 
                     Tekst = mongo?.Tekst,
                     Slika = mongo?.Slika,
                     //Teritorija = mongo.Teritorija,
-                    Deca = vl.Deca,
+                    DecaID = vl.DecaID,
                     RoditeljiID = vl.RoditeljiID
                 };
             });

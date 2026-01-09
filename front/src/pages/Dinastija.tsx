@@ -60,7 +60,7 @@ export default function Dinastija() {
         async function loadClanovi() {
             try {
                 const res = await axios.get<Licnost[]>(
-                    `http://localhost:5210/api/GetLicnostiByDinastija/${id}`
+                    `http://localhost:5210/api/GetVladareByDinastija/${id}`
                 );
                 setClanoviDinastije(res.data);
             } catch (err) {
