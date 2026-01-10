@@ -5,3 +5,4 @@ export * from "./dinastija";
 export * from "./zemlja";
 export * from "./allEventsForGodinaResponse";
 export * from "./yearTimelineProps";
+export * from "./licnostTree";

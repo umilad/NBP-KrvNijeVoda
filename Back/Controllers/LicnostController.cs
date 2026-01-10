@@ -394,6 +394,78 @@ public async Task<IActionResult> UpdateLicnost([FromBody] LicnostDto licnost, Gu
         }
     }
 
+    // [HttpGet("GetLicnostByDinastija")]
+    // public async Task<IActionResult> GetLicnostByDinastija(Guid id)
+    // {
+    //     try
+    //     {
+    //         //za svakog vracam njegovu decu i ID-jeve njegovih roditelja
+    //         var licnosti = (await _client.Cypher.Match("(l:Licnost)-[:PRIPADA_DINASTIJI]->(d:Dinastija { ID: $id })")
+    //                                       .WithParam("id", id)
+    //                                       .OptionalMatch("(l)-[r3:JE_RODITELJ]->(dete:Licnost)")
+    //                                       .OptionalMatch("(l)<-[r4:JE_RODITELJ]-(rod:Licnost)")
+    //                                       //.OptionalMatch("(v)-[r6:PRIPADA_DINASTIJI]->(d:Dinastija)")
+    //                                       .With("l, collect(DISTINCT rod.ID) as roditeljiID, collect(DISTINCT dete.ID) as decaID")
+    //                                       .Return((l, decaID, roditeljiID) => new
+    //                                       {
+    //                                           Licnost = l.As<LicnostNeo>(),
+    //                                           //Dinastija = d.As<DinastijaNeo>(),
+    //                                           DecaID = decaID.As<List<Guid>>(),
+    //                                           RoditeljiID = roditeljiID.As<List<Guid>>()
+    //                                       })
+    //                                       .ResultsAsync)
+    //                                       .ToList();
+
+
+    //         if (!licnosti.Any())
+    //         {
+    //             return BadRequest($"Nijedna ličnost nije pronađena u bazi!");
+    //         }
+
+    //         var ids = licnosti.Select(l => l.Licnost.ID).ToList();
+    //         var mongoList = await _licnostCollection.Find(m => ids.Contains(m.ID)).ToListAsync();
+
+    //         var result = licnosti.Select(lic =>
+    //         {
+    //             var mongo = mongoList.FirstOrDefault(m => m.ID == lic.Licnost.ID);
+    //             return new LicnostTreeDto
+    //             {
+    //                 ID = lic.Licnost.ID,
+    //                 Titula = lic.Licnost.Titula,
+    //                 Ime = lic.Licnost.Ime,
+    //                 Prezime = lic.Licnost.Prezime,
+    //                 GodinaRodjenja = lic.Licnost.GodinaRodjenja,
+    //                 GodinaRodjenjaPNE = lic.Licnost.GodinaRodjenjaPNE,
+    //                 GodinaSmrti =lic.Licnost.GodinaSmrti,
+    //                 GodinaSmrtiPNE = lic.Licnost.GodinaSmrtiPNE,
+    //                 Pol = lic.Licnost.Pol,
+    //                 MestoRodjenja = lic.Licnost.MestoRodjenja,
+    //                 //Dinastija = vl.Dinastija, // ?? new Dinastija() ne moze jer mora da ima naziv da bi kreirao novu zato sad ostavljam ovako 
+    //                 //ali takodje i stoji u modelu da dinastija moze da bude null tkd???
+                    
+    //                 // PocetakVladavineGod = vl.Vladar.PocetakVladavineGod,
+    //                 // PocetakVladavinePNE = vl.Vladar.PocetakVladavinePNE,
+    //                 // KrajVladavineGod = vl.Vladar.KrajVladavineGod,
+    //                 // KrajVladavinePNE = vl.Vladar.KrajVladavinePNE,
+
+    //                 Tekst = mongo?.Tekst,
+    //                 Slika = mongo?.Slika,
+    //                 //Teritorija = mongo.Teritorija,
+    //                 DecaID = lic.DecaID,
+    //                 RoditeljiID = lic.RoditeljiID
+    //             };
+    //         }).ToList();
+
+    //         //var roots = _treeBuilder.BuildTree(flatList);
+    //         return Ok(result);
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
+    //     }
+    // }
+
+
 }
 
 

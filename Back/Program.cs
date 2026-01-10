@@ -4,9 +4,40 @@ using System.Text;
 using Microsoft.OpenApi.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using Neo4jClient;
+using MongoDB.Driver;
 
 var builder = WebApplication.CreateBuilder(args);
 var config = builder.Configuration;
+
+
+
+// MongoDB client
+var mongoClient = new MongoClient("mongodb+srv://anitaal1711_db_user:DZptn5BLaswBcmDk@krvnijevodadb.4kkb5s5.mongodb.net/");
+var mongoDatabase = mongoClient.GetDatabase("KrvNijeVodaDB");
+
+// Register the collections for DI
+builder.Services.AddSingleton<IMongoCollection<VladarMongo>>(sp =>
+    mongoDatabase.GetCollection<VladarMongo>("Vladari"));
+
+builder.Services.AddSingleton<IMongoCollection<LicnostMongo>>(sp =>
+    mongoDatabase.GetCollection<LicnostMongo>("Licnosti"));
+
+
+// Register Neo4jClient IGraphClient
+builder.Services.AddSingleton<IGraphClient>(sp =>
+{
+    var client = new BoltGraphClient(
+        "neo4j+s://8bb87af4.databases.neo4j.io", // same as your Neo4jService URL
+        "neo4j",
+        "LP_jKZYCWGDICIaCavzhEOfNlfcr6A1k9-TYO15eHb0"
+    );
+
+    // Connect on startup (synchronously)
+    client.ConnectAsync().Wait();
+
+    return client;
+});
 
 builder.Services.AddSingleton<Neo4jService>(
     new Neo4jService("neo4j+s://8bb87af4.databases.neo4j.io", "neo4j", "LP_jKZYCWGDICIaCavzhEOfNlfcr6A1k9-TYO15eHb0"));
@@ -23,12 +54,14 @@ builder.Services.AddSingleton<RedisService>(sp =>
     )
 );
 
-
 builder.Services.AddScoped<GodinaService>();
 builder.Services.AddScoped<ZemljaService>();
 builder.Services.AddScoped<RatService>();
 builder.Services.AddScoped<DinastijaService>();
 builder.Services.AddScoped<TokenService>();
+builder.Services.AddScoped<IVladarService, VladarService>();
+builder.Services.AddScoped<ILicnostService, LicnostService>();
+builder.Services.AddScoped<ITreeBuilder, TreeBuilder>();
 //builder.Services.AddScoped<LokacijaService>();
 
 builder.Services.AddCors(options =>

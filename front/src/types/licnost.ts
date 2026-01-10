@@ -1,4 +1,4 @@
-import type Dinastija from './dinastija';
+import type { Dinastija } from './dinastija';
 
 export interface Licnost {
     id: string;

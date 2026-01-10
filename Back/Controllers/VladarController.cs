@@ -16,11 +16,13 @@ public class VladarController : ControllerBase
     // private readonly ZemljaService _zemljaService;
     // private readonly DinastijaService _dinastijaService;
     private readonly IMongoCollection<VladarMongo> _vladarCollection;
-    public VladarController(Neo4jService neo4jService, GodinaService godinaService, MongoService mongoService/*, LokacijaService lokacijaService, ZemljaService zemljaService, DinastijaService dinastijaService*/)
+    private readonly ITreeBuilder _treeBuilder;
+    public VladarController(Neo4jService neo4jService, GodinaService godinaService, MongoService mongoService, ITreeBuilder treeBuilder/*, LokacijaService lokacijaService, ZemljaService zemljaService, DinastijaService dinastijaService*/)
     {
         _client = neo4jService.GetClient();
         _godinaService = godinaService;
         _vladarCollection = mongoService.GetCollection<VladarMongo>("Vladari");
+        _treeBuilder = treeBuilder;
         // _lokacijaService = lokacijaService;
         // _zemljaService = zemljaService;
         // _dinastijaService = dinastijaService;
@@ -825,73 +827,120 @@ public async Task<IActionResult> UpdateVladar([FromBody] VladarDto vladar, Guid 
     //     }
 
 
-    [HttpGet("GetVladareByDinastija")]
-    public async Task<IActionResult> GetVladareByDinastija(Guid id)
-    {
-        try
-        {
-            //za svakog vracam njegovu decu i ID-jeve njegovih roditelja
-            var vladari = (await _client.Cypher.Match("(v:Licnost:Vladar)-[:PRIPADA_DINASTIJI]->(d:Dinastija { ID: $id })")
-                                          .WithParam("id", id)
-                                          .OptionalMatch("(v)-[r3:JE_RODITELJ]->(dete:Licnost)")
-                                          .OptionalMatch("(v)<-[r4:JE_RODITELJ]-(rod:Licnost)")
-                                          .OptionalMatch("(v)-[r6:PRIPADA_DINASTIJI]->(d:Dinastija)")
-                                          .With("v, d, collect(DISTINCT rod.ID) as roditeljiID, collect(DISTINCT dete.ID) as decaID")
-                                          .Return((v, d, decaID, roditeljiID) => new
-                                          {
-                                              Vladar = v.As<VladarNeo>(),
-                                              Dinastija = d.As<DinastijaNeo>(),
-                                              DecaID = decaID.As<List<Guid>>(),
-                                              RoditeljiID = roditeljiID.As<List<Guid>>()
-                                          })
-                                          .ResultsAsync)
-                                          .ToList();
+    // [HttpGet("GetVladareByDinastija")]
+    // public async Task<IActionResult> GetVladareByDinastija(Guid id)
+    // {
+    //     try
+    //     {
+    //         //za svakog vracam njegovu decu i ID-jeve njegovih roditelja
+    //         var vladari = (await _client.Cypher.Match("(v:Licnost:Vladar)-[:PRIPADA_DINASTIJI]->(d:Dinastija { ID: $id })")
+    //                                       .WithParam("id", id)
+    //                                       .OptionalMatch("(v)-[r3:JE_RODITELJ]->(dete:Licnost)")
+    //                                       .OptionalMatch("(v)<-[r4:JE_RODITELJ]-(rod:Licnost)")
+    //                                       //.OptionalMatch("(v)-[r6:PRIPADA_DINASTIJI]->(d:Dinastija)")
+    //                                       .With("v, collect(DISTINCT rod.ID) as roditeljiID, collect(DISTINCT dete.ID) as decaID")
+    //                                       .Return((v, decaID, roditeljiID) => new
+    //                                       {
+    //                                           Vladar = v.As<VladarNeo>(),
+    //                                           //Dinastija = d.As<DinastijaNeo>(),
+    //                                           DecaID = decaID.As<List<Guid>>(),
+    //                                           RoditeljiID = roditeljiID.As<List<Guid>>()
+    //                                       })
+    //                                       .ResultsAsync)
+    //                                       .ToList();
 
 
-            if (!vladari.Any())
-            {
-                return BadRequest($"Nijedan vladar nije pronađen u bazi!");
-            }
+    //         if (!vladari.Any())
+    //         {
+    //             return BadRequest($"Nijedan vladar nije pronađen u bazi!");
+    //         }
 
-            var ids = vladari.Select(v => v.Vladar.ID).ToList();
-            var mongoList = await _vladarCollection.Find(m => ids.Contains(m.ID)).ToListAsync();
+    //         var ids = vladari.Select(v => v.Vladar.ID).ToList();
+    //         var mongoList = await _vladarCollection.Find(m => ids.Contains(m.ID)).ToListAsync();
 
-            var result = vladari.Select(vl =>
-            {
-                var mongo = mongoList.FirstOrDefault(m => m.ID == vl.Vladar.ID);
-                return new VladarTreeDto
-                {
-                    ID = vl.Vladar.ID,
-                    Titula = vl.Vladar.Titula,
-                    Ime = vl.Vladar.Ime,
-                    Prezime = vl.Vladar.Prezime,
-                    GodinaRodjenja = vl.Vladar.GodinaRodjenja,
-                    GodinaRodjenjaPNE = vl.Vladar.GodinaRodjenjaPNE,
-                    GodinaSmrti = vl.Vladar.GodinaSmrti,
-                    GodinaSmrtiPNE = vl.Vladar.GodinaSmrtiPNE,
-                    Pol = vl.Vladar.Pol,
-                    MestoRodjenja = vl.Vladar.MestoRodjenja,
-                    Dinastija = vl.Dinastija, // ?? new Dinastija() ne moze jer mora da ima naziv da bi kreirao novu zato sad ostavljam ovako 
-                    //ali takodje i stoji u modelu da dinastija moze da bude null tkd???
+    //         var result = vladari.Select(vl =>
+    //         {
+    //             var mongo = mongoList.FirstOrDefault(m => m.ID == vl.Vladar.ID);
+    //             return new LicnostTreeDto
+    //             {
+    //                 ID = vl.Vladar.ID,
+    //                 Titula = vl.Vladar.Titula,
+    //                 Ime = vl.Vladar.Ime,
+    //                 Prezime = vl.Vladar.Prezime,
+    //                 GodinaRodjenja = vl.Vladar.GodinaRodjenja,
+    //                 GodinaRodjenjaPNE = vl.Vladar.GodinaRodjenjaPNE,
+    //                 GodinaSmrti = vl.Vladar.GodinaSmrti,
+    //                 GodinaSmrtiPNE = vl.Vladar.GodinaSmrtiPNE,
+    //                 Pol = vl.Vladar.Pol,
+    //                 MestoRodjenja = vl.Vladar.MestoRodjenja,
+    //                 //Dinastija = vl.Dinastija, // ?? new Dinastija() ne moze jer mora da ima naziv da bi kreirao novu zato sad ostavljam ovako 
+    //                 //ali takodje i stoji u modelu da dinastija moze da bude null tkd???
                     
-                    // PocetakVladavineGod = vl.Vladar.PocetakVladavineGod,
-                    // PocetakVladavinePNE = vl.Vladar.PocetakVladavinePNE,
-                    // KrajVladavineGod = vl.Vladar.KrajVladavineGod,
-                    // KrajVladavinePNE = vl.Vladar.KrajVladavinePNE,
+    //                 // PocetakVladavineGod = vl.Vladar.PocetakVladavineGod,
+    //                 // PocetakVladavinePNE = vl.Vladar.PocetakVladavinePNE,
+    //                 // KrajVladavineGod = vl.Vladar.KrajVladavineGod,
+    //                 // KrajVladavinePNE = vl.Vladar.KrajVladavinePNE,
 
-                    Tekst = mongo?.Tekst,
-                    Slika = mongo?.Slika,
-                    //Teritorija = mongo.Teritorija,
-                    DecaID = vl.DecaID,
-                    RoditeljiID = vl.RoditeljiID
-                };
-            });
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
-        }
-    }
+    //                 Tekst = mongo?.Tekst,
+    //                 Slika = mongo?.Slika,
+    //                 //Teritorija = mongo.Teritorija,
+    //                 DecaID = vl.DecaID,
+    //                 RoditeljiID = vl.RoditeljiID
+    //             };
+    //         }).ToList();
+
+    //         //var roots = _treeBuilder.BuildTree(flatList);
+    //         return Ok(result);
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
+    //     }
+    // }
+
+    // [HttpGet("GetVladareByDinastijaTree")]
+    // public async Task<IActionResult> GetVladareByDinastijaTree(Guid id)
+    // {
+    //     // Step 1: Get all dynasty members (flat list)
+    //     var flatList = await GetVladareByDinastija(id); // Reuse your existing query
+    //     var flatListDtos = flatList.Select(v => new LicnostTreeDto
+    //     {
+    //         ID = v.ID,
+    //         Titula = v.Titula,
+    //         Ime = v.Ime,
+    //         Prezime = v.Prezime,
+    //         GodinaRodjenja = v.GodinaRodjenja,
+    //         GodinaRodjenjaPNE = v.GodinaRodjenjaPNE,
+    //         GodinaSmrti = v.GodinaSmrti,
+    //         GodinaSmrtiPNE = v.GodinaSmrtiPNE,
+    //         Pol = v.Pol,
+    //         MestoRodjenja = v.MestoRodjenja,
+    //         Slika = v.Slika,
+    //         Tekst = v.Tekst,
+    //         DecaID = v.DecaID,
+    //         RoditeljiID = v.RoditeljiID
+    //     }).ToList();
+
+    //     // Step 2: Create the tree builder
+    //     var builder = new TreeBuilder(async ids =>
+    //     {
+    //         // Fetch additional people from DB/Neo4j by ID
+    //         // Exclude already fetched ones
+    //         var missing = await _client.Cypher
+    //             .Match("(p:Licnost)")
+    //             .Where("p.ID IN $ids")
+    //             .WithParam("ids", ids)
+    //             .Return(p => p.As<LicnostTreeDto>())
+    //             .ResultsAsync;
+
+    //         return missing.ToList();
+    //     });
+
+    //     // Step 3: Build the tree
+    //     var roots = builder.BuildTree(flatListDtos);
+
+    //     return Ok(roots);
+    // }
+
 
 }
