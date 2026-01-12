@@ -85,9 +85,6 @@ public class TreeBuilder : ITreeBuilder
             {
                 var spouse = BuildNode(sId, dict, visited, assigned, null);
                 node.Supruznici.Add(spouse);
-                // if (!spouse.Supruznici.Any(s => s.ID == node.ID)){
-                //     spouse.SupruzniciID.Add(node.ID);
-                // }
             }
             
         }

@@ -1,9 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-//using Neo4j.Driver;
 using Neo4jClient;
 using System;
 using System.Threading.Tasks;
-//using KrvNijeVoda.Back.Models;
 using System.Reflection.Metadata;
 using KrvNijeVoda.Back;
 using System.Formats.Tar;
