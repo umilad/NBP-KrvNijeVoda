@@ -15,12 +15,18 @@ public class DinastijaController : ControllerBase
 {
     private readonly IGraphClient _client;
     private readonly GodinaService _godinaService;
+    private readonly IVladarService _vladarService;
+    private readonly ILicnostService _licnostService;
+    private readonly ITreeBuilder _treeBuilder;
     private readonly IMongoCollection<DinastijaMongo> _dinastijaCollection;
     // Constructor: Injecting Neo4jService and getting the client
-    public DinastijaController(Neo4jService neo4jService, GodinaService godinaService, MongoService mongoService)
+    public DinastijaController(Neo4jService neo4jService, GodinaService godinaService, MongoService mongoService, IVladarService vladarService, ILicnostService licnostService, ITreeBuilder treeBuilder)
     {
         _client = neo4jService.GetClient();  // Get the Neo4jClient
         _godinaService = godinaService;
+        _vladarService = vladarService;
+        _licnostService = licnostService;
+        _treeBuilder = treeBuilder;
         _dinastijaCollection = mongoService.GetCollection<DinastijaMongo>("Dinastije");
     }
 
@@ -327,6 +333,23 @@ public class DinastijaController : ControllerBase
         {
             return StatusCode(500, $"Došlo je do greške: {ex.Message}");
         }
+    }
+
+    [HttpGet("GetDinastijaTree/{id}")]
+    public async Task<IActionResult> GetDinastijaTree(Guid id)
+    {
+        var vladari = await _vladarService.GetVladariFlat(id);
+        var licnosti = await _licnostService.GetLicnostiFlat(id);
+
+        //groupby i select za svaki slucaj ako ima duplikata
+        var flatList = vladari
+            .Concat(licnosti)
+            .GroupBy(p => p.ID)
+            .Select(g => g.First())
+            .ToList();
+
+        var trees = _treeBuilder.BuildTrees(flatList);
+        return Ok(trees);
     }
 
 }

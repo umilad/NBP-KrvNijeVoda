@@ -7,6 +7,7 @@ LICNOST -> GODINA (kad se rodio)        ---------- RODJEN
 LICNOST -> GODINA (kad je umro)         ---------- UMRO
 LICNOST -> LOKACIJA (gde se rodio)      ---------- RODJEN_U
 LICNOST -> LICNOST (roditelj dete)      ---------- JE_RODITELJ
+LICNOST -> DINASTIJA (kojoj pripada)    ---------- PRIPADA_DINASTJI
 LOKACIJA -> ZEMLJA (kojoj pripada)      ---------- PRIPADA_ZEMLJI
 RAT -> GODINA (do kad je trajao)        ---------- RAT_TRAJAO_DO
 VLADAR -> DINASTIJA (kojoj pripada)     ---------- PRIPADA_DINASTJI

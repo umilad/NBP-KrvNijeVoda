@@ -21,13 +21,13 @@ export default function LicnostPrikaz({ licnost }: LicnostPrikazProps){
             <div className="relative w-[259px] h-[300px] m-auto">
                 <img
                     src="/src/images/picture-frame.png"
-                    alt="Frame"
+                    alt="Ram"
                     className="absolute top-0 left-0 w-full h-full z-10 pointer-events-none"
                 />
                 <div className="absolute inset-0 flex items-center justify-center z-0">
                     <img
                         src={`/src/images/${licnost?.slika}`}
-                        alt="Historical Figure"
+                        alt={`${licnost.titula} ${licnost.ime} ${licnost.prezime}`}
                         className="max-w-[80%] max-h-[80%] object-contain"
                     />
                 </div>
