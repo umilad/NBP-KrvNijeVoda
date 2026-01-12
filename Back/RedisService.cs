@@ -115,22 +115,19 @@ public async Task SetHashAsync(string key, Dictionary<string, int> values, TimeS
 
 // 🟩 Povećaj brojač poseta, sada sa label
   // Povećaj brojač poseta i sačuvaj label
-  public async Task IncrementPageVisitAsync(string username, string path, string label)
+ public async Task IncrementPageVisitAsync(string username, string path, string label)
 {
     if (_db == null) return;
 
     string key = username;
 
-    // ⚡️ Provera tipa Redis ključa
     var keyType = await _db.KeyTypeAsync(key);
     if (keyType != RedisType.Hash)
     {
-        // Ako nije hash (ili ne postoji), obriši i kreiraj prazan hash
         await _db.KeyDeleteAsync(key);
         await _db.HashSetAsync(key, new HashEntry[] { });
     }
 
-    // Provera postojeće vrednosti
     var existing = await _db.HashGetAsync(key, path);
     int count = 1;
     if (!existing.IsNullOrEmpty)
@@ -140,13 +137,21 @@ public async Task SetHashAsync(string key, Dictionary<string, int> values, TimeS
             count = existingCount + 1;
     }
 
-    // Upis nove vrednosti: "count|label"
     string newValue = $"{count}|{label}";
     await _db.HashSetAsync(key, path, newValue);
-
-    // Opcionalno: postavi expiry na 12h
     await _db.KeyExpireAsync(key, TimeSpan.FromHours(12));
+
+    // ⚡️ GLOBAL TRACKING
+    await _db.HashSetAsync("stats:pages:labels", path, label ?? path);
+
+    await _db.SortedSetIncrementAsync(
+        "stats:pages:global",
+        path,
+        1
+    );
 }
+
+
 
     // Vrati top posete sa label
     public async Task<List<object>> GetTopVisitedPagesAsync(string username)
@@ -168,6 +173,36 @@ public async Task SetHashAsync(string key, Dictionary<string, int> values, TimeS
             .Cast<object>()
             .ToList();
     }
+
+public async Task<List<object>> GetGlobalTopPagesAsync(int top = 10)
+{
+    if (_db == null) return new List<object>();
+
+    var entries = await _db.SortedSetRangeByRankWithScoresAsync(
+        "stats:pages:global",
+        0,
+        top - 1,
+        Order.Descending
+    );
+
+    var result = new List<object>();
+
+    foreach (var e in entries)
+    {
+        string path = e.Element.ToString();
+        int count = (int)e.Score;
+
+        // Traži label u nekom "global labels" hash-u ili pokuša iz korisnika
+        var globalLabel = await _db.HashGetAsync("stats:pages:labels", path);
+        string label = globalLabel.HasValue ? globalLabel.ToString() : path;
+
+        result.Add(new { Path = path, Count = count, Label = label });
+    }
+
+    return result;
+}
+
+
 }
 
 
@@ -271,3 +306,4 @@ public async Task SetHashAsync(string key, Dictionary<string, int> values, TimeS
 //         return await _db.StringGetAsync(key);
 //     }
 // }
+ 

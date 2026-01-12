@@ -214,5 +214,12 @@ public async Task<IActionResult> GetTopVisits()
     return Ok(visits);
 }
 
+    [HttpGet("global-top-pages")]
+    public async Task<IActionResult> GetGlobalTopPages()
+    {
+        var result = await _redisService.GetGlobalTopPagesAsync(10);
+        return Ok(result);
+    }
+
 
 }
