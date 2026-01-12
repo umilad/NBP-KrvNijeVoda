@@ -868,6 +868,12 @@ CREATE (v)-[:PRIPADA_DINASTIJI]->(d);
 MATCH (v:Licnost:Vladar {ID:"77777777-7777-4777-8777-777777777777"}), (d:Dinastija {Naziv:"Kotromanići"}) 
 CREATE (v)-[:PRIPADA_DINASTIJI]->(d);
 
+MATCH (l:Licnost {ID:"c9c9c9c9-9999-4c9c-8c9c-999999999999"}), (d:Dinastija {Naziv:"Kotromanići"}) 
+CREATE (l)-[:PRIPADA_DINASTIJI]->(d);
+
+MATCH (l:Licnost {ID:"c8c8c8c8-8888-4c8c-8c8c-888888888888"}), (d:Dinastija {Naziv:"Kotromanići"}) 
+CREATE (l)-[:PRIPADA_DINASTIJI]->(d);
+
 MATCH (v:Licnost:Vladar {ID:"99999999-9999-4999-8999-999999999999"}), (d:Dinastija {Naziv:"Hohenštauf"}) 
 CREATE (v)-[:PRIPADA_DINASTIJI]->(d);
 
@@ -886,7 +892,7 @@ CREATE (v)-[:PRIPADA_DINASTIJI]->(d);
 MATCH (v:Licnost:Vladar {ID:"14141414-1414-4a14-8a14-141414141414"}), (d:Dinastija {Naziv:"Kotromanići"}) 
 CREATE (v)-[:PRIPADA_DINASTIJI]->(d);
 
-MATCH (v:Licnost:Vladar {ID:"15151515-1515-4a15-8a15-151515151515"}), (d:Dinastija {Naziv:"Nemanjići"}) 
+MATCH (v:Licnost:Vladar {ID:"15151515-1515-4a15-8a15-151515151515"}), (d:Dinastija {Naziv:"Kotromanići"}) 
 CREATE (v)-[:PRIPADA_DINASTIJI]->(d);
 
 //moji nemanjici i pripadanje dinastiji 
@@ -1029,12 +1035,12 @@ CREATE
 // Tvrtko – sin Tvrtko II (moguća veza dinastičkog naslednika)
 MATCH (tvrtko:Licnost {ID:"77777777-7777-4777-8777-777777777777"}),
       (tvrtko2:Licnost {ID:"14141414-1414-4a14-8a14-141414141414"})
-CREATE (tvrtko)-[:JE_RODITELJ]->(tvrtko2);
+MERGE (tvrtko)-[:JE_RODITELJ]->(tvrtko2);
 
 // Stefan Kotromanić – sin Tvrtka II
 MATCH (tvrtko2:Licnost {ID:"14141414-1414-4a14-8a14-141414141414"}),
       (stefan_kotrom:Licnost {ID:"15151515-1515-4a15-8a15-151515151515"})
-CREATE (tvrtko2)-[:JE_RODITELJ]->(stefan_kotrom);
+MERGE (tvrtko2)-[:JE_RODITELJ]->(stefan_kotrom);
 
 
 
@@ -1043,7 +1049,7 @@ CREATE (tvrtko2)-[:JE_RODITELJ]->(stefan_kotrom);
 MATCH (balsa_i:Licnost {ID:"55555555-5555-4555-8555-555555555555"}),
       (djurdj:Licnost {ID:"66666666-6666-4666-8666-666666666666"}),
       (balsa_ii:Licnost {ID:"13131313-1313-4a13-8a13-131313131313"})
-CREATE
+MERGE 
   (balsa_i)-[:JE_RODITELJ]->(djurdj),
   (balsa_i)-[:JE_RODITELJ]->(balsa_ii);
 
@@ -1051,4 +1057,4 @@ CREATE
 // Louis Vizantijski -> sin Ferdinand Dalmacija
 MATCH (louis:Licnost {ID:"88888888-8888-4888-8888-888888888888"}),
       (ferdinand:Licnost {ID:"99999999-9999-4999-8999-999999999999"})
-CREATE (louis)-[:JE_RODITELJ]->(ferdinand);
+MERGE (louis)-[:JE_RODITELJ]->(ferdinand);

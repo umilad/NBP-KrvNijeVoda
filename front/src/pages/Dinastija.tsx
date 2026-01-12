@@ -3,12 +3,10 @@ import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import PorodicnoStabloPrikaz from "../components/PorodicnoStabloPrikaz";
-//import TreeNode from "../components/TreeNode";
 import type { Dinastija, LicnostTree } from "../types";
 
 export default function Dinastija() {
     const [dinastija, setDinastija] = useState<Dinastija | null>(null);
-    //const [clanoviDinastije, setClanoviDinastije] = useState<Licnost[]>([]);
     const [treeRoots, setTreeRoots] = useState<LicnostTree[]>([]);
     const { id } = useParams();
     const { token } = useAuth(); // token je opcionalan
@@ -100,21 +98,14 @@ export default function Dinastija() {
         <div className="dinastije my-[120px]">
             <div className="pozadinaStabla flex flex-col items-center justify-center relative mx-[100px] p-[20px] border-2 border-[#3f2b0a] bg-[#e6cda5] rounded-lg text-center text-[#3f2b0a]">
                 <p className="text-2xl font-bold">{dinastija?.naziv}</p>
-                <span className="text-xl font-bold mb-[10px]">
+                <span className="text-xl font-bold mb-[20px]">
                     {dinastija?.pocetakVladavineGod} - {dinastija?.krajVladavineGod}. 
                     {dinastija?.krajVladavinePNE ? " p. n. e." : ""}
                 </span>
 
-                {/*stablo od chatgpt-a*/}
-                {/*<div className="flex justify-center mt-20">
+                <div className="flex justify-center">
                     {treeRoots.map(root => (
-                        <TreeNode key={root.id} osoba={root} />
-                    ))}
-                </div>*/}
-
-                <div className="flex justify-center mt-[60px]">
-                    {treeRoots.map(root => (
-                        <PorodicnoStabloPrikaz key={root.id} osoba={root} />
+                        <PorodicnoStabloPrikaz key={root.id} licnost={root} />
                     ))}
                 </div>
 

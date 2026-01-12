@@ -7,20 +7,29 @@ public class TreeBuilder : ITreeBuilder
 
         var dict = flatList.ToDictionary(l => l.ID);
 
-        var rootCandidates = flatList.Where(l =>
-            l.DecaID.Count > 0 &&
-            (
-                l.RoditeljiID.Count == 0 ||
-                !l.RoditeljiID.Any(pid => dict.ContainsKey(pid))
+        // GLOBAL ownership tracker
+        var assigned = new HashSet<Guid>();
+
+        var rootCandidates = flatList
+            .Where(l =>
+                l.DecaID.Count > 0 &&
+                (
+                    l.RoditeljiID.Count == 0 ||
+                    !l.RoditeljiID.Any(pid => dict.ContainsKey(pid))
+                )
             )
-        ).ToList();
+            .ToList();
 
         var result = new List<LicnostTreeDto>();
 
         foreach (var root in rootCandidates)
         {
+            if (assigned.Contains(root.ID))
+                continue;
+
             var visited = new HashSet<Guid>();
-            var tree = BuildNode(root.ID, dict, visited);
+            var tree = BuildNode(root.ID, dict, visited, assigned, null);
+
             if (tree != null)
                 result.Add(tree);
         }
@@ -31,14 +40,33 @@ public class TreeBuilder : ITreeBuilder
     private LicnostTreeDto BuildNode(
         Guid id,
         Dictionary<Guid, LicnostFlatDto> dict,
-        HashSet<Guid> visited
+        HashSet<Guid> visited,
+        HashSet<Guid> assigned,
+        LicnostTreeDto? parent
     )
     {
         if (!dict.TryGetValue(id, out var flat))
             return null;
 
+        // cycle protection (local)
         if (!visited.Add(id))
-            return null; // prevent cycles
+            return null;
+
+        // GLOBAL duplicate protection
+        if (!assigned.Add(id))
+            return null;
+
+        if(flat.RoditeljiID.Count == 2)//ima 2 roditelja znaci njegovi roditetlji imaju supruznike
+        {
+            foreach(var rId in flat.RoditeljiID)
+            {
+                if(parent!= null && rId != parent.ID && !parent.SupruzniciID.Contains(rId))
+                {
+                    parent.SupruzniciID.Add(rId);
+                    break;
+                }
+            }
+        }
 
         var node = MapFlatToTree(flat);
 
@@ -47,11 +75,22 @@ public class TreeBuilder : ITreeBuilder
             if (!dict.ContainsKey(childId))
                 continue;
 
-            var child = BuildNode(childId, dict, visited);
+            var child = BuildNode(childId, dict, visited, assigned, node);
             if (child != null)
                 node.Deca.Add(child);
         }
-
+        if(node.SupruzniciID != null && node.SupruzniciID.Count > 0)
+        {
+            foreach(var sId in node.SupruzniciID)
+            {
+                var spouse = BuildNode(sId, dict, visited, assigned, null);
+                node.Supruznici.Add(spouse);
+                // if (!spouse.Supruznici.Any(s => s.ID == node.ID)){
+                //     spouse.SupruzniciID.Add(node.ID);
+                // }
+            }
+            
+        }
         return node;
     }
 
@@ -71,7 +110,10 @@ public class TreeBuilder : ITreeBuilder
             MestoRodjenja = src.MestoRodjenja,
             Tekst = src.Tekst,
             Slika = src.Slika,
-            Deca = new List<LicnostTreeDto>()
+            Deca = new List<LicnostTreeDto>(),
+            DecaID = src.DecaID,
+            RoditeljiID = src.RoditeljiID,
+            SupruzniciID = src.SupruzniciID
         };
     }
 }

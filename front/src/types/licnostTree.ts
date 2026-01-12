@@ -11,12 +11,10 @@ export interface LicnostTree {
   mestoRodjenja?: string;
   slika?: string;
   tekst?: string;
-  //porodice: FamilyNode[];
   deca: LicnostTree[];
+  supruzniciId: string;
+  supruznici: LicnostTree[];
+  roditeljiID: string[];
 }
 
-export interface FamilyNode {
-  otac?: LicnostTree;
-  majka?: LicnostTree;
-  deca: LicnostTree[];
-}
+

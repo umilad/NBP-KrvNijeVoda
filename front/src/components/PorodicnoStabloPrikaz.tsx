@@ -1,49 +1,88 @@
 import type { LicnostTree } from "../types";
+//import { Link } from "react-router-dom";
+import PersonCard from "./PersonCard";
+
 
 interface Props {
-  osoba: LicnostTree;
+  licnost: LicnostTree;
 }
 
-export default function PorodicnoStabloPrikaz({ osoba }: Props) {
+export default function PorodicnoStabloPrikaz({ licnost }: Props) {
+  const hasSpouse = licnost.supruznici && licnost.supruznici.length > 0;
+  const hasChildren = licnost.deca && licnost.deca.length > 0;
+  const hasOnlyOneChild = licnost.deca.length == 1; 
+  const hasParents = licnost.roditeljiID && licnost.roditeljiID.length > 0;
+  const numOfChildren = licnost.deca.length;
+  const childrenLineWidth =
+                            hasOnlyOneChild
+                              ? 0
+                              : (numOfChildren - 1) * (150);
+
   return (
     <div className="flex flex-col items-center relative">
-      
-      {/* osoba CARD */}
-      <div className="group text-center hover:scale-110 transition">
-        <img
-          src={osoba.slika ?? "/src/images/placeholder_muski.png"}
-          className="w-[80px] h-[100px] object-cover mx-auto border-2 border-[#3f2b0a] rounded-lg"
-        />
-        <p className="font-bold">
-          {osoba.titula} {osoba.ime} {osoba.prezime}
-        </p>
-        <p className="text-sm">
-          {osoba.godinaRodjenja} – {osoba.godinaSmrti}
-        </p>
 
-        {/* TOOLTIP */}
-        {osoba.tekst && (
-          <div className="absolute top-full mt-2 w-56 p-3 bg-[#e6cda5] border border-[#3f2b0a] rounded opacity-0 group-hover:opacity-100 transition z-20">
-            {osoba.tekst}
-          </div>
+      {/* COUPLE ROW */}
+      <div className="flex items-center gap-6 relative">
+        <PersonCard licnost={licnost} />
+        
+
+        {hasSpouse && licnost.supruznici.map(s => (
+          <PersonCard key={s.id} licnost={s} />
+        ))}
+
+        {/* horizontal spouse line */}
+        {hasSpouse && (
+          <div className="absolute top-[54px] translate-x-[115px] w-[95px] h-[2px] bg-[#3f2b0a] z-0" />
         )}
+
       </div>
 
+      {/*ima i zenu i decu*/}
+      {hasSpouse && hasChildren && (
+        <div className="absolute top-[55px] left-1/2 transform -translate-x-1/2 w-[3px] h-[146px] bg-[#3f2b0a] z-0" />
+      )}
+
+      {/* ima samo decu*/}
+      {!hasSpouse && hasChildren && !hasOnlyOneChild && (
+        <div className="absolute top-[169px] left-1/2 transform -translate-x-1/2 w-[3px] h-[33px] bg-[#3f2b0a] z-0" />
+      )}
+
+      {/*ima roditelje */}
+      {hasParents && (
+        <div className="absolute top-[-37px] left-1/2 transform -translate-x-1/2 w-[3px] h-[38px] bg-[#3f2b0a] z-0" />
+      )}
+
       {/* CHILDREN */}
-      {osoba.deca && osoba.deca.length > 0 && (
-        <>
-          {/* vertical line */}
-          <div className="w-[2px] h-[30px] bg-[#3f2b0a]" />
+      
 
-          <div className="flex gap-10 mt-4 relative">
-            {/* horizontal line */}
-            <div className="absolute top-0 left-0 right-0 h-[2px] bg-[#3f2b0a]" />
+      {licnost.deca.length > 0 &&(
+        <div className="flex relative"
+        style={{
+          top: hasOnlyOneChild ?
+          15 : 37
+        }}>
+          {!hasOnlyOneChild && (
+            <div>           
 
-            {osoba.deca.map(child => (
-              <PorodicnoStabloPrikaz key={child.id} osoba={child} />
-            ))}
-          </div>
-        </>
+               <div
+              className="absolute top-[-37px] left-1/2 h-[3px] bg-[#3f2b0a]"
+              style={{
+                width: childrenLineWidth,
+                transform: "translateX(-50%)",
+              }}
+            />
+            <div className="absolute top-[-37px] left-19 h-[3px] bg-[#3f2b0a]"
+                style= {{
+                  right: numOfChildren*50
+                }}
+            />
+            </div>
+          )}
+          
+          {licnost.deca.map(child => (
+            <PorodicnoStabloPrikaz key={child.id} licnost={child} />
+          ))}
+        </div>
       )}
     </div>
   );
