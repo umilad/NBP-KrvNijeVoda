@@ -184,6 +184,7 @@ app.UseAuthorization();
 //app.UseMiddleware<RequestTrackingMiddleware>();
 
 
+app.UseStaticFiles(); // već kažeš da imaš
 
 app.MapControllers();
 

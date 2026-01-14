@@ -1049,9 +1049,8 @@ MERGE (tvrtko2)-[:JE_RODITELJ]->(stefan_kotrom);
 MATCH (balsa_i:Licnost {ID:"55555555-5555-4555-8555-555555555555"}),
       (djurdj:Licnost {ID:"66666666-6666-4666-8666-666666666666"}),
       (balsa_ii:Licnost {ID:"13131313-1313-4a13-8a13-131313131313"})
-MERGE 
-  (balsa_i)-[:JE_RODITELJ]->(djurdj),
-  (balsa_i)-[:JE_RODITELJ]->(balsa_ii);
+MERGE (balsa_i)-[:JE_RODITELJ]->(djurdj)
+MERGE (balsa_i)-[:JE_RODITELJ]->(balsa_ii);
 
 //Ostali 
 // Louis Vizantijski -> sin Ferdinand Dalmacija

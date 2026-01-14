@@ -24,98 +24,147 @@ public class LicnostController : ControllerBase
         // _zemljaService = zemljaService;
     }
 
-    [HttpPost("CreateLicnost")]
-    public async Task<IActionResult> CreateLicnost([FromBody] LicnostDto licnost)
+   [HttpPost("CreateLicnost")]
+public async Task<IActionResult> CreateLicnost(
+    [FromForm] LicnostDto licnost,
+    [FromForm] IFormFile? slika)
+{
+    try
     {
-        try
+        // =========================
+        // 1. UPLOAD SLIKE (NOVO)
+        // =========================
+        if (slika != null && slika.Length > 0)
         {
-            var postojecaLicnost = (await _client.Cypher.Match("(l:Licnost)")
-                                                        .Where("l.Titula = $titula AND l.Ime = $ime AND l.Prezime = $prezime")
-                                                        .WithParam("titula", licnost.Titula)
-                                                        .WithParam("ime", licnost.Ime)
-                                                        .WithParam("prezime", licnost.Prezime)
-                                                        .Return(l => l.As<LicnostNeo>())
-                                                        .ResultsAsync)
-                                                        .FirstOrDefault();
+           // relativna putanja od back foldera
+var uploadsPath = Path.Combine("..", "front", "public", "images", "licnosti");
 
-            if (postojecaLicnost != null)
-                return BadRequest($"Licnost {licnost.Titula} {licnost.Ime} {licnost.Prezime} vec postoji u bazi sa ID: {postojecaLicnost.ID}!");
 
-            var licnostID = Guid.NewGuid();
-            var query = _client.Cypher.Create("(l:Licnost {ID: $id, Titula: $titula, Ime: $ime, Prezime: $prezime, Pol: $pol})")
-                                .WithParam("id", licnostID)
-                                .WithParam("titula", licnost.Titula)
-                                .WithParam("ime", licnost.Ime)
-                                .WithParam("prezime", licnost.Prezime)
-                                .WithParam("pol", licnost.Pol);
-                                
+// pretvori u apsolutnu
+uploadsPath = Path.GetFullPath(uploadsPath);
 
-            if (licnost.GodinaRodjenja != 0)
-            {
-                await _godinaService.DodajGodinu(licnost.GodinaRodjenja, licnost.GodinaRodjenjaPNE);
+if (!Directory.Exists(uploadsPath))
+    Directory.CreateDirectory(uploadsPath);
+
+var fileName = $"{Guid.NewGuid()}{Path.GetExtension(slika.FileName)}";
+var fullPath = Path.Combine(uploadsPath, fileName);
+
+using (var stream = new FileStream(fullPath, FileMode.Create))
+{
+    await slika.CopyToAsync(stream);
+}
+
+// string za React/Mongo
+licnost.Slika = $"{fileName}";
+
+
+        }
+
+        // =========================
+        // 2. PROVERA POSTOJANJA
+        // =========================
+        var postojecaLicnost = (await _client.Cypher
+            .Match("(l:Licnost)")
+            .Where("l.Titula = $titula AND l.Ime = $ime AND l.Prezime = $prezime")
+            .WithParam("titula", licnost.Titula)
+            .WithParam("ime", licnost.Ime)
+            .WithParam("prezime", licnost.Prezime)
+            .Return(l => l.As<LicnostNeo>())
+            .ResultsAsync)
+            .FirstOrDefault();
+
+        if (postojecaLicnost != null)
+            return BadRequest($"Licnost {licnost.Titula} {licnost.Ime} {licnost.Prezime} vec postoji u bazi sa ID: {postojecaLicnost.ID}!");
+
+        var licnostID = Guid.NewGuid();
+
+        var query = _client.Cypher
+            .Create("(l:Licnost {ID: $id, Titula: $titula, Ime: $ime, Prezime: $prezime, Pol: $pol})")
+            .WithParam("id", licnostID)
+            .WithParam("titula", licnost.Titula)
+            .WithParam("ime", licnost.Ime)
+            .WithParam("prezime", licnost.Prezime)
+            .WithParam("pol", licnost.Pol);
+
+        // =========================
+        // 3. GODINE
+        // =========================
+        if (licnost.GodinaRodjenja != 0)
+        {
+            await _godinaService.DodajGodinu(licnost.GodinaRodjenja, licnost.GodinaRodjenjaPNE);
+            query = query.With("l")
+                .Match("(gr:Godina {God: $rodj, IsPNE: $pne})")
+                .WithParam("rodj", licnost.GodinaRodjenja)
+                .WithParam("pne", licnost.GodinaRodjenjaPNE)
+                .Set("l.GodinaRodjenja = $rodj, l.GodinaRodjenjaPNE = $pne")
+                .Create("(l)-[:RODJEN]->(gr)");
+        }
+
+        if (licnost.GodinaSmrti != 0)
+        {
+            await _godinaService.DodajGodinu(licnost.GodinaSmrti, licnost.GodinaSmrtiPNE);
+            query = query.With("l")
+                .Match("(gs:Godina {God: $smrt, IsPNE: $pnes})")
+                .WithParam("smrt", licnost.GodinaSmrti)
+                .WithParam("pnes", licnost.GodinaSmrtiPNE)
+                .Set("l.GodinaSmrti = $smrt, l.GodinaSmrtiPNE = $pnes")
+                .Create("(l)-[:UMRO]->(gs)");
+        }
+
+        // =========================
+        // 4. MESTO ROĐENJA
+        // =========================
+        if (!string.IsNullOrWhiteSpace(licnost.MestoRodjenja) && licnost.MestoRodjenja != "string")
+        {
+            var z = (await _client.Cypher
+                .Match("(z:Zemlja)")
+                .Where("toLower(z.Naziv) = toLower($naziv)")
+                .WithParam("naziv", licnost.MestoRodjenja)
+                .Return(z => z.As<ZemljaNeo>())
+                .ResultsAsync)
+                .FirstOrDefault();
+
+            if (z != null)
                 query = query.With("l")
-                             .Match("(gr:Godina {God: $rodj, IsPNE: $pne})")
-                             .WithParam("rodj", licnost.GodinaRodjenja)
-                             .WithParam("pne", licnost.GodinaRodjenjaPNE)
-                             .Set("l.GodinaRodjenja = $rodj, l.GodinaRodjenjaPNE = $pne")
-                             .Create("(l)-[:RODJEN]->(gr)");
-            }
-            if (licnost.GodinaSmrti != 0)
-            {
-                await _godinaService.DodajGodinu(licnost.GodinaSmrti, licnost.GodinaSmrtiPNE);
-                query = query.With("l")
-                             .Match("(gs:Godina {God: $smrt, IsPNE: $pnes})")
-                             .WithParam("smrt", licnost.GodinaSmrti)
-                             .WithParam("pnes", licnost.GodinaSmrtiPNE)
-                             .Set("l.GodinaSmrti = $smrt, l.GodinaSmrtiPNE = $pnes")
-                             .Create("(l)-[:UMRO]->(gs)");
-            }
+                    .Match("(z:Zemlja)")
+                    .Where("toLower(z.Naziv) = toLower($naziv)")
+                    .WithParam("naziv", licnost.MestoRodjenja)
+                    .Create("(l)-[:RODJEN_U]->(z)")
+                    .Set("l.MestoRodjenja = $naziv");
+        }
 
-            if (!string.IsNullOrWhiteSpace(licnost.MestoRodjenja) && licnost.MestoRodjenja != "string")
-            {
-                var z = (await _client.Cypher.Match("(z:Zemlja)")
-                                             .Where("toLower(z.Naziv) = toLower($naziv)")
-                                             .WithParam("naziv", licnost.MestoRodjenja)
-                                             .Return(z => z.As<ZemljaNeo>())
-                                             .ResultsAsync)
-                                             .FirstOrDefault();
+        await query.ExecuteWithoutResultsAsync();
 
-                if (z != null)
-                    query = query.With("l")
-                                 .Match("(z:Zemlja)")
-                                 .Where("toLower(z.Naziv) = toLower($naziv)")
-                                 .WithParam("naziv", licnost.MestoRodjenja)
-                                 .Create("(l)-[:RODJEN_U]->(z)")
-                                 .Set("l.MestoRodjenja = $naziv");
-                else
-                    query = query.With("l")
-                                 .Set("l.MestoRodjenja = $mr")
-                                 .WithParam("mr", "string");
-            }
-            //DODAJ DA SE SETUJE GORE AKO NE OSTAJE SAM PO SEBI STRING ILI NULL
+        // =========================
+        // 5. MONGO (NE MENJANO)
+        // =========================
 
+        if (string.IsNullOrWhiteSpace(licnost.Slika))
+{
+    // Ako nije izabrana slika, dodaj placeholder zavisno od pola
+    licnost.Slika = licnost.Pol == "M" ? "placeholder_muski.png" : "placeholder_zenski.png";
+}
 
-            await query.ExecuteWithoutResultsAsync();
-
-            if (!string.IsNullOrWhiteSpace(licnost.Tekst) || !string.IsNullOrWhiteSpace(licnost.Slika))
-            {
+        if (!string.IsNullOrWhiteSpace(licnost.Tekst) || !string.IsNullOrWhiteSpace(licnost.Slika))
+        {
             var licnostMongo = new LicnostMongo
             {
-                ID = Guid.Parse(licnostID.ToString()),
+                ID = licnostID,
                 Tekst = licnost.Tekst,
-                Slika = licnost.Slika
+                Slika = licnost.Slika // STRING URL
             };
-            await _licnostCollection.InsertOneAsync(licnostMongo);
-            }
 
-            
-            return Ok($"Uspesno dodata licnost sa ID:{licnostID} u bazu!");
+            await _licnostCollection.InsertOneAsync(licnostMongo);
         }
-        catch (Exception ex)
-        {
-            return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
-        }
+
+        return Ok($"Uspesno dodata licnost sa ID:{licnostID} u bazu!");
     }
+    catch (Exception ex)
+    {
+        return StatusCode(500, $"Greška: {ex.Message}");
+    }
+}
+
 
     [HttpGet("GetLicnost/{id}")]
     public async Task<IActionResult> GetLicnost(Guid id)
@@ -170,7 +219,7 @@ public class LicnostController : ControllerBase
     }
     
     [HttpPut("UpdateLicnost/{id}")]
-public async Task<IActionResult> UpdateLicnost([FromBody] LicnostDto licnost, Guid id)
+public async Task<IActionResult> UpdateLicnost([FromForm] LicnostDto licnost, Guid id, [FromForm] IFormFile? slika)
 {
     try 
     {
@@ -204,6 +253,43 @@ public async Task<IActionResult> UpdateLicnost([FromBody] LicnostDto licnost, Gu
                                   .WithParam("prezime", licnost.Prezime)
                                   .WithParam("pol", licnost.Pol);
 
+        // =========================
+        // 1. UPLOAD NOVE SLIKE
+        // =========================
+        var uploadsPath = Path.Combine("..", "front", "public", "images", "licnosti");
+        uploadsPath = Path.GetFullPath(uploadsPath);
+        if (!Directory.Exists(uploadsPath))
+            Directory.CreateDirectory(uploadsPath);
+
+        if (slika != null && slika.Length > 0)
+        {
+            // Dohvati staru sliku iz Mongo-a
+            var staraMongo = (await _licnostCollection.Find(d => d.ID == id).FirstOrDefaultAsync())?.Slika;
+
+            // Obrisi staru sliku ako nije placeholder
+            if (!string.IsNullOrWhiteSpace(staraMongo) && 
+                staraMongo != "placeholder_muski.png" && 
+                staraMongo != "placeholder_zenski.png")
+            {
+                var staraPutanja = Path.Combine(uploadsPath, staraMongo);
+                if (System.IO.File.Exists(staraPutanja))
+                    System.IO.File.Delete(staraPutanja);
+            }
+
+            // Snimi novu sliku
+            var fileName = $"{Guid.NewGuid()}{Path.GetExtension(slika.FileName)}";
+            var fullPath = Path.Combine(uploadsPath, fileName);
+
+            using (var stream = new FileStream(fullPath, FileMode.Create))
+                await slika.CopyToAsync(stream);
+
+            // Postavi u DTO za Mongo update
+            licnost.Slika = fileName;
+        }
+
+        // =========================
+        // Ostali delovi ostaju isti
+        // =========================
         // --- Godina rođenja ---
         if (licnost.GodinaRodjenja != 0)
         {
@@ -305,6 +391,7 @@ public async Task<IActionResult> UpdateLicnost([FromBody] LicnostDto licnost, Gu
         return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
     }        
 }
+
 
 
     [HttpDelete("DeleteLicnost/{id}")]

@@ -30,11 +30,35 @@ public class VladarController : ControllerBase
     }
 
     [HttpPost("CreateVladar")]
-public async Task<IActionResult> CreateVladar([FromBody] VladarDto vladar)
+public async Task<IActionResult> CreateVladar([FromForm] VladarDto vladar, [FromForm] IFormFile? slika)
 {
     try
     {
-        // Provera da li vladar već postoji
+        // =========================
+        // 1. UPLOAD SLIKE
+        // =========================
+        if (slika != null && slika.Length > 0)
+        {
+            var uploadsPath = Path.Combine("..", "front", "public", "images", "licnosti");
+            uploadsPath = Path.GetFullPath(uploadsPath);
+
+            if (!Directory.Exists(uploadsPath))
+                Directory.CreateDirectory(uploadsPath);
+
+            var fileName = $"{Guid.NewGuid()}{Path.GetExtension(slika.FileName)}";
+            var fullPath = Path.Combine(uploadsPath, fileName);
+
+            using (var stream = new FileStream(fullPath, FileMode.Create))
+            {
+                await slika.CopyToAsync(stream);
+            }
+
+            vladar.Slika = fileName;
+        }
+
+        // =========================
+        // 2. PROVERA POSTOJANJA
+        // =========================
         var postojeciVladar = (await _client.Cypher
             .Match("(l:Licnost:Vladar)")
             .Where("toLower(l.Titula) = toLower($titula) AND toLower(l.Ime) = toLower($ime) AND toLower(l.Prezime) = toLower($prezime)")
@@ -50,8 +74,11 @@ public async Task<IActionResult> CreateVladar([FromBody] VladarDto vladar)
 
         var vladarID = Guid.NewGuid();
 
-        // Kreiranje Vladara
-        var query = _client.Cypher.Create("(v:Licnost:Vladar {ID: $id, Titula: $titula, Ime: $ime, Prezime: $prezime, Pol: $pol, MestoRodjenja: $mestoRodjenja})")
+        // =========================
+        // 3. KREIRANJE NOD-a
+        // =========================
+        var query = _client.Cypher
+            .Create("(v:Licnost:Vladar {ID: $id, Titula: $titula, Ime: $ime, Prezime: $prezime, Pol: $pol, MestoRodjenja: $mestoRodjenja})")
             .WithParam("id", vladarID)
             .WithParam("titula", vladar.Titula)
             .WithParam("ime", vladar.Ime)
@@ -59,7 +86,9 @@ public async Task<IActionResult> CreateVladar([FromBody] VladarDto vladar)
             .WithParam("pol", vladar.Pol)
             .WithParam("mestoRodjenja", vladar.MestoRodjenja);
 
-        // Godina rođenja
+        // =========================
+        // 4. GODINE
+        // =========================
         if (vladar.GodinaRodjenja != 0)
         {
             await _godinaService.DodajGodinu(vladar.GodinaRodjenja, vladar.GodinaRodjenjaPNE);
@@ -71,7 +100,6 @@ public async Task<IActionResult> CreateVladar([FromBody] VladarDto vladar)
                          .Create("(v)-[:RODJEN]->(gr)");
         }
 
-        // Godina smrti
         if (vladar.GodinaSmrti != 0)
         {
             await _godinaService.DodajGodinu(vladar.GodinaSmrti, vladar.GodinaSmrtiPNE);
@@ -83,7 +111,9 @@ public async Task<IActionResult> CreateVladar([FromBody] VladarDto vladar)
                          .Create("(v)-[:UMRO]->(gs)");
         }
 
-        // Početak vladavine
+        // =========================
+        // 5. Vladavina
+        // =========================
         if (vladar.PocetakVladavineGod != 0)
         {
             await _godinaService.DodajGodinu(vladar.PocetakVladavineGod, vladar.PocetakVladavinePNE);
@@ -95,7 +125,6 @@ public async Task<IActionResult> CreateVladar([FromBody] VladarDto vladar)
                          .Create("(v)-[:VLADAO_OD]->(gp)");
         }
 
-        // Kraj vladavine
         if (vladar.KrajVladavineGod != 0)
         {
             await _godinaService.DodajGodinu(vladar.KrajVladavineGod, vladar.KrajVladavinePNE);
@@ -107,7 +136,9 @@ public async Task<IActionResult> CreateVladar([FromBody] VladarDto vladar)
                          .Create("(v)-[:VLADAO_DO]->(gk)");
         }
 
-        // Mesto rodjenja
+        // =========================
+        // 6. Mesto rodjenja
+        // =========================
         if (!string.IsNullOrWhiteSpace(vladar.MestoRodjenja) && vladar.MestoRodjenja != "string")
         {
             var z = (await _client.Cypher.Match("(z:Zemlja)")
@@ -134,7 +165,9 @@ public async Task<IActionResult> CreateVladar([FromBody] VladarDto vladar)
             }
         }
 
-        // Dinastija
+        // =========================
+        // 7. Dinastija
+        // =========================
         if (vladar.Dinastija != null && !string.IsNullOrWhiteSpace(vladar.Dinastija.Naziv) && vladar.Dinastija.Naziv != "string")
         {
             var din = (await _client.Cypher.Match("(d:Dinastija)")
@@ -154,10 +187,17 @@ public async Task<IActionResult> CreateVladar([FromBody] VladarDto vladar)
             }
         }
 
-        // Izvrši query
+        // =========================
+        // 8. EXECUTE QUERY
+        // =========================
         await query.ExecuteWithoutResultsAsync();
 
-        // MongoDB za dodatne podatke
+        // =========================
+        // 9. MONGO
+        // =========================
+        if (string.IsNullOrWhiteSpace(vladar.Slika))
+            vladar.Slika = vladar.Pol == "M" ? "placeholder_muski.png" : "placeholder_zenski.png";
+
         if (!string.IsNullOrWhiteSpace(vladar.Tekst) || !string.IsNullOrWhiteSpace(vladar.Slika) || !string.IsNullOrWhiteSpace(vladar.Teritorija))
         {
             var vladarMongo = new VladarMongo
@@ -170,13 +210,14 @@ public async Task<IActionResult> CreateVladar([FromBody] VladarDto vladar)
             await _vladarCollection.InsertOneAsync(vladarMongo);
         }
 
-        return Ok($"Uspešno dodat vladar sa id:{vladarID} u bazu!");
+        return Ok($"Uspešno dodat vladar sa ID:{vladarID} u bazu!");
     }
     catch (Exception ex)
     {
         return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
     }
 }
+
 
 
     [HttpGet("GetVladar/{id}")]
@@ -250,11 +291,13 @@ public async Task<IActionResult> CreateVladar([FromBody] VladarDto vladar)
     }
 
    [HttpPut("UpdateVladar/{id}")]
-public async Task<IActionResult> UpdateVladar([FromBody] VladarDto vladar, Guid id)
+public async Task<IActionResult> UpdateVladar([FromForm] VladarDto vladar, Guid id, [FromForm] IFormFile? slika)
 {
     try
     {
-        // Pronadji vladara i njegove postojeće veze
+        // =========================
+        // 1. Pronadji Vladara i postojece veze
+        // =========================
         var vl = (await _client.Cypher
             .Match("(v:Licnost:Vladar)")
             .Where((VladarNeo v) => v.ID == id)
@@ -270,19 +313,56 @@ public async Task<IActionResult> UpdateVladar([FromBody] VladarDto vladar, Guid 
         if (vl == null || vl.Vladar == null)
             return BadRequest($"Vladar sa ID: {id} nije pronađen u bazi!");
 
-        // Osnovno ažuriranje atributa Vladara
+        // =========================
+        // 2. Osnovno update atributa Vladara
+        // =========================
         var query = _client.Cypher
             .Match("(v:Licnost:Vladar)")
             .Where((VladarNeo v) => v.ID == id)
-            .OptionalMatch("(v)-[r6:PRIPADA_DINASTIJI]->(d:Dinastija)")
-            .Set("v.Titula = $titula, v.Ime = $ime, v.Prezime = $prezime, v.Pol = $pol, v.MestoRodjenja = $mestoRodjenja")
+            .OptionalMatch("(v)-[r:PRIPADA_DINASTIJI]->(:Dinastija)")
+            .Set("v.Titula = $titula, v.Ime = $ime, v.Prezime = $prezime, v.Pol = $pol")
             .WithParam("titula", vladar.Titula)
             .WithParam("ime", vladar.Ime)
             .WithParam("prezime", vladar.Prezime)
-            .WithParam("pol", vladar.Pol)
-            .WithParam("mestoRodjenja", vl.Vladar.MestoRodjenja);
+            .WithParam("pol", vladar.Pol);
 
-        // ===== GODINA RODJENJA =====
+        // =========================
+        // 3. UPLOAD NOVE SLIKE
+        // =========================
+        var uploadsPath = Path.Combine("..", "front", "public", "images", "licnosti");
+        uploadsPath = Path.GetFullPath(uploadsPath);
+        if (!Directory.Exists(uploadsPath))
+            Directory.CreateDirectory(uploadsPath);
+
+        if (slika != null && slika.Length > 0)
+        {
+            // Dohvati staru sliku iz Mongo-a
+            var staraMongo = (await _vladarCollection.Find(d => d.ID == id).FirstOrDefaultAsync())?.Slika;
+
+            // Obrisi staru sliku ako nije placeholder
+            if (!string.IsNullOrWhiteSpace(staraMongo) &&
+                staraMongo != "placeholder_muski.png" &&
+                staraMongo != "placeholder_zenski.png")
+            {
+                var staraPutanja = Path.Combine(uploadsPath, staraMongo);
+                if (System.IO.File.Exists(staraPutanja))
+                    System.IO.File.Delete(staraPutanja);
+            }
+
+            // Snimi novu sliku
+            var fileName = $"{Guid.NewGuid()}{Path.GetExtension(slika.FileName)}";
+            var fullPath = Path.Combine(uploadsPath, fileName);
+
+            using (var stream = new FileStream(fullPath, FileMode.Create))
+                await slika.CopyToAsync(stream);
+
+            // Postavi u DTO za Mongo update
+            vladar.Slika = fileName;
+        }
+
+        // =========================
+        // 4. Godina rođenja
+        // =========================
         if (vladar.GodinaRodjenja != 0)
         {
             await _godinaService.DodajGodinu(vladar.GodinaRodjenja, vladar.GodinaRodjenjaPNE);
@@ -300,8 +380,17 @@ public async Task<IActionResult> UpdateVladar([FromBody] VladarDto vladar, Guid 
                     .Set("v.GodinaRodjenja = $god, v.GodinaRodjenjaPNE = $pne");
             }
         }
+        else
+        {
+            query = query.With("v")
+                         .OptionalMatch("(v)-[r:RODJEN]->()")
+                         .Delete("r")
+                         .Set("v.GodinaRodjenja = 0, v.GodinaRodjenjaPNE = false");
+        }
 
-        // ===== GODINA SMRTI =====
+        // =========================
+        // 5. Godina smrti
+        // =========================
         if (vladar.GodinaSmrti != 0)
         {
             await _godinaService.DodajGodinu(vladar.GodinaSmrti, vladar.GodinaSmrtiPNE);
@@ -309,18 +398,27 @@ public async Task<IActionResult> UpdateVladar([FromBody] VladarDto vladar, Guid 
             if (vl.Vladar.GodinaSmrti != vladar.GodinaSmrti || vl.Vladar.GodinaSmrtiPNE != vladar.GodinaSmrtiPNE)
             {
                 query = query.With("v")
-                    .OptionalMatch("(v)-[r1:UMRO]->(:Godina)")
-                    .Delete("r1")
+                    .OptionalMatch("(v)-[r:UMRO]->(:Godina)")
+                    .Delete("r")
                     .With("v")
-                    .Match("(g2:Godina {God: $gods, IsPNE: $pnes})")
-                    .WithParam("gods", vladar.GodinaSmrti)
-                    .WithParam("pnes", vladar.GodinaSmrtiPNE)
-                    .Create("(v)-[:UMRO]->(g2)")
-                    .Set("v.GodinaSmrti = $gods, v.GodinaSmrtiPNE = $pnes");
+                    .Match("(g:Godina {God: $god, IsPNE: $pne})")
+                    .WithParam("god", vladar.GodinaSmrti)
+                    .WithParam("pne", vladar.GodinaSmrtiPNE)
+                    .Create("(v)-[:UMRO]->(g)")
+                    .Set("v.GodinaSmrti = $god, v.GodinaSmrtiPNE = $pne");
             }
         }
+        else
+        {
+            query = query.With("v")
+                         .OptionalMatch("(v)-[r:UMRO]->()")
+                         .Delete("r")
+                         .Set("v.GodinaSmrti = 0, v.GodinaSmrtiPNE = false");
+        }
 
-        // ===== MESTO RODJENJA =====
+        // =========================
+        // 6. Mesto rodjenja
+        // =========================
         if (!string.IsNullOrWhiteSpace(vladar.MestoRodjenja) && vladar.MestoRodjenja != "string")
         {
             var z = (await _client.Cypher
@@ -331,24 +429,30 @@ public async Task<IActionResult> UpdateVladar([FromBody] VladarDto vladar, Guid 
                 .ResultsAsync)
                 .FirstOrDefault();
 
-            if (z != null)
+            if (z != null && vl.Vladar.MestoRodjenja != vladar.MestoRodjenja)
             {
-                if (vl.Vladar.MestoRodjenja != vladar.MestoRodjenja)
-                {
-                    query = query.With("v")
-                        .OptionalMatch("(v)-[r2:RODJEN_U]->(:Zemlja)")
-                        .Delete("r2")
-                        .With("v")
-                        .Match("(z:Zemlja)")
-                        .Where("toLower(z.Naziv) = toLower($n)")
-                        .WithParam("n", vladar.MestoRodjenja)
-                        .Create("(v)-[:RODJEN_U]->(z)")
-                        .Set("v.MestoRodjenja = $n");
-                }
+                query = query.With("v")
+                    .OptionalMatch("(v)-[r:RODJEN_U]->(:Zemlja)")
+                    .Delete("r")
+                    .With("v")
+                    .Match("(z:Zemlja)")
+                    .Where("toLower(z.Naziv) = toLower($n)")
+                    .WithParam("n", vladar.MestoRodjenja)
+                    .Create("(v)-[:RODJEN_U]->(z)")
+                    .Set("v.MestoRodjenja = $n");
             }
         }
+        else
+        {
+            query = query.With("v")
+                         .OptionalMatch("(v)-[r:RODJEN_U]->()")
+                         .Delete("r")
+                         .Set("v.MestoRodjenja = 'string'");
+        }
 
-        // ===== POČETAK VLADAVINE =====
+        // =========================
+        // 7. Početak vladavine
+        // =========================
         if (vladar.PocetakVladavineGod != 0)
         {
             await _godinaService.DodajGodinu(vladar.PocetakVladavineGod, vladar.PocetakVladavinePNE);
@@ -356,18 +460,20 @@ public async Task<IActionResult> UpdateVladar([FromBody] VladarDto vladar, Guid 
             if (vl.Vladar.PocetakVladavineGod != vladar.PocetakVladavineGod || vl.Vladar.PocetakVladavinePNE != vladar.PocetakVladavinePNE)
             {
                 query = query.With("v")
-                    .OptionalMatch("(v)-[r7:VLADAO_OD]->(:Godina)")
-                    .Delete("r7")
+                    .OptionalMatch("(v)-[r:VLADAO_OD]->(:Godina)")
+                    .Delete("r")
                     .With("v")
-                    .Match("(gp:Godina {God: $poc, IsPNE: $pnep})")
-                    .WithParam("poc", vladar.PocetakVladavineGod)
-                    .WithParam("pnep", vladar.PocetakVladavinePNE)
-                    .Create("(v)-[:VLADAO_OD]->(gp)")
-                    .Set("v.PocetakVladavineGod = $poc, v.PocetakVladavinePNE = $pnep");
+                    .Match("(g:Godina {God: $god, IsPNE: $pne})")
+                    .WithParam("god", vladar.PocetakVladavineGod)
+                    .WithParam("pne", vladar.PocetakVladavinePNE)
+                    .Create("(v)-[:VLADAO_OD]->(g)")
+                    .Set("v.PocetakVladavineGod = $god, v.PocetakVladavinePNE = $pne");
             }
         }
 
-        // ===== KRAJ VLADAVINE =====
+        // =========================
+        // 8. Kraj vladavine
+        // =========================
         if (vladar.KrajVladavineGod != 0)
         {
             await _godinaService.DodajGodinu(vladar.KrajVladavineGod, vladar.KrajVladavinePNE);
@@ -375,20 +481,22 @@ public async Task<IActionResult> UpdateVladar([FromBody] VladarDto vladar, Guid 
             if (vl.Vladar.KrajVladavineGod != vladar.KrajVladavineGod || vl.Vladar.KrajVladavinePNE != vladar.KrajVladavinePNE)
             {
                 query = query.With("v")
-                    .OptionalMatch("(v)-[r8:VLADAO_DO]->(:Godina)")
-                    .Delete("r8")
+                    .OptionalMatch("(v)-[r:VLADAO_DO]->(:Godina)")
+                    .Delete("r")
                     .With("v")
-                    .Match("(gk:Godina {God: $kraj, IsPNE: $kvpne})")
-                    .WithParam("kraj", vladar.KrajVladavineGod)
-                    .WithParam("kvpne", vladar.KrajVladavinePNE)
-                    .Create("(v)-[:VLADAO_DO]->(gk)")
-                    .Set("v.KrajVladavineGod = $kraj, v.KrajVladavinePNE = $kvpne");
+                    .Match("(g:Godina {God: $god, IsPNE: $pne})")
+                    .WithParam("god", vladar.KrajVladavineGod)
+                    .WithParam("pne", vladar.KrajVladavinePNE)
+                    .Create("(v)-[:VLADAO_DO]->(g)")
+                    .Set("v.KrajVladavineGod = $god, v.KrajVladavinePNE = $pne");
             }
         }
 
-        // ===== DINASTIJA =====
-        if (vladar.Dinastija != null && 
-            !string.IsNullOrWhiteSpace(vladar.Dinastija.Naziv) && 
+        // =========================
+        // 9. Dinastija
+        // =========================
+        if (vladar.Dinastija != null &&
+            !string.IsNullOrWhiteSpace(vladar.Dinastija.Naziv) &&
             vladar.Dinastija.Naziv != "string")
         {
             var din = (await _client.Cypher
@@ -399,23 +507,22 @@ public async Task<IActionResult> UpdateVladar([FromBody] VladarDto vladar, Guid 
                 .ResultsAsync)
                 .FirstOrDefault();
 
-            if (din != null)
+            if (din != null && (vl.Dinastija == null || vl.Dinastija.Naziv != din.Naziv))
             {
-                if (vl.Dinastija == null || vl.Dinastija.Naziv != din.Naziv)
-                {
-                    query = query.With("v")
-                        .OptionalMatch("(v)-[r9:PRIPADA_DINASTIJI]->(:Dinastija)")
-                        .Delete("r9")
-                        .With("v")
-                        .Match("(d:Dinastija)")
-                        .Where("toLower(d.Naziv) = toLower($naziv)")
-                        .WithParam("naziv", vladar.Dinastija.Naziv)
-                        .Create("(v)-[:PRIPADA_DINASTIJI]->(d)");
-                }
+                query = query.With("v")
+                    .OptionalMatch("(v)-[r:PRIPADA_DINASTIJI]->(:Dinastija)")
+                    .Delete("r")
+                    .With("v")
+                    .Match("(d:Dinastija)")
+                    .Where("toLower(d.Naziv) = toLower($naziv)")
+                    .WithParam("naziv", vladar.Dinastija.Naziv)
+                    .Create("(v)-[:PRIPADA_DINASTIJI]->(d)");
             }
         }
 
-        // ===== MONGO UPDATE =====
+        // =========================
+        // 10. Mongo update
+        // =========================
         if (!string.IsNullOrWhiteSpace(vladar.Tekst) || 
             !string.IsNullOrWhiteSpace(vladar.Slika) || 
             !string.IsNullOrWhiteSpace(vladar.Teritorija))
@@ -424,11 +531,16 @@ public async Task<IActionResult> UpdateVladar([FromBody] VladarDto vladar, Guid 
             var update = Builders<VladarMongo>.Update.Combine(
                 Builders<VladarMongo>.Update.Set(d => d.Tekst, vladar.Tekst),
                 Builders<VladarMongo>.Update.Set(d => d.Slika, vladar.Slika),
-                Builders<VladarMongo>.Update.Set(d => d.Teritorija, vladar.Teritorija));
+                Builders<VladarMongo>.Update.Set(d => d.Teritorija, vladar.Teritorija)
+            );
             await _vladarCollection.UpdateOneAsync(filter, update);
         }
 
+        // =========================
+        // 11. Execute query
+        // =========================
         await query.ExecuteWithoutResultsAsync();
+
         return Ok($"Vladar sa ID {id} uspešno je ažuriran!");
     }
     catch (Exception ex)
@@ -436,6 +548,7 @@ public async Task<IActionResult> UpdateVladar([FromBody] VladarDto vladar, Guid 
         return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
     }
 }
+
 
 
     [HttpPut("UpdateVladarBezDinastije/{id}")]

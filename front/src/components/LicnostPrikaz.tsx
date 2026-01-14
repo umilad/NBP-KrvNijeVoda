@@ -26,7 +26,7 @@ export default function LicnostPrikaz({ licnost }: LicnostPrikazProps){
                 />
                 <div className="absolute inset-0 flex items-center justify-center z-0">
                     <img
-                        src={`/src/images/${licnost?.slika}`}
+                        src={`/images/licnosti/${licnost?.slika}`}
                         alt={`${licnost.titula} ${licnost.ime} ${licnost.prezime}`}
                         className="max-w-[80%] max-h-[80%] object-contain"
                     />
