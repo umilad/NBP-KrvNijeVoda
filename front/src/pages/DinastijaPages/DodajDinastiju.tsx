@@ -34,35 +34,26 @@ export default function DodajDinastiju() {
       return;
     }
 
-    // --- Ako je fajl odabran, konvertujemo u Base64 ---
-    let slikaBase64: string | null = null;
+    // === FormData za [FromForm] upload ===
+    const formData = new FormData();
+    formData.append("Naziv", naziv);
+    formData.append("PocetakVladavineGod", (pocetakGod || 0).toString());
+    formData.append("PocetakVladavinePNE", pocetakPNE.toString());
+    formData.append("KrajVladavineGod", (krajGod || 0).toString());
+    formData.append("KrajVladavinePNE", krajPNE.toString());
     if (slika) {
-      slikaBase64 = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(slika);
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = (err) => reject(err);
-      });
+      formData.append("slika", slika);
     }
-
-    const payload = {
-      Naziv: naziv,
-      PocetakVladavineGod: pocetakGod,
-      PocetakVladavinePNE: pocetakPNE,
-      KrajVladavineGod: krajGod,
-      KrajVladavinePNE: krajPNE,
-      Slika: slikaBase64 // šaljemo Base64 string
-    };
 
     try {
       const response = await axios.post(
         "http://localhost:5210/api/CreateDinastija",
-        payload,
+        formData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json"
-          }
+            "Content-Type": "multipart/form-data",
+          },
         }
       );
       alert(response.data);

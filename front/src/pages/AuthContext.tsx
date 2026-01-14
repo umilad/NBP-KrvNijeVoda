@@ -1,8 +1,7 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import type { ReactNode } from "react"; // <--- ovako
+import type { ReactNode } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-
 
 interface AuthContextType {
   username: string | null;
@@ -44,8 +43,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [role, setRole] = useState<string | null>(null);
   const [logoutTimeout, setLogoutTimeout] = useState<number | null>(null);
 
-
+  // ----------------------
   // Logout funkcija
+  // ----------------------
   const logout = async (sessionExpired: boolean = false) => {
     if (token) {
       try {
@@ -74,10 +74,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (sessionExpired) {
       alert("Sesija je istekla, ulogujte se opet.");
     }
+
     navigate("/prijava");
   };
 
+  // ----------------------
   // Login funkcija
+  // ----------------------
   const login = (username: string, token: string, role: string) => {
     setUsername(username);
     setToken(token);
@@ -95,7 +98,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // ----------------------
   // Auto-login pri mount-u
+  // ----------------------
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
     const storedUsername = localStorage.getItem("username");
@@ -113,17 +118,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setLogoutTimeout(timeout);
       }
     }
-    // Ako nema tokena ili je istekao -> ne pokazuje alert odmah
   }, []);
 
-  // Axios interceptor za 401 (token istekao / nevalidan)
+  // ----------------------
+  // Axios interceptor za 401
+  // ----------------------
   useEffect(() => {
     const interceptor = axios.interceptors.response.use(
       response => response,
       error => {
-        if (error.response?.status === 401) {
+        const reqUrl = error.config?.url || "";
+
+        // Ignoriši 401 za login request
+        if (error.response?.status === 401 && !reqUrl.endsWith("/Auth/login")) {
           logout(true);
         }
+
         return Promise.reject(error);
       }
     );
@@ -140,6 +150,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
+// ----------------------
+// Hook za lakše korišćenje
+// ----------------------
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) throw new Error("useAuth must be used within AuthProvider");

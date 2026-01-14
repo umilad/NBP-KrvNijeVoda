@@ -903,7 +903,7 @@ public async Task<IActionResult> UpdateVladar([FromForm] VladarDto vladar, Guid 
                     //Clanovi = item.Clanovi?.ToList() ?? new List<Licnost>()  // If no Licnost found, return empty list
                     Tekst = mongo?.Tekst,
                     Slika = mongo?.Slika,
-                    Teritorija = mongo.Teritorija
+                    Teritorija = mongo?.Teritorija
                 };
             });
             return Ok(result);

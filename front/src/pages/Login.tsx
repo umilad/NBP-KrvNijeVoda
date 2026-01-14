@@ -62,7 +62,7 @@ export default function Login() {
         >
           <input
             type="text"
-            placeholder="Korisničko ime ili email"
+            placeholder="Korisničko ime"
             value={usernameInput}
             onChange={(e) => setUsernameInput(e.target.value)}
             className="p-[6px] rounded-[3px] border border-[#3f2b0a] focus:outline-none"

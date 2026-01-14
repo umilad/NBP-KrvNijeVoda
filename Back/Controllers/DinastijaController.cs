@@ -29,71 +29,110 @@ public class DinastijaController : ControllerBase
     }
 
     [HttpPost("CreateDinastija")]
-    public async Task<IActionResult> CreateDinastija([FromBody] DinastijaDto dinastija)
+public async Task<IActionResult> CreateDinastija(
+    [FromForm] DinastijaDto dinastija,
+    [FromForm] IFormFile? slika)
+{
+    try
     {
-        //provere za prazna polja FRONT
-        //provere godPocetka < godKraja i to FRONT 
-        //godina da ne sme da bude 0 FRONT 
-        //pne na false FRONT??
-        try
+        // =========================
+        // 1. UPLOAD SLIKE (NOVO)
+        // =========================
+        if (slika != null && slika.Length > 0)
         {
-            var din = (await _client.Cypher.Match("(d:Dinastija)")
-                                           .Where("toLower(d.Naziv) = toLower($naziv)")
-                                           .WithParam("naziv", dinastija.Naziv)
-                                           .Return(d => d.As<DinastijaNeo>())
-                                           .ResultsAsync)
-                                           .FirstOrDefault();
+            // relativna putanja od back foldera
+            var uploadsPath = Path.Combine("..", "front", "public", "images", "dinastije");
 
-            if (din != null)
-                return BadRequest($"Dinastija sa imenom {dinastija.Naziv} vec postoji u bazi!");
+            // apsolutna putanja
+            uploadsPath = Path.GetFullPath(uploadsPath);
 
-            var dinID = Guid.NewGuid();
-            var query = _client.Cypher.Create("(d:Dinastija {ID: $id, Naziv: $naziv})")
-                                      .WithParam("id", dinID)
-                                      .WithParam("naziv", dinastija.Naziv);
+            if (!Directory.Exists(uploadsPath))
+                Directory.CreateDirectory(uploadsPath);
 
-            if (dinastija.PocetakVladavineGod != 0)
+            var fileName = $"{Guid.NewGuid()}{Path.GetExtension(slika.FileName)}";
+            var fullPath = Path.Combine(uploadsPath, fileName);
+
+            using (var stream = new FileStream(fullPath, FileMode.Create))
             {
-                await _godinaService.DodajGodinu(dinastija.PocetakVladavineGod, dinastija.PocetakVladavinePNE);
-                query = query.With("d")
-                             .Match("(pg:Godina {God: $pocetak, IsPNE: $pocetakPNE})")
-                             .WithParam("pocetak", dinastija.PocetakVladavineGod)
-                             .WithParam("pocetakPNE", dinastija.PocetakVladavinePNE)
-                             .Set("d.PocetakVladavineGod = $pocetak, d.PocetakVladavinePNE = $pocetakPNE")
-                             .Create("(d)-[:POCETAK_VLADAVINE]->(pg)");
+                await slika.CopyToAsync(stream);
             }
 
-            if (dinastija.KrajVladavineGod != 0)
-            {
-                await _godinaService.DodajGodinu(dinastija.KrajVladavineGod, dinastija.KrajVladavinePNE);
-                query = query.With("d")
-                             .Match("(kg:Godina {God: $kraj, IsPNE: $krajPNE})")
-                             .WithParam("kraj", dinastija.KrajVladavineGod)
-                             .WithParam("krajPNE", dinastija.KrajVladavinePNE)
-                             .Set("d.KrajVladavineGod = $kraj, d.KrajVladavinePNE = $krajPNE")
-                             .Create("(d)-[:KRAJ_VLADAVINE]->(kg)");
-            }
-
-            await query.ExecuteWithoutResultsAsync();
-
-            if (!string.IsNullOrWhiteSpace(dinastija.Slika))
-            {
-                var dinastijaMongo = new DinastijaMongo
-                {
-                    ID =  dinID,
-                    Slika = dinastija.Slika
-                };
-                await _dinastijaCollection.InsertOneAsync(dinastijaMongo);
-            }
-
-            return Ok($"Dinastija {dinastija.Naziv} je uspesno kreirana!");
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
+            // string za React/Mongo
+            dinastija.Slika = fileName;
         }
 
+        // =========================
+        // 2. PROVERA POSTOJANJA
+        // =========================
+        var din = (await _client.Cypher.Match("(d:Dinastija)")
+                                       .Where("toLower(d.Naziv) = toLower($naziv)")
+                                       .WithParam("naziv", dinastija.Naziv)
+                                       .Return(d => d.As<DinastijaNeo>())
+                                       .ResultsAsync)
+                                       .FirstOrDefault();
+
+        if (din != null)
+            return BadRequest($"Dinastija sa imenom {dinastija.Naziv} već postoji u bazi!");
+
+        // =========================
+        // 3. CREATE DINASTIJA
+        // =========================
+        var dinID = Guid.NewGuid();
+        var query = _client.Cypher.Create("(d:Dinastija {ID: $id, Naziv: $naziv})")
+                                  .WithParam("id", dinID)
+                                  .WithParam("naziv", dinastija.Naziv);
+
+        // =========================
+        // 4. GODINE
+        // =========================
+        if (dinastija.PocetakVladavineGod != 0)
+        {
+            await _godinaService.DodajGodinu(dinastija.PocetakVladavineGod, dinastija.PocetakVladavinePNE);
+            query = query.With("d")
+                         .Match("(pg:Godina {God: $pocetak, IsPNE: $pocetakPNE})")
+                         .WithParam("pocetak", dinastija.PocetakVladavineGod)
+                         .WithParam("pocetakPNE", dinastija.PocetakVladavinePNE)
+                         .Set("d.PocetakVladavineGod = $pocetak, d.PocetakVladavinePNE = $pocetakPNE")
+                         .Create("(d)-[:POCETAK_VLADAVINE]->(pg)");
+        }
+
+        if (dinastija.KrajVladavineGod != 0)
+        {
+            await _godinaService.DodajGodinu(dinastija.KrajVladavineGod, dinastija.KrajVladavinePNE);
+            query = query.With("d")
+                         .Match("(kg:Godina {God: $kraj, IsPNE: $krajPNE})")
+                         .WithParam("kraj", dinastija.KrajVladavineGod)
+                         .WithParam("krajPNE", dinastija.KrajVladavinePNE)
+                         .Set("d.KrajVladavineGod = $kraj, d.KrajVladavinePNE = $krajPNE")
+                         .Create("(d)-[:KRAJ_VLADAVINE]->(kg)");
+        }
+
+        await query.ExecuteWithoutResultsAsync();
+
+        // =========================
+        // 5. MONGO
+        // =========================
+        if (string.IsNullOrWhiteSpace(dinastija.Slika))
+        {
+            // Ako nije izabrana slika, dodaj placeholder
+            dinastija.Slika = "placeholder_dinastija.png";
+        }
+
+        var dinastijaMongo = new DinastijaMongo
+        {
+            ID = dinID,
+            Slika = dinastija.Slika
+        };
+        await _dinastijaCollection.InsertOneAsync(dinastijaMongo);
+
+        return Ok($"Dinastija {dinastija.Naziv} je uspešno kreirana!");
     }
+    catch (Exception ex)
+    {
+        return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
+    }
+}
+
 
     //SREDI
     [HttpGet("GetDinastija/{id}")]
@@ -140,133 +179,154 @@ public class DinastijaController : ControllerBase
     }
 
     [HttpPut("UpdateDinastija/{id}")]
-    public async Task<IActionResult> UpdateDinastija([FromBody] DinastijaDto dinastija, Guid id)
+public async Task<IActionResult> UpdateDinastija([FromForm] DinastijaDto dinastija, Guid id, [FromForm] IFormFile? slika)
+{
+    try
     {
-        //samo osnovne propertije da moze da menja, na frontu ce da se sredi logistika za godine
-        //napravi da na frontu postoje godine koj emozes da izaberes za kraj nakon sto izaberes pocetak da bi bile vece od pocetka
-        try
+        var din = (await _client.Cypher.Match("(d:Dinastija)")
+                                       .Where((DinastijaNeo d) => d.ID == id)
+                                       .Return(d => d.As<DinastijaNeo>())
+                                       .ResultsAsync)
+                                       .FirstOrDefault();
+
+        if (din == null)
+            return BadRequest($"Dinastija sa ID: {id} ne postoji u bazi!");
+
+        // Provera duplikata naziva
+        var duplikat = (await _client.Cypher
+            .Match("(d:Dinastija)")
+            .Where("toLower(d.Naziv) = toLower($naziv) AND d.ID <> $id")
+            .WithParam("naziv", dinastija.Naziv)
+            .WithParam("id", id)
+            .Return(d => d.As<DinastijaNeo>())
+            .ResultsAsync)
+            .Any();
+
+        if (duplikat)
+            return BadRequest($"Dinastija sa nazivom '{dinastija.Naziv}' već postoji u bazi!");
+
+        // =========================
+        // 1. UPLOAD NOVE SLIKE
+        // =========================
+        var uploadsPath = Path.Combine("..", "front", "public", "images", "dinastije");
+        uploadsPath = Path.GetFullPath(uploadsPath);
+        if (!Directory.Exists(uploadsPath))
+            Directory.CreateDirectory(uploadsPath);
+
+        if (slika != null && slika.Length > 0)
         {
-            var din = (await _client.Cypher.Match("(d:Dinastija)")
-                                           .Where((DinastijaNeo d) => d.ID == id)
-                                           .Return(d => d.As<DinastijaNeo>())
-                                           .ResultsAsync)
-                                           .FirstOrDefault();
+            // Dohvati staru sliku iz Mongo-a
+            var staraMongo = (await _dinastijaCollection.Find(d => d.ID == id).FirstOrDefaultAsync())?.Slika;
 
-            if (din == null)
-                return BadRequest($"Dinastija sa ID: {id} ne postoji u bazi!");
-
-             //ako naziv ostaje isti to je ta ista 
-            var duplikat = (await _client.Cypher
-                .Match("(d:Dinastija)")
-                .Where("toLower(d.Naziv) = toLower($naziv) AND d.ID <> $id")
-                .WithParam("naziv", dinastija.Naziv)
-                .WithParam("id", id)
-                .Return(d => d.As<DinastijaNeo>())
-                .ResultsAsync)
-                .Any();
-
-            if (duplikat)
+            // Obrisi staru sliku ako nije placeholder
+            if (!string.IsNullOrWhiteSpace(staraMongo) && staraMongo != "placeholder.png")
             {
-                return BadRequest($"Dinastija sa nazivom '{dinastija.Naziv}' već postoji u bazi!");
+                var staraPutanja = Path.Combine(uploadsPath, staraMongo);
+                if (System.IO.File.Exists(staraPutanja))
+                    System.IO.File.Delete(staraPutanja);
             }
 
-            //dinastija postoji => update sve proste atribute                         
-            var query = _client.Cypher.Match("(d:Dinastija)")
-                                      .Where((DinastijaNeo d) => d.ID == id)
-                                      .Set("d.Naziv = $naziv")
-                                      .WithParam("naziv", dinastija.Naziv);
-                                      
+            // Snimi novu sliku
+            var fileName = $"{Guid.NewGuid()}{Path.GetExtension(slika.FileName)}";
+            var fullPath = Path.Combine(uploadsPath, fileName);
 
-            bool promenjenPocetak = false;
-            bool promenjenKraj = false;
+            using (var stream = new FileStream(fullPath, FileMode.Create))
+                await slika.CopyToAsync(stream);
 
-            if (dinastija.PocetakVladavineGod != 0)//uneta je izmena
-            {
-                if (din.PocetakVladavineGod != 0)//postoji vec neka godina proveri da nisu iste
-                {
-                    if (din.PocetakVladavineGod != dinastija.PocetakVladavineGod || din.PocetakVladavinePNE != din.PocetakVladavinePNE)//ako ga preskoci iste su godine
-                    {//uso je godina je promenjena
-                        query = query.With("d")//brisemo godinu s kojom je bila vezana
-                                     .Match("(d)-[r:POCETAK_VLADAVINE]->(pg:Godina)")
-                                     .Delete("r");
-                        promenjenPocetak = true;//treba da se doda veza
-                    }
-                    //esle iste su nema promene
-                }
-                else //nije bila postavljena godina ali sad je unosimo 
-                    promenjenPocetak = true; //treba da se doda veza
-            }
-            else //ostavljeno je prazno polje brisemo godinu 
+            // Postavi u DTO za Mongo update
+            dinastija.Slika = fileName;
+        }
+
+        // =========================
+        // 2. Update osnovnih atributa u Neo4j
+        // =========================
+        var query = _client.Cypher.Match("(d:Dinastija)")
+                                  .Where((DinastijaNeo d) => d.ID == id)
+                                  .Set("d.Naziv = $naziv")
+                                  .WithParam("naziv", dinastija.Naziv);
+
+        bool promenjenPocetak = false;
+        bool promenjenKraj = false;
+
+        // --- Pocetak vladavine ---
+        if (dinastija.PocetakVladavineGod != 0)
+        {
+            if (din.PocetakVladavineGod != dinastija.PocetakVladavineGod || din.PocetakVladavinePNE != dinastija.PocetakVladavinePNE)
             {
                 query = query.With("d")
-                             .OptionalMatch("(d)-[r:POCETAK_VLADAVINE]->()")
+                             .Match("(d)-[r:POCETAK_VLADAVINE]->(pg:Godina)")
                              .Delete("r");
+                promenjenPocetak = true;
             }
-            //isto za kraj
-            if (dinastija.KrajVladavineGod != 0)//uneta je izmena
-            {
-                if (din.KrajVladavineGod != 0)//postoji vec neka godina proveri da nisu iste
-                {
-                    if (din.KrajVladavineGod != dinastija.KrajVladavineGod || din.KrajVladavinePNE != dinastija.KrajVladavinePNE)//ako ga preskoci iste su godine
-                    {//uso je godina je promenjena                        
-                        query = query.With("d")//brisemo godinu s kojom je bila vezana
-                                     .Match("(d)-[r1:KRAJ_VLADAVINE]->(pg:Godina)")
-                                     .Delete("r1");
-                        promenjenKraj = true;
-                    }
-                }
-                else //nije bila postavljena godina ali sad je unosimo 
-                    promenjenKraj = true;
-            }
-            else //ostavljeno je prazno polje brisemo godinu 
+        }
+        else
+        {
+            query = query.With("d")
+                         .OptionalMatch("(d)-[r:POCETAK_VLADAVINE]->()")
+                         .Delete("r");
+        }
+
+        // --- Kraj vladavine ---
+        if (dinastija.KrajVladavineGod != 0)
+        {
+            if (din.KrajVladavineGod != dinastija.KrajVladavineGod || din.KrajVladavinePNE != dinastija.KrajVladavinePNE)
             {
                 query = query.With("d")
-                             .OptionalMatch("(d)-[r1:KRAJ_VLADAVINE]->()")
+                             .Match("(d)-[r1:KRAJ_VLADAVINE]->(kg:Godina)")
                              .Delete("r1");
+                promenjenKraj = true;
             }
-
-            //da li nam treba da nam fja vrati novu dinastiju
-            //var novainastija = ().FirstOrDefault();           
-
-            if (promenjenPocetak)
-            {
-                await _godinaService.DodajGodinu(dinastija.PocetakVladavineGod, dinastija.PocetakVladavinePNE);
-                query = query.With("d")//brisemo godinu s kojom je bila vezana
-                             .Match("(pg:Godina {God: $pocetak, IsPNE: $pocetakPNE})")
-                             .WithParam("pocetak", dinastija.PocetakVladavineGod)
-                             .WithParam("pocetakPNE", dinastija.PocetakVladavinePNE)
-                             .Set("d.PocetakVladavineGod = $pocetak, d.PocetakVladavinePNE = $pocetakPNE")
-                             .Create("(d)-[:POCETAK_VLADAVINE]->(pg)");
-            }
-
-            if (promenjenKraj)
-            {
-                await _godinaService.DodajGodinu(dinastija.KrajVladavineGod, dinastija.KrajVladavinePNE);
-                query = query.With("d")//brisemo godinu s kojom je bila vezana
-                             .Match("(kg:Godina {God: $kraj, IsPNE: $krajPNE})") //mora da se mecuje i godina da bi bila referenca na cvor inace je samo na objekat
-                             .WithParam("kraj", dinastija.KrajVladavineGod)
-                             .WithParam("krajPNE", dinastija.KrajVladavinePNE)
-                             .Set("d.KrajVladavineGod = $kraj, d.KrajVladavinePNE = $krajPNE")
-                             .Create("(d)-[:KRAJ_VLADAVINE]->(kg)");
-            }
-
-            await query.ExecuteWithoutResultsAsync();
-
-            if (!string.IsNullOrWhiteSpace(dinastija.Slika))
-            {
-                var filter = Builders<DinastijaMongo>.Filter.Eq(d => d.ID, id);
-                var update = Builders<DinastijaMongo>.Update.Set(d => d.Slika, dinastija.Slika);
-                var result = await _dinastijaCollection.UpdateOneAsync(filter, update);
-
-            }
-
-            return Ok($"Dinastija {dinastija.Naziv} je uspesno azurirana!");
         }
-        catch (Exception ex)
+        else
         {
-            return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
+            query = query.With("d")
+                         .OptionalMatch("(d)-[r1:KRAJ_VLADAVINE]->()")
+                         .Delete("r1");
         }
+
+        // Dodavanje novih godina
+        if (promenjenPocetak)
+        {
+            await _godinaService.DodajGodinu(dinastija.PocetakVladavineGod, dinastija.PocetakVladavinePNE);
+            query = query.With("d")
+                         .Match("(pg:Godina {God: $pocetak, IsPNE: $pocetakPNE})")
+                         .WithParam("pocetak", dinastija.PocetakVladavineGod)
+                         .WithParam("pocetakPNE", dinastija.PocetakVladavinePNE)
+                         .Set("d.PocetakVladavineGod = $pocetak, d.PocetakVladavinePNE = $pocetakPNE")
+                         .Create("(d)-[:POCETAK_VLADAVINE]->(pg)");
+        }
+
+        if (promenjenKraj)
+        {
+            await _godinaService.DodajGodinu(dinastija.KrajVladavineGod, dinastija.KrajVladavinePNE);
+            query = query.With("d")
+                         .Match("(kg:Godina {God: $kraj, IsPNE: $krajPNE})")
+                         .WithParam("kraj", dinastija.KrajVladavineGod)
+                         .WithParam("krajPNE", dinastija.KrajVladavinePNE)
+                         .Set("d.KrajVladavineGod = $kraj, d.KrajVladavinePNE = $krajPNE")
+                         .Create("(d)-[:KRAJ_VLADAVINE]->(kg)");
+        }
+
+        await query.ExecuteWithoutResultsAsync();
+
+        // =========================
+        // 3. Update Mongo-a za sliku
+        // =========================
+        if (!string.IsNullOrWhiteSpace(dinastija.Slika))
+        {
+            var filter = Builders<DinastijaMongo>.Filter.Eq(d => d.ID, id);
+            var update = Builders<DinastijaMongo>.Update.Set(d => d.Slika, dinastija.Slika);
+            await _dinastijaCollection.UpdateOneAsync(filter, update);
+        }
+
+        return Ok($"Dinastija '{dinastija.Naziv}' je uspešno ažurirana!");
     }
+    catch (Exception ex)
+    {
+        return StatusCode(500, $"Došlo je do greške pri radu sa Neo4j bazom: {ex.Message}");
+    }
+}
+
 
     [HttpDelete("DeleteDinastija/{id}")]
     public async Task<IActionResult> DeleteDinastija(Guid id)

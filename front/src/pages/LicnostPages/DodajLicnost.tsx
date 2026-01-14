@@ -87,7 +87,7 @@ export default function DodajLicnost() {
       formData.append("PocetakVladavinePNE", pocetakVladavinePNE.toString());
       formData.append("KrajVladavineGod", (krajVladavineGod || 0).toString());
       formData.append("KrajVladavinePNE", krajVladavinePNE.toString());
-      if (dinastija) formData.append("Dinastija", dinastija.naziv);
+      formData.append("Dinastija.Naziv", dinastija.naziv);
     }
 
     try {

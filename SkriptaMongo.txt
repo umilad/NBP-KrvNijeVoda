@@ -120,11 +120,11 @@ db.Dogadjaji.insertMany([
 ]);
 
 db.Dinastije.insertMany([
-  { _id: "d1d1d1d1-1111-4d1d-8d1d-111111111111", Slika: "dinastije/nemanjici.png" },
-  { _id: "d2d2d2d2-2222-4d2d-8d2d-222222222222", Slika: "dinastije/vojisavljevici.png" },
-  { _id: "d3d3d3d3-3333-4d3d-8d3d-333333333333", Slika: "dinastije/balsici.png" },
-  { _id: "d4d4d4d4-4444-4d4d-8d4d-444444444444", Slika: "dinastije/kotromanici.png" },
-  { _id: "d6d6d6d6-6666-4d6d-8d6d-666666666666", Slika: "dinastije/hohenstauf.png" },
+  { _id: "d1d1d1d1-1111-4d1d-8d1d-111111111111", Slika: "nemanjici.png" },
+  { _id: "d2d2d2d2-2222-4d2d-8d2d-222222222222", Slika: "vojisavljevici.png" },
+  { _id: "d3d3d3d3-3333-4d3d-8d3d-333333333333", Slika: "balsici.png" },
+  { _id: "d4d4d4d4-4444-4d4d-8d4d-444444444444", Slika: "kotromanici.png" },
+  { _id: "d6d6d6d6-6666-4d6d-8d6d-666666666666", Slika: "hohenstauf.png" },
   { _id: "d7d7d7d7-7777-4d7d-8d7d-777777777777", Slika: "https://upload.wikimedia.org/wikipedia/commons/7/7f/Asenovci_CoA.png" },
   { _id: "d8d8d8d8-8888-4d8d-8d8d-888888888888", Slika: "https://upload.wikimedia.org/wikipedia/commons/8/8a/Komnini_CoA.png" },
   {

@@ -18,6 +18,8 @@ export default function AzurirajDinastiju() {
   const [slikaFile, setSlikaFile] = useState<File | null>(null);
   const [slikaURL, setSlikaURL] = useState("");
 
+  const placeholderSlika = "/images/placeholder_dinastija.png"; // promeni putanju ako treba
+
   useEffect(() => {
     async function loadDinastija() {
       if (!id) return;
@@ -46,50 +48,26 @@ export default function AzurirajDinastiju() {
     }
   };
 
-  const uploadSlika = async (): Promise<string> => {
-    if (!slikaFile) return slikaURL; // ako nije promenjena, vrati postojeći URL
-    const formData = new FormData();
-    formData.append("file", slikaFile);
-    try {
-      const res = await axios.post("http://localhost:5210/api/UploadSlika", formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
-        },
-      });
-      return res.data.url; // backend vraća { url: "..." }
-    } catch (err) {
-      console.error("Greška pri uploadu slike:", err);
-      return "";
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!id || !token) return;
 
-    const url = await uploadSlika();
-
-    const payload: Dinastija = {
-      id,
-      naziv,
-      pocetakVladavineGod: pocetakGod || 0,
-      pocetakVladavinePNE: pocetakPNE, // boolean
-      krajVladavineGod: krajGod || 0,
-      krajVladavinePNE: krajPNE,       // boolean
-      slika: url || "",
-    };
-
-    console.log("Payload koji šaljem:", payload); // log za debug
+    const formData = new FormData();
+    formData.append("Naziv", naziv);
+    formData.append("PocetakVladavineGod", (pocetakGod || 0).toString());
+    formData.append("PocetakVladavinePNE", pocetakPNE.toString());
+    formData.append("KrajVladavineGod", (krajGod || 0).toString());
+    formData.append("KrajVladavinePNE", krajPNE.toString());
+    if (slikaFile) formData.append("slika", slikaFile);
 
     try {
       await axios.put(
         `http://localhost:5210/api/UpdateDinastija/${id}`,
-        payload,
+        formData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
+            "Content-Type": "multipart/form-data",
           },
         }
       );
@@ -163,11 +141,14 @@ export default function AzurirajDinastiju() {
               onChange={handleFileChange}
               className="mt-1"
             />
-            {slikaURL && !slikaFile && (
-              <img src={slikaURL} alt="Dinastija" className="w-32 h-40 mt-2 border" />
-            )}
-            {slikaFile && (
+            {slikaFile ? (
               <p className="mt-2 text-sm">Izabrana slika: {slikaFile.name}</p>
+            ) : (
+              <img
+                src={slikaURL || placeholderSlika}
+                alt="Dinastija"
+                className="w-32 h-40 mt-2 border"
+              />
             )}
           </label>
 
