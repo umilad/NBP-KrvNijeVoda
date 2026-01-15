@@ -17,6 +17,7 @@ import DodajLicnost from './pages/LicnostPages/DodajLicnost.tsx';
 import Login from './pages/Login.tsx';
 import Registracija from './pages/Registracija.tsx';
 import Profil from './pages/Profil.tsx';
+import Godine from './pages/Godine.tsx';
 
 import { AuthProvider } from './pages/AuthContext';
 import { SearchProvider } from './components/SearchContext.tsx';
@@ -42,6 +43,8 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/licnosti" element={<Licnosti />} />
             <Route path="/licnost/:id" element={<Licnost />} />
+            
+            <Route path="/godine" element={<Godine />} />
             
             {/* Ažuriranje ličnosti / vladara */}
             <Route path="/licnost/edit/:id" element={<AzurirajLicnost />} />

@@ -46,7 +46,7 @@ export default function DinastijaPrikaz({ dinastija }: DinastijaPrikazProps){
             className="dinastija-div w-[350px] h-[400px] flex flex-col items-center justify-center relative border-2 border-[#3f2b0a] bg-[#e6cda5]/50 p-[20px] m-[20px] rounded-lg text-center text-[#3f2b0a] shadow-md overflow-hidden transition-transform hover:scale-110 cursor-pointer"
         >
             <span className='dogadjaj-header text-xl font-bold mt-2'>{dinastija.naziv}</span>
-            <span className='dogadjaj-godina text-l font-bold mt-2'>
+            <span className='dogadjaj-godina text-l font-bold mt-2 mb-[5px]'>
                 {dinastija.pocetakVladavineGod} - {dinastija.krajVladavineGod}.
                 {dinastija.krajVladavinePNE ? " p. n. e." : ""}
             </span>
@@ -62,17 +62,17 @@ export default function DinastijaPrikaz({ dinastija }: DinastijaPrikazProps){
             </div>
 
             {role === "admin" && (
-                <div className="flex gap-4 justify-center mt-2">
+                <div className="flex gap-4 justify-center mt-[5px]">
                     <button
                         onClick={handleDelete}
-                        className="px-[12px] py-[6px] border border-[#e6cda5] bg-[#3f2b0a] text-[#e6cda5] hover:bg-[#e6cda5] hover:text-[#3f2b0a] transition-all duration-300 transform hover:scale-110 cursor-pointer"
+                        className="px-[12px] py-[6px] m-[5px] border border-[#e6cda5] bg-[#3f2b0a] text-[#e6cda5] hover:bg-[#e6cda5] hover:text-[#3f2b0a] transition-all duration-300 transform hover:scale-110 cursor-pointer"
                     >
                         Obriši
                     </button>
 
                     <button
                         onClick={handleUpdate}
-                        className="px-[12px] py-[6px] border border-[#e6cda5] bg-[#3f2b0a] text-[#e6cda5] hover:bg-[#e6cda5] hover:text-[#3f2b0a] transition-all duration-300 transform hover:scale-110 cursor-pointer"
+                        className="px-[12px] py-[6px] m-[5px] border border-[#e6cda5] bg-[#3f2b0a] text-[#e6cda5] hover:bg-[#e6cda5] hover:text-[#3f2b0a] transition-all duration-300 transform hover:scale-110 cursor-pointer"
                     >
                         Ažuriraj
                     </button>

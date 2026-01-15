@@ -5,9 +5,10 @@ import {
   forwardRef,
   useEffect,
   useState,
+  useLayoutEffect,
 } from "react";
 
-const years = Array.from({ length: 2025 }, (_, i) => 1 + i);
+const years = Array.from({ length: 2026 }, (_, i) => i + 1);
 
 interface YearTimelineProps {
   activeYear: number;
@@ -18,11 +19,13 @@ export interface YearTimelineHandle {
   scrollToYear: (year: number) => void;
 }
 
+
+
 const YearTimeline = forwardRef<YearTimelineHandle, YearTimelineProps>(
   function YearTimeline({ setActiveYear }, ref) {
     const containerRef = useRef<HTMLDivElement | null>(null);
-    const isDragging = useRef(false);
-    const scrollStart = useRef(0);
+    //const isDragging = useRef(false);
+    //const scrollStart = useRef(0);
     const [activeIndex, setActiveIndex] = useState<number>(0);
 
     // Flag to prevent scroll handler from interfering with programmatic scroll
@@ -52,12 +55,31 @@ const YearTimeline = forwardRef<YearTimelineHandle, YearTimelineProps>(
         setActiveIndex(index);
         setActiveYear(years[index]);
 
+
         // Release programmatic scroll flag after scroll finishes
         setTimeout(() => {
           isProgrammaticScroll.current = false;
         }, 700);
       },
     }));
+
+    useLayoutEffect(() => {
+      const container = containerRef.current;
+      if (!container) return;
+
+      const startYear = 2026;
+      const index = years.findIndex(y => y === startYear);
+      const yearEls = container.querySelectorAll(".year-tick");
+      const targetEl = yearEls[index] as HTMLElement;
+      if (!targetEl) return;
+
+      const targetCenter = targetEl.offsetLeft + targetEl.offsetWidth / 2;
+      container.scrollLeft = targetCenter - container.clientWidth / 2;
+
+      // update state
+      setActiveIndex(index);
+      setActiveYear(startYear);
+    }, [setActiveYear]); // run once
 
     useEffect(() => {
       const container = containerRef.current;
@@ -80,7 +102,8 @@ const YearTimeline = forwardRef<YearTimelineHandle, YearTimelineProps>(
             closestDistance = distance;
             closestIndex = index;
           }
-        });
+      });
+
 
         if (closestIndex !== activeIndex) {
           setActiveIndex(closestIndex);
@@ -88,7 +111,7 @@ const YearTimeline = forwardRef<YearTimelineHandle, YearTimelineProps>(
         }
       };
 
-      const handleMouseDown = () => {
+      {/*const handleMouseDown = () => {
         isDragging.current = true;
         scrollStart.current = container.scrollLeft;
         document.body.style.cursor = "grabbing";
@@ -105,12 +128,12 @@ const YearTimeline = forwardRef<YearTimelineHandle, YearTimelineProps>(
       const handleMouseUp = () => {
         isDragging.current = false;
         document.body.style.cursor = "default";
-      };
+      };*/}
 
-      const dot = document.getElementById("center-dot");
+      {/*const dot = document.getElementById("center-dot");
       if (dot) dot.addEventListener("mousedown", handleMouseDown);
       window.addEventListener("mousemove", handleMouseMove);
-      window.addEventListener("mouseup", handleMouseUp);
+      window.addEventListener("mouseup", handleMouseUp);*/}
 
       container.addEventListener("scroll", handleScroll, { passive: true });
       window.addEventListener("resize", handleScroll);
@@ -118,37 +141,37 @@ const YearTimeline = forwardRef<YearTimelineHandle, YearTimelineProps>(
       handleScroll(); // initial highlight
 
       return () => {
-        if (dot) dot.removeEventListener("mousedown", handleMouseDown);
+        {/*if (dot) dot.removeEventListener("mousedown", handleMouseDown);
         window.removeEventListener("mousemove", handleMouseMove);
-        window.removeEventListener("mouseup", handleMouseUp);
+        window.removeEventListener("mouseup", handleMouseUp);*/}
         container.removeEventListener("scroll", handleScroll);
         window.removeEventListener("resize", handleScroll);
       };
     }, [activeIndex, setActiveYear]);
 
     return (
-      <div className="relative w-full py-16 overflow-hidden">
+      <div className="fixed w-full py-16 overflow-hidden top-40">
         {/* Center dot */}
         <div
           id="center-dot"
           className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 cursor-grab"
         >
-          <div className="w-4 h-4 bg-black rounded-full" />
+          <div className="w-4 h-4 bg-[#3f2b0a] rounded-full" />
         </div>
 
         {/* Timeline container */}
         <div
           ref={containerRef}
-          className="overflow-x-auto no-scrollbar relative flex px-20 snap-x snap-mandatory scroll-smooth"
+          className="overflow-x-auto no-scrollbar relative flex snap-x snap-mandatory"
         >
           {/* Timeline line */}
           <div
-            className="absolute top-1/2 left-0 right-0 h-[4px] bg-black z-0"
+            className="absolute top-1/2 left-0 right-0 h-[4px] bg-[#3f2b0a] z-0"
             style={{ minWidth: `${years.length * 50}px` }}
           />
 
           {/* Spacer before first year */}
-          <div className="w-[50vw] shrink-0" />
+          <div className="w-[49.5vw] shrink-0" />
 
           {/* Year ticks */}
           {years.map((year, i) => {
@@ -163,9 +186,9 @@ const YearTimeline = forwardRef<YearTimelineHandle, YearTimelineProps>(
                 key={year}
                 className={`year-tick flex flex-col items-center justify-center w-auto shrink-0 snap-center relative ${spacing}`}
               >
-                <div className={`mt-[29px] h-6 w-[3px] bg-black z-10 ${showTick ? "" : "hidden"}`} />
+                <div className={`mt-[29px] h-6 w-[3px] bg-[#3f2b0a] z-10 ${showTick ? "" : "hidden"}`} />
                 {showLabel && (
-                  <div className={`mt-4 transition-all duration-300 font-semibold ${yearSize} ${isActive ? "text-black" : "text-gray-600"}`}>
+                  <div className={`mt-4 transition-all duration-300 font-semibold ${yearSize} ${isActive ? "text-[#3f2b0a]" : "text-gray-600"}`}>
                     {year}
                   </div>
                 )}
@@ -173,8 +196,8 @@ const YearTimeline = forwardRef<YearTimelineHandle, YearTimelineProps>(
             );
           })}
 
-          {/* Spacer after last year */}
-          <div className="w-[50vw] shrink-0" />
+          {/* Spacer after last year 47 */}
+          <div className="w-[49.5vw] shrink-0" />
         </div>
       </div>
     );

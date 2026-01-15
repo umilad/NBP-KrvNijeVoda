@@ -8,25 +8,42 @@ export default function Navbar() {
   const navigate = useNavigate();
 
   // Sakrij search bar na /profil stranici
-  const hideSearch = location.pathname === "/profil";
+  const hideSearch = location.pathname === "/profil" || location.pathname === "/";
+
+  const handleLogout = () => {
+        logout();
+        navigate("/"); // preusmeri na početnu stranu
+    };
 
   return (
     <div className="fixed top-0 left-0 w-full z-50">
       <nav className="relative bg-[#3f2b0af0] h-12 z-20 text-white flex items-center px-4">
         {/* Navigacija */}
         <ul className="flex flex-grow h-full">
-          <li className="flex-1 text-center">
+          <li className="flex-1 text-center max-w-[40px]">
             <NavLink
               to="/"
+              className="flex items-center justify-center w-full h-full hover:scale-110"
+            >
+              <img
+                src="/castle-icon.png"
+                alt="Počеtna"
+                className="max-w-[30px]"
+              />
+            </NavLink>
+          </li>
+          <li className="flex-1 text-center">
+            <NavLink
+              to="/godine"
               className={({ isActive }) =>
-                `flex items-center justify-center w-full h-full ${
+                `flex items-center justify-center w-full h-full  ${
                   isActive
                     ? "bg-[#e6cda5f0] text-[#3f2b0af0]"
-                    : "hover:bg-[#e6cda5f0] hover:text-[#3f2b0af0] transition duration-300"
+                    : "hover:bg-[#e6cda5f0] hover:text-[#3f2b0af0] text-[#e6cda5f0] transition duration-300"
                 }`
               }
             >
-              Početna
+              Godine
             </NavLink>
           </li>
           <li className="flex-1 text-center">
@@ -36,7 +53,7 @@ export default function Navbar() {
                 `flex items-center justify-center w-full h-full ${
                   isActive
                     ? "bg-[#e6cda5f0] text-[#3f2b0af0]"
-                    : "hover:bg-[#e6cda5f0] hover:text-[#3f2b0af0] transition duration-300"
+                    : "hover:bg-[#e6cda5f0] hover:text-[#3f2b0af0] text-[#e6cda5f0] transition duration-300"
                 }`
               }
             >
@@ -50,7 +67,7 @@ export default function Navbar() {
                 `flex items-center justify-center w-full h-full ${
                   isActive
                     ? "bg-[#e6cda5f0] text-[#3f2b0af0]"
-                    : "hover:bg-[#e6cda5f0] hover:text-[#3f2b0af0] transition duration-300"
+                    : "hover:bg-[#e6cda5f0] hover:text-[#3f2b0af0] text-[#e6cda5f0] transition duration-300"
                 }`
               }
             >
@@ -64,7 +81,7 @@ export default function Navbar() {
                 `flex items-center justify-center w-full h-full ${
                   isActive
                     ? "bg-[#e6cda5f0] text-[#3f2b0af0]"
-                    : "hover:bg-[#e6cda5f0] hover:text-[#3f2b0af0] transition duration-300"
+                    : "hover:bg-[#e6cda5f0] hover:text-[#3f2b0af0] text-[#e6cda5f0] transition duration-300"
                 }`
               }
             >
@@ -75,7 +92,7 @@ export default function Navbar() {
 
         {/* Search bar */}
         {!hideSearch && (
-          <div className="relative w-56 h-8 rounded-full border border-[#e6cda5f0] flex items-center ml-4">
+          <div className="relative w-56 h-8 rounded-full border border-[#e6cda5f0] flex items-center m-[4px]">
             <div className="absolute inset-y-0 left-2 flex items-center pointer-events-none">
               <svg
                 className="w-4 h-4 text-[#e6cda5f0]"
@@ -106,16 +123,24 @@ export default function Navbar() {
                 className="px-4 h-full flex min-w-[80px] items-center justify-center text-[#e6cda5] font-bold text-lg hover:bg-[#e6cda5f0] hover:text-[#3f2b0af0] transition-colors duration-300 ease-in-out"
               >
                 {username}
-              </NavLink>                
+              </NavLink>    
+              {/* Logout icon */}
+              <button
+                onClick={handleLogout}
+                className="px-[3px] hover:scale-110 "
+                title="Odjavi se"
+              >
+                <img
+                  src="/logout-icon.png"
+                  alt="Odjavi se"
+                  className="w-6 h-6"
+                />
+              </button>            
             </>
           ) : (
             <NavLink
               to="/prijava"
-              className={({ isActive }) =>
-                `px-4 h-10 flex items-center justify-center rounded-lg bg-[#3f2b0af0] text-[#e6cda5] font-bold text-lg hover:bg-[#e6cda5] hover:text-[#3f2b0af0] transition-all ${
-                  isActive ? "underline" : ""
-                }`
-              }
+              className="px-4 w-full h-full flex items-center justify-center text-[#e6cda5] font-bold text-lg hover:bg-[#e6cda5] hover:text-[#3f2b0af0] transition-all"
             >
               Prijavi se
             </NavLink>

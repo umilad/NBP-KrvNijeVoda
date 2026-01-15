@@ -13,7 +13,7 @@ export default function DogadjajPrikaz({ dogadjaj, variant = "short" }: Dogadjaj
     const { token, role } = useAuth();
     const navigate = useNavigate();
 
-     console.log("Dogadjaj object:", dogadjaj);
+    console.log("Dogadjaj object:", dogadjaj);
     console.log("Dogadjaj.tip:", dogadjaj.tip);
     console.log("isBitka:", isBitka(dogadjaj));
     console.log("isRat:", isRat(dogadjaj));
