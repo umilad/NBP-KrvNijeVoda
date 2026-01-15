@@ -4,7 +4,6 @@ using MongoDB.Driver;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-//using KrvNijeVoda.Back.Models;
 
 [Route("api")]
 [ApiController]
@@ -46,7 +45,6 @@ public class ZemljaController : ControllerBase
                 .WithParam("trajanje", dto.Trajanje)
                 .ExecuteWithoutResultsAsync();
 
-            // Mongo
             var mongo = new ZemljaMongo
             {
                 ID = id,
@@ -68,7 +66,6 @@ public class ZemljaController : ControllerBase
     {
         try
         {
-            // Neo4j
             var neo = (await _neo4jClient.Cypher
                 .Match("(z:Zemlja)")
                 .Where((ZemljaNeo z) => z.ID == id)
@@ -79,7 +76,6 @@ public class ZemljaController : ControllerBase
             if (neo == null)
                 return NotFound($"Zemlja sa ID {id} ne postoji u Neo4j bazi!");
 
-            // Mongo
             var mongo = await _mongo.Find(m => m.ID == id).FirstOrDefaultAsync();
 
             var dto = new ZemljaDto
@@ -98,46 +94,44 @@ public class ZemljaController : ControllerBase
             return StatusCode(500, $"Greška: {ex.Message}");
         }
     }
-[HttpGet("GetAllZemlje")]
-public async Task<IActionResult> GetAllZemlje()
-{
-    try
+
+    [HttpGet("GetAllZemlje")]
+    public async Task<IActionResult> GetAllZemlje()
     {
-        // 1. Dohvatanje iz Neo4j (bez Grba i BrojaStanovnika)
-        var zemlje = (await _neo4jClient.Cypher
-            .Match("(z:Zemlja)")
-            .Return(z => z.As<ZemljaNeo>())
-            .ResultsAsync)
-            .ToList();
-
-        if (!zemlje.Any())
-            return NotFound("Nije pronađena nijedna zemlja u bazi!");
-
-        // 2. Dohvatanje dodatnih podataka iz Mongo (Grb, BrojStanovnika)
-        var ids = zemlje.Select(z => z.ID).ToList();
-        var mongoList = await _mongo.Find(m => ids.Contains(m.ID)).ToListAsync();
-
-        // 3. Kombinovanje Neo4j i Mongo podataka u DTO
-        var result = zemlje.Select(z =>
+        try
         {
-            var mongo = mongoList.FirstOrDefault(m => m.ID == z.ID);
-            return new ZemljaDto
-            {
-                ID = z.ID,
-                Naziv = z.Naziv,
-                Trajanje = z.Trajanje,
-                Grb = mongo?.Grb,
-                BrojStanovnika = mongo?.BrojStanovnika
-            };
-        }).ToList();
+            var zemlje = (await _neo4jClient.Cypher
+                .Match("(z:Zemlja)")
+                .Return(z => z.As<ZemljaNeo>())
+                .ResultsAsync)
+                .ToList();
 
-        return Ok(result);
+            if (!zemlje.Any())
+                return NotFound("Nije pronađena nijedna zemlja u bazi!");
+
+            var ids = zemlje.Select(z => z.ID).ToList();
+            var mongoList = await _mongo.Find(m => ids.Contains(m.ID)).ToListAsync();
+
+            var result = zemlje.Select(z =>
+            {
+                var mongo = mongoList.FirstOrDefault(m => m.ID == z.ID);
+                return new ZemljaDto
+                {
+                    ID = z.ID,
+                    Naziv = z.Naziv,
+                    Trajanje = z.Trajanje,
+                    Grb = mongo?.Grb,
+                    BrojStanovnika = mongo?.BrojStanovnika
+                };
+            }).ToList();
+
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Došlo je do greške: {ex.Message}");
+        }
     }
-    catch (Exception ex)
-    {
-        return StatusCode(500, $"Došlo je do greške: {ex.Message}");
-    }
-}
 
 
 
@@ -184,8 +178,7 @@ public async Task<IActionResult> GetAllZemlje()
     public async Task<IActionResult> DeleteZemlja(Guid id)
     {
         try
-        {
-            
+        {            
             await _neo4jClient.Cypher
                 .Match("(z:Zemlja)")
                 .Where((ZemljaNeo z) => z.ID == id)
@@ -207,8 +200,7 @@ public async Task<IActionResult> GetAllZemlje()
     public async Task<IActionResult> GetZemljaPoNazivu(string naziv)
     {
         try
-        {
-            
+        {            
             var neo = (await _neo4jClient.Cypher
                 .Match("(z:Zemlja)")
                 .Where("toLower(z.Naziv) = toLower($naziv)")
