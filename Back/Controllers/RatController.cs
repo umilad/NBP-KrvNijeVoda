@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Mvc;
 using Neo4jClient;
 using System;
 using System.Threading.Tasks;
-//using KrvNijeVoda.Back.Models;
 using System.Reflection.Metadata;
 using KrvNijeVoda.Back;
 using MongoDB.Driver;
@@ -12,16 +11,12 @@ public class RatController : ControllerBase
 {
     private readonly IGraphClient _client;
     private readonly GodinaService _godinaService;
-    // private readonly LokacijaService _lokacijaService;
-    // private readonly ZemljaService _zemljaService;
     private readonly IMongoCollection<DogadjajMongo> _dogadjajiCollection;
 
-    public RatController(Neo4jService neo4jService, GodinaService godinaService, MongoService mongoService/*, LokacijaService lokacijaService, ZemljaService zemljaService*/)
+    public RatController(Neo4jService neo4jService, GodinaService godinaService, MongoService mongoService)
     {
         _client = neo4jService.GetClient();
         _godinaService = godinaService;
-        // _lokacijaService = lokacijaService;
-        // _zemljaService = zemljaService;
         _dogadjajiCollection = mongoService.GetCollection<DogadjajMongo>("Dogadjaji");
     }
 
@@ -41,8 +36,8 @@ public class RatController : ControllerBase
                 return BadRequest($"Rat sa imenom {rat.Ime} vec postoji u bazi!");
             }
 
-            GodinaNeo godPocetak = null;
-            GodinaNeo godKraj = null;
+            GodinaNeo? godPocetak = null;
+            GodinaNeo? godKraj = null;
             Guid ratID = Guid.NewGuid();
 
             var query = _client.Cypher
@@ -50,7 +45,7 @@ public class RatController : ControllerBase
                 .WithParam("id", ratID)
                 .WithParam("ime", rat.Ime)
                 .WithParam("pobednik", rat.Pobednik)
-                .WithParam("lokacija", rat.Lokacija);//valjda ostaje prazno ako se ne unese nista 
+                .WithParam("lokacija", rat.Lokacija);
 
                 if (!string.IsNullOrEmpty(rat.Lokacija) && rat.Lokacija != "string")
                 {
@@ -99,14 +94,6 @@ public class RatController : ControllerBase
             }
             await query.ExecuteWithoutResultsAsync();
 
-            // var kreiranRat = (await _client.Cypher.Match("(r:Dogadjaj:Rat {ID: $ratID})")
-            //                                       .WithParam("ratID", ratID)
-            //                                       .Return(r => r.As<Rat>())
-            //                                       .ResultsAsync)
-            //                                       .FirstOrDefault();
-
-            //Poveži postojeće bitke
-            //POPRAVLJENO ALI BEZ DODAVANJA U LISTU I TREBA DA BUDE DOGADJAJ GENERALNO NE BITKA
             if (rat.Bitke != null && rat.Bitke.Any())
             {
                 foreach (var bitka in rat.Bitke)
@@ -129,7 +116,6 @@ public class RatController : ControllerBase
                                 .WithParam("imeBitke", bitka)
                                 .ExecuteWithoutResultsAsync();
 
-                        //kreiranRat.Bitke.Add(bitka);
                     }
 
                 }
@@ -145,9 +131,6 @@ public class RatController : ControllerBase
             }
                 
             return Ok($"Rat '{rat.Ime}' je uspešno dodat u bazu!");
-
-            
-                //return Ok($"Rat '{rat.Ime}' je uspešno dodat i povezane su postojeće bitke.");
         }
         catch (Exception ex)
         {
@@ -167,13 +150,13 @@ public class RatController : ControllerBase
                 .OptionalMatch("(r)-[:RAT_TRAJAO_DO]->(gdo:Godina)")
                 .OptionalMatch("(r)-[:DESIO_SE_U]->(z:Zemlja)")
                 .OptionalMatch("(b:Dogadjaj:Bitka)-[:BITKA_U_RATU]->(r)")
-                .With("r, g, z, gdo, collect(b.Ime) as imenaBitki") // <- pravi alias imena
+                .With("r, g, z, gdo, collect(b.Ime) as imenaBitki") 
                 .Return((r, g, gdo, imenaBitki, z) => new
                 {
                     rat = r.As<RatNeo>(),
                     godinaOd = g.As<GodinaNeo>(),
                     godinaDo = gdo.As<GodinaNeo>(),
-                    imenaBitki = imenaBitki.As<List<string>>(), // <- koristi alias
+                    imenaBitki = imenaBitki.As<List<string>>(), 
                     Zemlja = z.As<ZemljaNeo>()
                 })
                 .ResultsAsync).FirstOrDefault();
@@ -185,10 +168,9 @@ public class RatController : ControllerBase
             rat.Godina = result.godinaOd;
             rat.GodinaDo = result.godinaDo;
             rat.Bitke = result.imenaBitki ?? new List<string>();
-            var zemljaNaziv = result.Zemlja?.Naziv ?? ""; // fallback ako ne postoji
+            var zemljaNaziv = result.Zemlja?.Naziv ?? ""; 
             var mongoDoc = await _dogadjajiCollection.Find(d => d.ID == id).FirstOrDefaultAsync();
 
-            // 🔹 Kreiranje DTO objekta
             var dto = new RatDto
             {
                 ID = rat.ID,
@@ -216,7 +198,6 @@ public class RatController : ControllerBase
     {
         try
         {
-            // 1. Dohvatanje svih ratova iz Neo4j
             var ratovi = (await _client.Cypher
                 .Match("(r:Dogadjaj:Rat)")
                 .OptionalMatch("(r)-[:DESIO_SE]->(g:Godina)")
@@ -236,11 +217,9 @@ public class RatController : ControllerBase
             if (!ratovi.Any())
                 return NotFound("Nije pronađen nijedan rat u bazi!");
 
-            // 2. Dohvatanje teksta iz MongoDB
             var ids = ratovi.Select(r => r.Rat.ID).ToList();
             var mongoList = await _dogadjajiCollection.Find(d => ids.Contains(d.ID)).ToListAsync();
 
-            // 3. Kombinovanje u DTO
             var result = ratovi.Select(r =>
             {
                 var mongo = mongoList.FirstOrDefault(m => m.ID == r.Rat.ID);
@@ -270,7 +249,6 @@ public class RatController : ControllerBase
         }
     }
 
-    //NISAM GLEDALA
     [HttpGet("GetBitkeZaRat/{ratID}")]
     public async Task<IActionResult> GetBitkeZaRat(Guid ratID)
     {
@@ -334,164 +312,154 @@ public class RatController : ControllerBase
     }
 
    [HttpPut("UpdateRat/{id}")]
-public async Task<IActionResult> UpdateRat(Guid id, [FromBody] RatDto updatedRat)
-{
-    try
+    public async Task<IActionResult> UpdateRat(Guid id, [FromBody] RatDto updatedRat)
     {
-        var rat = (await _client.Cypher
-                                    .Match("(r:Dogadjaj:Rat)")
-                                    .Where((RatNeo r) => r.ID == id)
-                                    .OptionalMatch("(r)-[:DESIO_SE]->(g1:Godina)")          
-                                    .OptionalMatch("(r)-[:RAT_TRAJAO_DO]->(g2:Godina)")     
-                                    .Return((r, g1, g2) => new
-                                    {
-                                        Rat = r.As<RatNeo>(),
-                                        PocetnaGodina = g1.As<GodinaNeo>(),
-                                        KrajnjaGodina = g2.As<GodinaNeo>()
-                                    })
-                                    .ResultsAsync)
-                                    .FirstOrDefault();
-
-        if (rat == null)
-            return NotFound($"Rat sa ID: {id} nije pronađen!");
-
-        // Provera duplikata imena
-        var duplikat = (await _client.Cypher
-            .Match("(r:Dogadjaj:Rat)")
-            .Where("toLower(r.Ime) = toLower($naziv) AND r.ID <> $id")
-            .WithParam("naziv", updatedRat.Ime)
-            .WithParam("id", id)
-            .Return(r => r.As<RatNeo>())
-            .ResultsAsync)
-            .Any();
-
-        if (duplikat)
-            return BadRequest($"Rat sa nazivom '{updatedRat.Ime}' već postoji u bazi!");
-
-        // Osnovni update u Neo4j (osim Tekst koji ide u Mongo)
-        var cypher = _client.Cypher
-                            .Match("(r:Dogadjaj:Rat)")
-                            .Where((RatNeo r) => r.ID == id)
-                            .Set("r.Ime = $ime, r.Tip = 'Rat', r.Lokacija = $lokacija, r.Pobednik = $pobednik")
-                            .With("r")
-                            .WithParams(new
-                            {
-                                ime = updatedRat.Ime,
-                                lokacija = rat.Rat.Lokacija,
-                                pobednik = updatedRat.Pobednik
-                            });
-
-        // Lokacija
-        if (!string.IsNullOrEmpty(updatedRat.Lokacija) && updatedRat.Lokacija != "string")
+        try
         {
-            var zemljaPostoji = (await _client.Cypher
-                        .Match("(z:Zemlja)")
-                        .Where("toLower(z.Naziv) = toLower($naziv)")
-                        .WithParam("naziv", updatedRat.Lokacija)
-                        .Return(z => z.As<ZemljaNeo>())
-                        .ResultsAsync)
-                        .Any();
+            var rat = (await _client.Cypher
+                                        .Match("(r:Dogadjaj:Rat)")
+                                        .Where((RatNeo r) => r.ID == id)
+                                        .OptionalMatch("(r)-[:DESIO_SE]->(g1:Godina)")          
+                                        .OptionalMatch("(r)-[:RAT_TRAJAO_DO]->(g2:Godina)")     
+                                        .Return((r, g1, g2) => new
+                                        {
+                                            Rat = r.As<RatNeo>(),
+                                            PocetnaGodina = g1.As<GodinaNeo>(),
+                                            KrajnjaGodina = g2.As<GodinaNeo>()
+                                        })
+                                        .ResultsAsync)
+                                        .FirstOrDefault();
 
-            if (zemljaPostoji)
+            if (rat == null)
+                return NotFound($"Rat sa ID: {id} nije pronađen!");
+
+            var duplikat = (await _client.Cypher
+                .Match("(r:Dogadjaj:Rat)")
+                .Where("toLower(r.Ime) = toLower($naziv) AND r.ID <> $id")
+                .WithParam("naziv", updatedRat.Ime)
+                .WithParam("id", id)
+                .Return(r => r.As<RatNeo>())
+                .ResultsAsync)
+                .Any();
+
+            if (duplikat)
+                return BadRequest($"Rat sa nazivom '{updatedRat.Ime}' već postoji u bazi!");
+
+            var cypher = _client.Cypher
+                                .Match("(r:Dogadjaj:Rat)")
+                                .Where((RatNeo r) => r.ID == id)
+                                .Set("r.Ime = $ime, r.Tip = 'Rat', r.Lokacija = $lokacija, r.Pobednik = $pobednik")
+                                .With("r")
+                                .WithParams(new
+                                {
+                                    ime = updatedRat.Ime,
+                                    lokacija = rat.Rat.Lokacija,
+                                    pobednik = updatedRat.Pobednik
+                                });
+
+            if (!string.IsNullOrEmpty(updatedRat.Lokacija) && updatedRat.Lokacija != "string")
             {
-                if (!string.IsNullOrEmpty(rat.Rat.Lokacija) && rat.Rat.Lokacija != "string")
-                {
-                    if (rat.Rat.Lokacija.ToLower() != updatedRat.Lokacija.ToLower())
-                    {
-                        cypher = cypher
-                            .With("r")
-                            .OptionalMatch("(r)-[rel:DESIO_SE_U]->()")
+                var zemljaPostoji = (await _client.Cypher
                             .Match("(z:Zemlja)")
-                            .Where("toLower(z.Naziv) = toLower($nazivZemlje)")
-                            .Delete("rel")
-                            .WithParam("nazivZemlje", updatedRat.Lokacija)
-                            .Create("(r)-[:DESIO_SE_U]->(z)")
-                            .Set("r.Lokacija = $nazivZemlje");
+                            .Where("toLower(z.Naziv) = toLower($naziv)")
+                            .WithParam("naziv", updatedRat.Lokacija)
+                            .Return(z => z.As<ZemljaNeo>())
+                            .ResultsAsync)
+                            .Any();
+
+                if (zemljaPostoji)
+                {
+                    if (!string.IsNullOrEmpty(rat.Rat.Lokacija) && rat.Rat.Lokacija != "string")
+                    {
+                        if (rat.Rat.Lokacija.ToLower() != updatedRat.Lokacija.ToLower())
+                        {
+                            cypher = cypher
+                                .With("r")
+                                .OptionalMatch("(r)-[rel:DESIO_SE_U]->()")
+                                .Match("(z:Zemlja)")
+                                .Where("toLower(z.Naziv) = toLower($nazivZemlje)")
+                                .Delete("rel")
+                                .WithParam("nazivZemlje", updatedRat.Lokacija)
+                                .Create("(r)-[:DESIO_SE_U]->(z)")
+                                .Set("r.Lokacija = $nazivZemlje");
+                        }
+                    }
+                    else
+                    {
+                        cypher = cypher.With("r")
+                                .Match("(z:Zemlja)")
+                                .Where("toLower(z.Naziv) = toLower($nazivZemlje)")
+                                .WithParam("nazivZemlje", updatedRat.Lokacija)
+                                .Create("(r)-[:DESIO_SE_U]->(z)")
+                                .Set("r.Lokacija = $nazivZemlje");
                     }
                 }
-                else
-                {
-                    cypher = cypher.With("r")
-                            .Match("(z:Zemlja)")
-                            .Where("toLower(z.Naziv) = toLower($nazivZemlje)")
-                            .WithParam("nazivZemlje", updatedRat.Lokacija)
-                            .Create("(r)-[:DESIO_SE_U]->(z)")
-                            .Set("r.Lokacija = $nazivZemlje");
-                }
             }
+            else
+            {
+                cypher = cypher
+                    .With("r")
+                    .OptionalMatch("(r)-[rel:DESIO_SE_U]->()")
+                    .Delete("rel")
+                    .Set("r.Lokacija = 'string'");
+            }
+
+            if (updatedRat.Godina != null && updatedRat.Godina.God != 0)
+            {
+                var godinaOd = await _godinaService.DodajGodinu(updatedRat.Godina.God, updatedRat.Godina.IsPNE);
+
+                cypher = cypher
+                    .With("r")
+                    .OptionalMatch("(r)-[rel:DESIO_SE]->()")
+                    .Delete("rel")
+                    .With("r")
+                    .Match("(g:Godina {ID: $godinaIdOd})")
+                    .Create("(r)-[:DESIO_SE]->(g)")
+                    .WithParam("godinaIdOd", godinaOd.ID);
+            }
+            else
+            {
+                cypher = cypher
+                    .With("r")
+                    .OptionalMatch("(r)-[rel:DESIO_SE]->()")
+                    .Delete("rel");
+            }
+
+            if (updatedRat.GodinaDo != null && updatedRat.GodinaDo.God != 0)
+            {
+                var godinaDo = await _godinaService.DodajGodinu(updatedRat.GodinaDo.God, updatedRat.GodinaDo.IsPNE);
+
+                cypher = cypher
+                    .With("r")
+                    .OptionalMatch("(r)-[rel:RAT_TRAJAO_DO]->()")
+                    .Delete("rel")
+                    .With("r")
+                    .Match("(gdo:Godina {ID: $godinaIdDo})")
+                    .Create("(r)-[:RAT_TRAJAO_DO]->(gdo)")
+                    .WithParam("godinaIdDo", godinaDo.ID);
+            }
+            else
+            {
+                cypher = cypher
+                    .With("r")
+                    .OptionalMatch("(r)-[rel:RAT_TRAJAO_DO]->()")
+                    .Delete("rel");
+            }
+
+            await cypher.ExecuteWithoutResultsAsync();
+
+            if (!string.IsNullOrWhiteSpace(updatedRat.Tekst))
+            {
+                var filter = Builders<DogadjajMongo>.Filter.Eq(d => d.ID, id);
+                var update = Builders<DogadjajMongo>.Update.Set(d => d.Tekst, updatedRat.Tekst);
+                await _dogadjajiCollection.UpdateOneAsync(filter, update);
+            }
+
+            return Ok($"Rat '{updatedRat.Ime}' uspešno ažuriran!");
         }
-        else
+        catch (Exception ex)
         {
-            cypher = cypher
-                .With("r")
-                .OptionalMatch("(r)-[rel:DESIO_SE_U]->()")
-                .Delete("rel")
-                .Set("r.Lokacija = 'string'");
+            return StatusCode(500, $"Došlo je do greške pri radu sa bazom: {ex.Message}");
         }
-
-        // Početna godina
-        if (updatedRat.Godina != null && updatedRat.Godina.God != 0)
-        {
-            var godinaOd = await _godinaService.DodajGodinu(updatedRat.Godina.God, updatedRat.Godina.IsPNE);
-
-            cypher = cypher
-                .With("r")
-                .OptionalMatch("(r)-[rel:DESIO_SE]->()")
-                .Delete("rel")
-                .With("r")
-                .Match("(g:Godina {ID: $godinaIdOd})")
-                .Create("(r)-[:DESIO_SE]->(g)")
-                .WithParam("godinaIdOd", godinaOd.ID);
-        }
-        else
-        {
-            cypher = cypher
-                .With("r")
-                .OptionalMatch("(r)-[rel:DESIO_SE]->()")
-                .Delete("rel");
-        }
-
-        // Krajnja godina
-        if (updatedRat.GodinaDo != null && updatedRat.GodinaDo.God != 0)
-        {
-            var godinaDo = await _godinaService.DodajGodinu(updatedRat.GodinaDo.God, updatedRat.GodinaDo.IsPNE);
-
-            cypher = cypher
-                .With("r")
-                .OptionalMatch("(r)-[rel:RAT_TRAJAO_DO]->()")
-                .Delete("rel")
-                .With("r")
-                .Match("(gdo:Godina {ID: $godinaIdDo})")
-                .Create("(r)-[:RAT_TRAJAO_DO]->(gdo)")
-                .WithParam("godinaIdDo", godinaDo.ID);
-        }
-        else
-        {
-            cypher = cypher
-                .With("r")
-                .OptionalMatch("(r)-[rel:RAT_TRAJAO_DO]->()")
-                .Delete("rel");
-        }
-
-        // Izvrši update u Neo4j
-        await cypher.ExecuteWithoutResultsAsync();
-
-        // Ažuriranje teksta u MongoDB
-        if (!string.IsNullOrWhiteSpace(updatedRat.Tekst))
-        {
-            var filter = Builders<DogadjajMongo>.Filter.Eq(d => d.ID, id);
-            var update = Builders<DogadjajMongo>.Update.Set(d => d.Tekst, updatedRat.Tekst);
-            await _dogadjajiCollection.UpdateOneAsync(filter, update);
-        }
-
-        return Ok($"Rat '{updatedRat.Ime}' uspešno ažuriran!");
     }
-    catch (Exception ex)
-    {
-        return StatusCode(500, $"Došlo je do greške pri radu sa bazom: {ex.Message}");
-    }
-}
-
-
-
 }
