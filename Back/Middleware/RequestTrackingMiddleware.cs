@@ -19,7 +19,6 @@ public class RequestTrackingMiddleware
         {
             var token = authHeader.Substring("Bearer ".Length).Trim();
 
-            // Dohvati postojeću istoriju ili kreiraj novu listu
             var value = await _redisService.GetAsync(token);
             var pages = string.IsNullOrEmpty(value)
                 ? new List<string>()

@@ -1,4 +1,4 @@
-// components/YearTimeline.tsx
+
 import {
   useRef,
   useImperativeHandle,
@@ -24,14 +24,10 @@ export interface YearTimelineHandle {
 const YearTimeline = forwardRef<YearTimelineHandle, YearTimelineProps>(
   function YearTimeline({ setActiveYear }, ref) {
     const containerRef = useRef<HTMLDivElement | null>(null);
-    //const isDragging = useRef(false);
-    //const scrollStart = useRef(0);
     const [activeIndex, setActiveIndex] = useState<number>(0);
 
-    // Flag to prevent scroll handler from interfering with programmatic scroll
     const isProgrammaticScroll = useRef(false);
 
-    // Expose scrollToYear to parent
     useImperativeHandle(ref, () => ({
       scrollToYear(year: number) {
         const container = containerRef.current;
@@ -44,19 +40,15 @@ const YearTimeline = forwardRef<YearTimelineHandle, YearTimelineProps>(
         const targetEl = yearEls[index] as HTMLElement;
         if (!targetEl) return;
 
-        // Center target element
         const targetCenter = targetEl.offsetLeft + targetEl.offsetWidth / 2;
         const scrollTo = targetCenter - container.clientWidth / 2;
 
         isProgrammaticScroll.current = true;
         container.scrollTo({ left: scrollTo, behavior: "smooth" });
 
-        // Update state to mark active year
         setActiveIndex(index);
         setActiveYear(years[index]);
 
-
-        // Release programmatic scroll flag after scroll finishes
         setTimeout(() => {
           isProgrammaticScroll.current = false;
         }, 700);
@@ -76,10 +68,9 @@ const YearTimeline = forwardRef<YearTimelineHandle, YearTimelineProps>(
       const targetCenter = targetEl.offsetLeft + targetEl.offsetWidth / 2;
       container.scrollLeft = targetCenter - container.clientWidth / 2;
 
-      // update state
       setActiveIndex(index);
       setActiveYear(startYear);
-    }, [setActiveYear]); // run once
+    }, [setActiveYear]);
 
     useEffect(() => {
       const container = containerRef.current;
@@ -111,39 +102,13 @@ const YearTimeline = forwardRef<YearTimelineHandle, YearTimelineProps>(
         }
       };
 
-      {/*const handleMouseDown = () => {
-        isDragging.current = true;
-        scrollStart.current = container.scrollLeft;
-        document.body.style.cursor = "grabbing";
-      };
-
-      const handleMouseMove = (e: MouseEvent) => {
-        if (!isDragging.current || !containerRef.current) return;
-        const screenCenter = window.innerWidth / 2;
-        const distanceFromCenter = e.pageX - screenCenter;
-        const speedMultiplier = 0.8;
-        container.scrollLeft = scrollStart.current + distanceFromCenter * speedMultiplier;
-      };
-
-      const handleMouseUp = () => {
-        isDragging.current = false;
-        document.body.style.cursor = "default";
-      };*/}
-
-      {/*const dot = document.getElementById("center-dot");
-      if (dot) dot.addEventListener("mousedown", handleMouseDown);
-      window.addEventListener("mousemove", handleMouseMove);
-      window.addEventListener("mouseup", handleMouseUp);*/}
 
       container.addEventListener("scroll", handleScroll, { passive: true });
       window.addEventListener("resize", handleScroll);
 
-      handleScroll(); // initial highlight
+      handleScroll();
 
       return () => {
-        {/*if (dot) dot.removeEventListener("mousedown", handleMouseDown);
-        window.removeEventListener("mousemove", handleMouseMove);
-        window.removeEventListener("mouseup", handleMouseUp);*/}
         container.removeEventListener("scroll", handleScroll);
         window.removeEventListener("resize", handleScroll);
       };
@@ -151,7 +116,6 @@ const YearTimeline = forwardRef<YearTimelineHandle, YearTimelineProps>(
 
     return (
       <div className="fixed w-full py-16 overflow-hidden top-40">
-        {/* Center dot */}
         <div
           id="center-dot"
           className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 cursor-grab"
@@ -159,21 +123,17 @@ const YearTimeline = forwardRef<YearTimelineHandle, YearTimelineProps>(
           <div className="w-4 h-4 bg-[#3f2b0a] rounded-full" />
         </div>
 
-        {/* Timeline container */}
         <div
           ref={containerRef}
           className="overflow-x-auto no-scrollbar relative flex snap-x snap-mandatory"
         >
-          {/* Timeline line */}
           <div
             className="absolute top-1/2 left-0 right-0 h-[4px] bg-[#3f2b0a] z-0"
             style={{ minWidth: `${years.length * 50}px` }}
           />
 
-          {/* Spacer before first year */}
           <div className="w-[49.5vw] shrink-0" />
 
-          {/* Year ticks */}
           {years.map((year, i) => {
             const isActive = i === activeIndex;
             const yearSize = isActive ? "text-3xl" : "text-base";
@@ -196,7 +156,6 @@ const YearTimeline = forwardRef<YearTimelineHandle, YearTimelineProps>(
             );
           })}
 
-          {/* Spacer after last year 47 */}
           <div className="w-[49.5vw] shrink-0" />
         </div>
       </div>

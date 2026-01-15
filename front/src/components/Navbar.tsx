@@ -89,7 +89,6 @@ export default function Navbar() {
           </li>
         </ul>
 
-        {/* Search bar */}
         {!hideSearch && (
           <div className="relative w-56 h-8 rounded-full border border-[#e6cda5f0] flex items-center m-[4px]">
             <div className="absolute inset-y-0 left-2 flex items-center pointer-events-none">

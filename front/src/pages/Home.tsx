@@ -7,7 +7,7 @@ type PageStat = {
   label?: string;
 };
 
-function Carousel({ title, pages }: { title: string; pages: [] }) {
+function Carousel({ title, pages }: { title: string; pages: PageStat[] }) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scrollLeft = () => {
@@ -27,7 +27,6 @@ function Carousel({ title, pages }: { title: string; pages: [] }) {
       </p>
 
       <div className="w-full relative overflow-hidden h-[240px] px-16 flex items-center">
-        {/* ◀ */}
         <button
           onClick={scrollLeft}
           className="bg-[#E6CDA5] hover:bg-[#3f2b0a] hover:text-[#d6b889] text-[#3f2b0a] text-[40px] pb-[11px] w-8 h-8 rounded-full shadow-lg flex items-center justify-center transition-transform duration-300 hover:scale-110 ml-[4px] mr-[4px]"

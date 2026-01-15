@@ -11,9 +11,7 @@ export default function AzurirajLicnost() {
   const navigate = useNavigate();
   const { token } = useAuth();
 
-  type LocationState = { isVladar?: boolean };
   const location = useLocation();
-  const state = location.state as LocationState;
 
   const [titula, setTitula] = useState("");
   const [ime, setIme] = useState("");

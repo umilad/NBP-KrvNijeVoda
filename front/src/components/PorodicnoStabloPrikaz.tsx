@@ -1,5 +1,4 @@
 import type { LicnostTree } from "../types";
-//import { Link } from "react-router-dom";
 import PersonCard from "./PersonCard";
 
 
@@ -21,7 +20,6 @@ export default function PorodicnoStabloPrikaz({ licnost }: Props) {
   return (
     <div className="flex flex-col items-center relative">
 
-      {/* COUPLE ROW */}
       <div className="flex items-center gap-6 relative">
         <PersonCard licnost={licnost} />
         
@@ -30,29 +28,24 @@ export default function PorodicnoStabloPrikaz({ licnost }: Props) {
           <PersonCard key={s.id} licnost={s} />
         ))}
 
-        {/* horizontal spouse line */}
         {hasSpouse && (
           <div className="absolute top-[54px] translate-x-[115px] w-[95px] h-[2px] bg-[#3f2b0a] z-0" />
         )}
 
       </div>
 
-      {/*ima i zenu i decu*/}
       {hasSpouse && hasChildren && (
         <div className="absolute top-[55px] left-1/2 transform -translate-x-1/2 w-[3px] h-[146px] bg-[#3f2b0a] z-0" />
       )}
 
-      {/* ima samo decu*/}
       {!hasSpouse && hasChildren && !hasOnlyOneChild && (
         <div className="absolute top-[169px] left-1/2 transform -translate-x-1/2 w-[3px] h-[33px] bg-[#3f2b0a] z-0" />
       )}
 
-      {/*ima roditelje */}
       {hasParents && (
         <div className="absolute top-[-37px] left-1/2 transform -translate-x-1/2 w-[3px] h-[38px] bg-[#3f2b0a] z-0" />
       )}
 
-      {/* CHILDREN */}
       
 
       {licnost.deca.length > 0 &&(

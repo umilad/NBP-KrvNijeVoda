@@ -1,7 +1,7 @@
 import { useAuth } from "./AuthContext";
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link} from "react-router-dom";
 
 type PageDto = {
     path: string;
@@ -15,10 +15,9 @@ type TopVisit = {
 };
 
 export default function Profil() {
-    const { username, token, role, logout } = useAuth();
+    const { token, logout } = useAuth();
     const [history, setHistory] = useState<PageDto[]>([]);
     const [topVisits, setTopVisits] = useState<TopVisit[]>([]);
-    const navigate = useNavigate();
 
     useEffect(() => {
         if (!token) return;
@@ -67,24 +66,11 @@ export default function Profil() {
     fetchTopVisits();
 }, [token]);
 
-    const handleLogout = () => {
-        logout();
-        navigate("/"); 
-    };
+    
 
     return (
         <div className="profil my-[100px] w-full flex flex-col items-center">
-
-            <div className="fixed top-15 right-4 z-50">
-                <button
-                    onClick={handleLogout}
-                    className="px-[12px] py-[6px] border border-[#e6cda5] bg-[#3f2b0a] text-[#e6cda5] hover:bg-[#e6cda5] hover:text-[#3f2b0a] transition-all duration-300 transform hover:scale-110 cursor-pointer"
-                >
-                    Odjavi se
-                </button>
-            </div>
-
-           
+    
             <div className="w-4/5 md:w-2/3 lg:w-1/2 mb-[50px]">
                 <h2 className="text-[30px] font-bold mb-4">Istorija poseta:</h2>
 

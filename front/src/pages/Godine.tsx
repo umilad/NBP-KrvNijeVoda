@@ -7,7 +7,6 @@ import LicnostPrikaz from "../components/LicnostPrikaz";
 import type { AllEventsForGodinaResponse } from "../types";
 import { useSearch } from "../components/SearchContext";
 import axios from "axios";
-//import Searchbar from "../components/Searchbar";
 
 function Carousel({ events }: { events: AllEventsForGodinaResponse | null}) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -26,7 +25,6 @@ function Carousel({ events }: { events: AllEventsForGodinaResponse | null}) {
     <div className="mb-20">
 
       <div className="w-full relative overflow-hidden h-[400px] px-16 flex items-center">
-        {/* ◀ */}
         <button
           onClick={scrollLeft}
           className="bg-[#E6CDA5] hover:bg-[#3f2b0a] hover:text-[#d6b889] text-[#3f2b0a] text-[40px] pb-[11px] w-8 h-8 rounded-full shadow-lg flex items-center justify-center transition-transform duration-300 hover:scale-110 ml-[4px] mr-[4px]"
@@ -72,14 +70,12 @@ function Carousel({ events }: { events: AllEventsForGodinaResponse | null}) {
 }
 
 export default function Home() {
-  const timelineRef = useRef<YearTimelineHandle>(null); // for timeline
-  //const scrollRef = useRef<HTMLDivElement>(null); // for carousel scroll
+  const timelineRef = useRef<YearTimelineHandle>(null); 
   const [activeYear, setActiveYear] = useState<number>(1);
   const [allActiveYearEvents, setAllActiveYearEvents] = useState<AllEventsForGodinaResponse | null>(null);
   const { query } = useSearch();
 
 
-  // 🌟 Load events for active year
   useEffect(() => {
     async function GetAllEventsForGodina() {
       try {
@@ -105,35 +101,21 @@ export default function Home() {
     loadAllEventsForGodina();
   }, [activeYear]);
 
-  // 1. Remove <Searchbar onSearch={handleSearch} /> from your JSX
 
-// 2. Add this useEffect to "watch" the search query
     useEffect(() => {
-    // Try to convert the search query to a number
     const yearFromSearch = parseInt(query, 10);
 
-    // If it's a valid year, scroll the timeline
     if (timelineRef.current && !isNaN(yearFromSearch)) {
-        // Optional: Only scroll if the year is within your range (0 - 2026)
         if (yearFromSearch >= 0 && yearFromSearch <= 2026) {
         timelineRef.current.scrollToYear(yearFromSearch);
         }
     }
-    }, [query]); // This triggers every time the user types in the Navbar searchbar
-
-//   const handleSearch = () => {
-//     const queryNumber = parseInt(query, 10);
-//     if (timelineRef.current) {
-//       timelineRef.current.scrollToYear(queryNumber);
-//     }
-//   };
-
+    }, [query]);
 
 
   return (
     <div className="home overflow-y-scroll no-scrollbar h-screen">     
 
-      {/* 🕰 Fixed Timeline */}
         <div className="fixed top-20 left-0 w-full z-50">
         <p className="text-center text-2xl font-bold mb-4 text-[#3f2b0a]">
             Putovanje kroz vreme

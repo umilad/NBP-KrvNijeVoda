@@ -1,7 +1,6 @@
 using StackExchange.Redis;
 using System;
 using System.Threading.Tasks;
-
 public class RedisService
 {
     private readonly IDatabase _db;
@@ -54,7 +53,7 @@ public class RedisService
 
     public async Task SetAsync(string key, string value, TimeSpan? expiry = null)
     {
-        if (_db == null) return; // skip if Redis unavailable
+        if (_db == null) return;
         await _db.StringSetAsync(key, value, expiry);
     }
 
@@ -254,106 +253,3 @@ public async Task<List<PageStat>> GetGlobalTopPagesAsync(int top = 10)
 
 
 }
-
-
-
-
-
-
-
-// using StackExchange.Redis;
-// using System;
-// using System.Threading.Tasks;
-
-// public class RedisService
-// {
-//     private readonly IDatabase _db;
-
-//     // Constructor that takes 4 arguments
-//     public RedisService(string host, int port, string user, string password)
-//     {
-//         var config = new ConfigurationOptions
-//         {
-//             EndPoints = { { host, port } },
-//             User = user,
-//             Password = password,
-//             Ssl = true,        // Redis Cloud usually requires SSL
-//             AbortOnConnectFail = false
-//         };
-
-//         var muxer = ConnectionMultiplexer.Connect(config);
-//         _db = muxer.GetDatabase();
-//     }
-
-//     // Async method to set a value
-//     public async Task SetAsync(string key, string value, TimeSpan? expiry = null)
-//     {
-//         await _db.StringSetAsync(key, value, expiry);
-//     }
-
-//     // Async method to get a value
-//     public async Task<string?> GetAsync(string key)
-//     {
-//         return await _db.StringGetAsync(key);
-//     }
-
-//     // Optional: simple test method like your run()
-//     public void RunTest()
-//     {
-//         _db.StringSet("foo", "bar");
-//         var result = _db.StringGet("foo");
-//         Console.WriteLine(result); // should print "bar"
-//     }
-// }
-
-
-// using NRedisStack;
-// using NRedisStack.RedisStackCommands;
-// using StackExchange.Redis;
-
-// public class RedisService
-// {
-//     public void run()
-//     {
-//         var muxer = ConnectionMultiplexer.Connect(
-//             new ConfigurationOptions{
-//                 EndPoints= { {"redis-12982.c300.eu-central-1-1.ec2.redns.redis-cloud.com", 12982} },
-//                 User="default",
-//                 Password="9BoltGO34yWtZwsJIBVKOSYCU2D0JdnG"
-//             }
-//         );
-//         var db = muxer.GetDatabase();
-        
-//         db.StringSet("foo", "bar");
-//         RedisValue result = db.StringGet("foo");
-//         Console.WriteLine(result); // >>> bar
-        
-//     }
-// }
-
-
-
-
-// using StackExchange.Redis;
-
-// public class RedisService
-// {
-//     private readonly IDatabase _db;
-
-//     public RedisService(string connectionString)
-//     {
-//         var redis = ConnectionMultiplexer.Connect(connectionString);
-//         _db = redis.GetDatabase();
-//     }
-
-//     public async Task SetAsync(string key, string value, TimeSpan? expiry = null)
-//     {
-//         await _db.StringSetAsync(key, value, expiry);
-//     }
-
-//     public async Task<string?> GetAsync(string key)
-//     {
-//         return await _db.StringGetAsync(key);
-//     }
-// }
- 

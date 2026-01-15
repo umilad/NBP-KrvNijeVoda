@@ -1,7 +1,5 @@
 import type { Licnost } from "../types";
 import { useNavigate } from 'react-router-dom';
-//import { useAuth } from '../pages/AuthContext';
-//import axios from 'axios';
 
 interface LicnostPrikazProps {
   licnost: Licnost;

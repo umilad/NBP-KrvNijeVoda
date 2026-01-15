@@ -7,7 +7,6 @@ public class TreeBuilder : ITreeBuilder
 
         var dict = flatList.ToDictionary(l => l.ID);
 
-        // GLOBAL ownership tracker
         var assigned = new HashSet<Guid>();
 
         var rootCandidates = flatList
@@ -48,15 +47,13 @@ public class TreeBuilder : ITreeBuilder
         if (!dict.TryGetValue(id, out var flat))
             return null;
 
-        // cycle protection (local)
         if (!visited.Add(id))
             return null;
 
-        // GLOBAL duplicate protection
         if (!assigned.Add(id))
             return null;
 
-        if(flat.RoditeljiID.Count == 2)//ima 2 roditelja znaci njegovi roditetlji imaju supruznike
+        if(flat.RoditeljiID.Count == 2)
         {
             foreach(var rId in flat.RoditeljiID)
             {

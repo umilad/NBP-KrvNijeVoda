@@ -8,8 +8,6 @@ export default function AzurirajDinastiju() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { token } = useAuth();
-
- // const [dinastija, setDinastija] = useState<Dinastija | null>(null);
   const [naziv, setNaziv] = useState("");
   const [pocetakGod, setPocetakGod] = useState<number | "">("");
   const [pocetakPNE, setPocetakPNE] = useState(false);
@@ -26,13 +24,11 @@ export default function AzurirajDinastiju() {
           `http://localhost:5210/api/GetDinastija/${id}`
         );
         const d = res.data;
-        //setDinastija(d);
         setNaziv(d.naziv);
         setPocetakGod(d.pocetakVladavineGod || "");
         setPocetakPNE(Boolean(d.pocetakVladavinePNE));
         setKrajGod(d.krajVladavineGod || "");
         setKrajPNE(Boolean(d.krajVladavinePNE));
-       // setSlikaURL(d.slika || "");
         setPreviewURL(d.slika ? `/images/dinastije/${d.slika}` : null);
       } catch (err) {
         console.error("Greška pri učitavanju dinastije", err);

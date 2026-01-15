@@ -5,7 +5,7 @@ namespace KrvNijeVoda.Back.Helpers
         public int GodS { get; set; }
         public bool PneS { get; set; }
 
-        public GodinaStruct(int god, bool pne = false)//nece djubre 
+        public GodinaStruct(int god, bool pne = false)
         {
             GodS = god;
             PneS = pne;

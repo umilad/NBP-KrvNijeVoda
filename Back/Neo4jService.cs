@@ -6,7 +6,7 @@ using Neo4jClient;
         public Neo4jService(string uri, string user, string password)
         {
             _client = new BoltGraphClient(new Uri(uri), user, password);
-            _client.ConnectAsync().Wait(); // Ensures the connection is established
+            _client.ConnectAsync().Wait();
         }
 
         public IGraphClient GetClient()

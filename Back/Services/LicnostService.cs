@@ -1,6 +1,5 @@
 using Neo4jClient;
 using MongoDB.Driver;
-
 public class LicnostService : ILicnostService
 {
     private readonly IGraphClient _client;
