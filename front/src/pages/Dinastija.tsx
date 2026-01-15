@@ -74,7 +74,7 @@ export default function Dinastija() {
 
     return (
         <div className="dinastije my-[120px]">
-            <div className="pozadinaStabla flex flex-col items-center justify-center relative mx-[100px] p-[20px] border-2 border-[#3f2b0a] bg-[#e6cda5] rounded-lg text-center text-[#3f2b0a]">
+            <div className="pozadinaStabla flex flex-col min-h-max min-w-max items-center justify-center relative mx-[100px] p-[20px] border-2 border-[#3f2b0a] bg-[#e6cda5] rounded-lg text-center text-[#3f2b0a]">
                 <p className="text-2xl font-bold">{dinastija?.naziv}</p>
                 <span className="text-xl font-bold mb-[20px]">
                     {dinastija?.pocetakVladavineGod} - {dinastija?.krajVladavineGod}. 
