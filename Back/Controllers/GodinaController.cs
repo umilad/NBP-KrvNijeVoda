@@ -205,65 +205,113 @@ public async Task<IActionResult> ExportDatabaseAsCypherString()
         }
     }
 
-
     [HttpGet("GetAllEventsForGodina/{god}")]
-    public async Task<IActionResult> GetAllEventsForGodina(int god)
-    {
-        try
+        public async Task<IActionResult> GetAllEventsForGodina(int god)
         {
-            var results = new Dictionary<string, object>();
+            try
+            {
+                var usedIds = new HashSet<Guid>();
 
-            var dogadjaji = await _client.Cypher
-                .Match("(d:Dogadjaj)-[:DESIO_SE]->(g:Godina)")
-                .Where("NOT (d:Bitka OR d:Rat)")
-                .AndWhere((GodinaNeo g) => g.God == god)
-                .Return(d => d.As<DogadjajNeo>())
-                .ResultsAsync;
-            results["dogadjaji"] = dogadjaji;
+                var results = new Dictionary<string, object>();
 
-            var bitke = await _client.Cypher
-                .Match("(d:Dogadjaj:Bitka)-[:DESIO_SE]->(g:Godina)")
-                .Where((GodinaNeo g) => g.God == god)
-                .Return(d => d.As<BitkaNeo>())
-                .ResultsAsync;
-            results["bitke"] = bitke;
+                var dogadjaji = await _client.Cypher
+                    .Match("(d:Dogadjaj)-[:DESIO_SE]->(g:Godina)")
+                    .Where("NOT (d:Bitka OR d:Rat)")
+                    .AndWhere((GodinaNeo g) => g.God == god)
+                    .Return(d => d.As<DogadjajNeo>())
+                    .ResultsAsync;
+                // if(dogadjaji != null && dogadjaji.Any())
+                //     results["dogadjaji"] = dogadjaji;
+                var dogadjajiFiltered = dogadjaji
+                    .Where(d => usedIds.Add(d.ID))
+                    .ToList();
 
-            var ratovi = await _client.Cypher
-                .Match("(r:Dogadjaj:Rat)-[rel]->(g:Godina)")
-                .Where("(type(rel)='DESIO_SE' OR type(rel)='RAT_TRAJAO_DO')")
-                .AndWhere((GodinaNeo g) => g.God == god)
-                .Return(r => r.As<RatNeo>())
-                .ResultsAsync;
-            results["ratovi"] = ratovi;
+                if (dogadjajiFiltered.Count != 0)
+                    results["dogadjaji"] = dogadjajiFiltered;
+                else 
+                    results["dogadjaji"] = Enumerable.Empty<DogadjajNeo>();
 
-            var vladari = await _client.Cypher
-                .Match("(v:Vladar)-[r:VLADAO_OD|VLADAO_DO|RODJEN|UMRO]->(g:Godina)")
-                .Where((GodinaNeo g) => g.God == god)
-                .Return(v => v.As<VladarNeo>())
-                .ResultsAsync;
-            results["vladari"] = vladari;
 
-            var licnosti = await _client.Cypher
-                .Match("(l:Licnost)-[r:RODJEN|UMRO]->(g:Godina)")
-                .Where((GodinaNeo g) => g.God == god)
-                .Return(l => l.As<LicnostNeo>())
-                .ResultsAsync;
-            results["licnosti"] = licnosti;
+                var bitke = await _client.Cypher
+                    .Match("(d:Dogadjaj:Bitka)-[:DESIO_SE]->(g:Godina)")
+                    .Where((GodinaNeo g) => g.God == god)
+                    .Return(d => d.As<BitkaNeo>())
+                    .ResultsAsync;
 
-            var dinastije = await _client.Cypher
-                .Match("(d:Dinastija)-[r:POCETAK_VLADAVINE|KRAJ_VLADAVINE]->(g:Godina)")
-                .Where((GodinaNeo g) => g.God == god)
-                .Return(d => d.As<DinastijaNeo>())
-                .ResultsAsync;
-            results["dinastije"] = dinastije;
+            
+                var bitkeFiltered = bitke
+                    .Where(b => usedIds.Add(b.ID))
+                    .ToList();
 
-            return Ok(results);
+                if (bitkeFiltered.Count != 0)
+                    results["bitke"] = bitkeFiltered;
+                else 
+                    results["bitke"] = Enumerable.Empty<BitkaNeo>();
+
+
+                var ratovi = await _client.Cypher
+                    .Match("(r:Dogadjaj:Rat)-[rel]->(g:Godina)")
+                    .Where("(type(rel)='DESIO_SE' OR type(rel)='RAT_TRAJAO_DO')")
+                    .AndWhere((GodinaNeo g) => g.God == god)
+                    .Return(r => r.As<RatNeo>())
+                    .ResultsAsync;
+                var ratoviFiltered = ratovi
+                    .Where(r => usedIds.Add(r.ID))
+                    .ToList();
+
+                if (ratoviFiltered.Count != 0)
+                    results["ratovi"] = ratoviFiltered;
+                else 
+                    results["ratovi"] = Enumerable.Empty<RatNeo>();
+
+                var vladari = await _client.Cypher
+                    .Match("(v:Vladar)-[r:VLADAO_OD|VLADAO_DO|RODJEN|UMRO]->(g:Godina)")
+                    .Where((GodinaNeo g) => g.God == god)
+                    .Return(v => v.As<VladarNeo>())
+                    .ResultsAsync;
+                var vladariFiltered = vladari
+                    .Where(v => usedIds.Add(v.ID))
+                    .ToList();
+
+                if (vladariFiltered.Count != 0)
+                    results["vladari"] = vladariFiltered;
+                else 
+                    results["vladari"] = Enumerable.Empty<VladarNeo>();
+
+                var licnosti = await _client.Cypher
+                    .Match("(l:Licnost)-[r:RODJEN|UMRO]->(g:Godina)")
+                    .Where("NOT l:Vladar")
+                    .AndWhere((GodinaNeo g) => g.God == god)
+                    .Return(l => l.As<LicnostNeo>())
+                    .ResultsAsync;
+                var licnostiFiltered = licnosti
+                    .Where(l => usedIds.Add(l.ID))
+                    .ToList();
+
+                if (licnostiFiltered.Count != 0)
+                    results["licnosti"] = licnostiFiltered;
+                else 
+                    results["licnosti"] = Enumerable.Empty<LicnostNeo>();
+
+                var dinastije = await _client.Cypher
+                    .Match("(d:Dinastija)-[r:POCETAK_VLADAVINE|KRAJ_VLADAVINE]->(g:Godina)")
+                    .Where((GodinaNeo g) => g.God == god)
+                    .Return(d => d.As<DinastijaNeo>())
+                    .ResultsAsync;
+                var dinastijeFiltered = dinastije
+                    .Where(d => usedIds.Add(d.ID))
+                    .ToList();
+
+                if (dinastijeFiltered.Count != 0)
+                    results["dinastije"] = dinastijeFiltered;
+                else 
+                    results["dinastije"] = Enumerable.Empty<DinastijaNeo>();
+
+                return Ok(results);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Došlo je do greške pri radu sa bazom: {ex.Message}");
+            }
         }
-        catch (Exception ex)
-        {
-            return StatusCode(500, $"Došlo je do greške pri radu sa bazom: {ex.Message}");
-        }
-    }
-
-
 }

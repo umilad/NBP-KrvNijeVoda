@@ -7,36 +7,77 @@ import LicnostPrikaz from "../components/LicnostPrikaz";
 import type { AllEventsForGodinaResponse } from "../types";
 import { useSearch } from "../components/SearchContext";
 import axios from "axios";
-import Searchbar from "../components/Searchbar";
+//import Searchbar from "../components/Searchbar";
+
+function Carousel({ events }: { events: AllEventsForGodinaResponse | null}) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const scrollLeft = () => {
+    scrollRef.current?.scrollBy({ left: -300, behavior: "smooth" });
+  };
+
+  const scrollRight = () => {
+    scrollRef.current?.scrollBy({ left: 300, behavior: "smooth" });
+  };
+
+  if (!events) return null;
+
+  return (
+    <div className="mb-20">
+
+      <div className="w-full relative overflow-hidden h-[400px] px-16 flex items-center">
+        {/* ◀ */}
+        <button
+          onClick={scrollLeft}
+          className="bg-[#E6CDA5] hover:bg-[#3f2b0a] hover:text-[#d6b889] text-[#3f2b0a] text-[40px] pb-[11px] w-8 h-8 rounded-full shadow-lg flex items-center justify-center transition-transform duration-300 hover:scale-110 ml-[4px] mr-[4px]"
+        >
+          ‹
+        </button>
+
+        <div
+          ref={scrollRef}
+          className="flex scale-60 left-30 gap-8 overflow-x-auto scroll-smooth no-scrollbar h-[350px] items-center pt-4 pb-4 flex-1 max-h-350 min-h-350 min-w-fit"
+        >
+            
+                {events && [
+                    ...events.dogadjaji,
+                    ...events.bitke,
+                    ...events.ratovi
+                    ].map(dogadjaj => (
+                    <DogadjajPrikaz key={dogadjaj.id} dogadjaj={dogadjaj} variant="short" />
+                    ))}
+                {events.vladari.map(v =>
+                    <LicnostPrikaz key={v.id} licnost={v} />
+                )}
+                {events.licnosti.map(l =>
+                    <LicnostPrikaz key={l.id} licnost={l} />
+                )}
+                {events.dinastije.map(d => (
+                    <DinastijaPrikaz key={d.id} dinastija={d} />
+                ))}
+            
+          
+        
+        </div>
+
+        <button
+          onClick={scrollRight}
+          className="bg-[#E6CDA5] hover:bg-[#3f2b0a] hover:text-[#d6b889] text-[#3f2b0a] text-[40px] pb-[11px] w-8 h-8 rounded-full shadow-lg flex items-center justify-center transition-transform duration-300 hover:scale-110 ml-[4px] mr-[4px]"
+        >
+          ›
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function Home() {
   const timelineRef = useRef<YearTimelineHandle>(null); // for timeline
-  const scrollRef = useRef<HTMLDivElement>(null); // for carousel scroll
+  //const scrollRef = useRef<HTMLDivElement>(null); // for carousel scroll
   const [activeYear, setActiveYear] = useState<number>(1);
   const [allActiveYearEvents, setAllActiveYearEvents] = useState<AllEventsForGodinaResponse | null>(null);
-  const [topPages, setTopPages] = useState<{ path: string; count: number; label?: string }[]>([]);
   const { query } = useSearch();
 
-
-  // 🌟 Load top 10 global pages
-  useEffect(() => {
-    async function fetchTopPages() {
-      try {
-        const token = localStorage.getItem("token");
-
-        const response = await axios.get(
-          "http://localhost:5210/api/auth/global-top-pages",
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-
-        setTopPages(response.data);
-      } catch (err) {
-        console.error("Error fetching top pages:", err);
-      }
-    }
-
-    fetchTopPages();
-  }, []);
 
   // 🌟 Load events for active year
   useEffect(() => {
@@ -80,54 +121,33 @@ export default function Home() {
     }
     }, [query]); // This triggers every time the user types in the Navbar searchbar
 
-  const handleSearch = () => {
-    const queryNumber = parseInt(query, 10);
-    if (timelineRef.current) {
-      timelineRef.current.scrollToYear(queryNumber);
-    }
-  };
+//   const handleSearch = () => {
+//     const queryNumber = parseInt(query, 10);
+//     if (timelineRef.current) {
+//       timelineRef.current.scrollToYear(queryNumber);
+//     }
+//   };
+
+
 
   return (
-    <div className="home overflow-y-scroll no-scrollbar h-screen my-[100px]">
-      {/* 👑 Vladari/Licnosti/Dinastije */}
-      <div className="events-above w-[calc(100%-200px)] mx-[20px] flex justify-around flex-wrap gap-2">
-        {allActiveYearEvents && (
-          <>
-            <div className="scale-80">
-              {allActiveYearEvents.vladari.map(v =>
-                <LicnostPrikaz key={v.id} licnost={v} />
-              )}
-            </div>
-            <div className="scale-80">
-              {allActiveYearEvents.licnosti.map(l =>
-                <LicnostPrikaz key={l.id} licnost={l} />
-              )}
-            </div>
-            <div className="scale-60">
-              {allActiveYearEvents.dinastije.map(d => (
-                <DinastijaPrikaz key={d.id} dinastija={d} />
-              ))}
-            </div>
-          </>
-        )}
-      </div>
+    <div className="home overflow-y-scroll no-scrollbar h-screen">     
 
-      {/* 🕰 Timeline */}
-      <div className="relative min-h-[303px] mt-8">
-        <p className="text-center text-2xl font-bold mb-4 text-[#3f2b0a] fixed top-20 left-1/2 -translate-x-1/2">Putovanje kroz vreme</p>
-        <YearTimeline activeYear={activeYear} setActiveYear={setActiveYear} ref={timelineRef} />
-      </div>
+      {/* 🕰 Fixed Timeline */}
+        <div className="fixed top-20 left-0 w-full z-50">
+        <p className="text-center text-2xl font-bold mb-4 text-[#3f2b0a]">
+            Putovanje kroz vreme
+        </p>
+        <YearTimeline
+            activeYear={activeYear}
+            setActiveYear={setActiveYear}
+            ref={timelineRef}
+        />
+        </div>
 
-      {/* 📜 Događaji za aktivnu godinu */}
-      <div className="events-below w-[calc(100%-40px)] mx-[20px] grid grid-cols-3 gap-4 mt-10 min-h-[130px] fixed top-80">
-        {allActiveYearEvents && [
-          ...allActiveYearEvents.dogadjaji,
-          ...allActiveYearEvents.bitke,
-          ...allActiveYearEvents.ratovi
-        ].map(dogadjaj => (
-          <DogadjajPrikaz key={dogadjaj.id} dogadjaj={dogadjaj} variant="short" />
-        ))}
-      </div>
+        <div className="h-[400px]" />
+        <Carousel events={allActiveYearEvents} />
+      
 
     </div>
   );

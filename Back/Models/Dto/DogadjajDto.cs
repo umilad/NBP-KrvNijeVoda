@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
     public class DogadjajDto
     {
-        public Guid? ID { get; set; } // nullable kod kreiranja
+        public Guid ID { get; set; } // nullable kod kreiranja AKO SE SVE UKENJA OBRISAN  JE UPITNIK NA GUID
          [JsonConverter(typeof(JsonStringEnumConverter))]
         public TipDogadjaja Tip { get; set; }
         public required string Ime { get; set; }
