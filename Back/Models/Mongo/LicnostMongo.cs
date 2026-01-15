@@ -5,7 +5,7 @@ public class LicnostMongo
     [BsonId]
     [BsonRepresentation(BsonType.String)]
     public Guid ID { get; set; }
-    public string? Slika { get; set; }//na osnovu pola moze da stavlja one prazne slike kao na fb, MONGO!!
+    public string? Slika { get; set; }
 
-    public string? Tekst { get; set; } //MONGO, BIOGRAFIJA
+    public string? Tekst { get; set; } 
 }

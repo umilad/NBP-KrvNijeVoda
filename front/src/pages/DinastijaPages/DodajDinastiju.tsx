@@ -34,7 +34,6 @@ export default function DodajDinastiju() {
       return;
     }
 
-    // === FormData za [FromForm] upload ===
     const formData = new FormData();
     formData.append("Naziv", naziv);
     formData.append("PocetakVladavineGod", (pocetakGod || 0).toString());
@@ -137,7 +136,6 @@ export default function DodajDinastiju() {
           </button>
         </form>
 
-        {/* Prikaz preview slike ako je odabrana */}
         {slika && (
           <img
             src={URL.createObjectURL(slika)}

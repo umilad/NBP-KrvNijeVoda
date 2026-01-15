@@ -65,7 +65,6 @@ export default function DodajLicnost() {
       return;
     }
 
-    // === FormData za file upload ===
     const formData = new FormData();
     formData.append("Titula", titula);
     formData.append("Ime", ime);

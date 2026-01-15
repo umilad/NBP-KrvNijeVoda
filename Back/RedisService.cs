@@ -6,15 +6,12 @@ public class RedisService
 {
     private readonly IDatabase _db;
 
-    // Constructor takes host, port, password
     public RedisService(string host, int port, string user, string password)
     {
         try
         {
-            // Connection string with abortConnect=false
             var connectionString = $"rediss://{user}:{password}@{host}:{port},abortConnect=false";
 
-            // Connect to Redis
             var muxer = ConnectionMultiplexer.Connect(new ConfigurationOptions
             {
                 EndPoints = { { "redis-10165.c300.eu-central-1-1.ec2.cloud.redislabs.com", 10165 } },
@@ -23,7 +20,7 @@ public class RedisService
             }
         );
 
-            // Get the database
+            
             _db = muxer.GetDatabase();
 
             Console.WriteLine("Connected to Redis successfully!");
@@ -32,14 +29,29 @@ public class RedisService
         catch (Exception ex)
         {
             Console.WriteLine($"Redis connection failed: {ex.Message}");
-            _db = null; // optional: mark as unavailable
+            _db = null;
         }
     }
 
 
+    private string GetCategoryFromPath(string path)
+{
+    if (string.IsNullOrWhiteSpace(path))
+        return "ostalo";
+
+    if (path.StartsWith("/dogadjaj", StringComparison.OrdinalIgnoreCase))
+        return "dogadjaj";
+
+    if (path.StartsWith("/licnost", StringComparison.OrdinalIgnoreCase))
+        return "licnost";
+
+    if (path.StartsWith("/dinastija", StringComparison.OrdinalIgnoreCase))
+        return "dinastija";
+
+    return "ostalo";
+}
 
 
-    // Set a value in Redis
     public async Task SetAsync(string key, string value, TimeSpan? expiry = null)
     {
         if (_db == null) return; // skip if Redis unavailable
@@ -52,13 +64,12 @@ public class RedisService
         return await _db.StringGetAsync(key);
     }
 
-    // Async test method
     public async Task RunTestAsync()
     {
         await _db.StringSetAsync("foo", "bar");
         await _db.StringSetAsync("foo2", "bar2");
         var result = await _db.StringGetAsync("foo");
-        Console.WriteLine($"Redis test value: {result}"); // shows bar in console
+        Console.WriteLine($"Redis test value: {result}");
     }
 
     public async Task<bool> DeleteAsync(string key)
@@ -77,10 +88,9 @@ public class RedisService
     {
         if (_db == null) return;
         await _db.ListRightPushAsync($"{token}:history", page);
-        await _db.KeyExpireAsync($"{token}:history", TimeSpan.FromHours(2)); // koliko traje token
+        await _db.KeyExpireAsync($"{token}:history", TimeSpan.FromHours(2));
     }
 
-    // Vrati listu stranica za dati token
     public async Task<List<string>> GetVisitedPagesAsync(string token)
     {
         if (_db == null) return new List<string>();
@@ -88,14 +98,12 @@ public class RedisService
         return values.Select(v => v.ToString()).ToList();
     }
 
-    // Obriši istoriju kad se token obriše
     public async Task DeleteHistoryAsync(string token)
     {
         if (_db == null) return;
         await _db.KeyDeleteAsync($"{token}:history");
     }
 
-    // 🟩 Inicijalizuj prazan hash
 public async Task SetHashAsync(string key, Dictionary<string, int> values, TimeSpan? expiry = null)
 {
     if (_db == null) return;
@@ -110,11 +118,6 @@ public async Task SetHashAsync(string key, Dictionary<string, int> values, TimeS
         await _db.KeyExpireAsync(key, expiry);
 }
 
-
-
-
-// 🟩 Povećaj brojač poseta, sada sa label
-  // Povećaj brojač poseta i sačuvaj label
  public async Task IncrementPageVisitAsync(string username, string path, string label)
 {
     if (_db == null) return;
@@ -125,24 +128,25 @@ public async Task SetHashAsync(string key, Dictionary<string, int> values, TimeS
     if (keyType != RedisType.Hash)
     {
         await _db.KeyDeleteAsync(key);
-        await _db.HashSetAsync(key, new HashEntry[] { });
+        await _db.HashSetAsync(key, Array.Empty<HashEntry>());
     }
 
     var existing = await _db.HashGetAsync(key, path);
     int count = 1;
+
     if (!existing.IsNullOrEmpty)
     {
         var parts = existing.ToString().Split('|');
-        if (parts.Length > 0 && int.TryParse(parts[0], out var existingCount))
-            count = existingCount + 1;
+        if (parts.Length > 0 && int.TryParse(parts[0], out var c))
+            count = c + 1;
     }
 
-    string newValue = $"{count}|{label}";
-    await _db.HashSetAsync(key, path, newValue);
+    string finalLabel = string.IsNullOrWhiteSpace(label) ? path : label;
+
+    await _db.HashSetAsync(key, path, $"{count}|{finalLabel}");
     await _db.KeyExpireAsync(key, TimeSpan.FromHours(12));
 
-    // ⚡️ GLOBAL TRACKING
-    await _db.HashSetAsync("stats:pages:labels", path, label ?? path);
+    await _db.HashSetAsync("stats:pages:labels", path, finalLabel);
 
     await _db.SortedSetIncrementAsync(
         "stats:pages:global",
@@ -150,10 +154,49 @@ public async Task SetHashAsync(string key, Dictionary<string, int> values, TimeS
         1
     );
 }
+public class PageStat
+{
+    public string Path { get; set; }
+    public int Count { get; set; }
+    public string Label { get; set; }
+}
 
+public async Task<List<PageStat>> GetGlobalTopByCategoryAsync(string category, int top = 10)
+{
+    if (_db == null) return new List<PageStat>();
 
+    var entries = await _db.SortedSetRangeByRankWithScoresAsync(
+        "stats:pages:global",
+        0,
+        100, // buffer
+        Order.Descending
+    );
 
-    // Vrati top posete sa label
+    var result = new List<PageStat>();
+
+    foreach (var e in entries)
+    {
+        string path = e.Element.ToString();
+
+        if (!path.StartsWith($"/{category}", StringComparison.OrdinalIgnoreCase))
+            continue;
+
+        var label = await _db.HashGetAsync("stats:pages:labels", path);
+
+        result.Add(new PageStat
+        {
+            Path = path,
+            Count = (int)e.Score,
+            Label = label.HasValue ? label.ToString() : path
+        });
+
+        if (result.Count >= top)
+            break;
+    }
+
+    return result;
+}
+
     public async Task<List<object>> GetTopVisitedPagesAsync(string username)
     {
         if (_db == null) return new List<object>();
@@ -174,29 +217,36 @@ public async Task SetHashAsync(string key, Dictionary<string, int> values, TimeS
             .ToList();
     }
 
-public async Task<List<object>> GetGlobalTopPagesAsync(int top = 10)
+public async Task<List<PageStat>> GetGlobalTopPagesAsync(int top = 10)
 {
-    if (_db == null) return new List<object>();
+    if (_db == null) return new List<PageStat>();
 
     var entries = await _db.SortedSetRangeByRankWithScoresAsync(
         "stats:pages:global",
         0,
-        top - 1,
+        100,
         Order.Descending
     );
 
-    var result = new List<object>();
+    var result = new List<PageStat>();
 
     foreach (var e in entries)
     {
         string path = e.Element.ToString();
         int count = (int)e.Score;
 
-        // Traži label u nekom "global labels" hash-u ili pokuša iz korisnika
-        var globalLabel = await _db.HashGetAsync("stats:pages:labels", path);
-        string label = globalLabel.HasValue ? globalLabel.ToString() : path;
+        var label = await _db.HashGetAsync("stats:pages:labels", path);
+        string finalLabel = label.HasValue ? label.ToString() : path;
 
-        result.Add(new { Path = path, Count = count, Label = label });
+        result.Add(new PageStat
+        {
+            Path = path,
+            Count = count,
+            Label = finalLabel
+        });
+
+        if (result.Count >= top)
+            break;
     }
 
     return result;

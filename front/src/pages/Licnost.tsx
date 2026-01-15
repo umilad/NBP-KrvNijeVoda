@@ -13,15 +13,11 @@ export default function LicnostPage() {
   const hasTracked = useRef(false);
   const navigate = useNavigate();
 
-  /* =========================
-     LOAD PODATAKA
-  ========================= */
   useEffect(() => {
     async function loadLicnost() {
       if (!id) return;
 
       try {
-        // pokušaj kao vladar
         const vladarRes = await axios
           .get<Licnost>(`http://localhost:5210/api/GetVladar/${id}`)
           .catch(() => null);
@@ -32,7 +28,6 @@ export default function LicnostPage() {
           return;
         }
 
-        // ako nije vladar
         const licnostRes = await axios.get<Licnost>(
           `http://localhost:5210/api/GetLicnost/${id}`
         );
@@ -47,9 +42,6 @@ export default function LicnostPage() {
     loadLicnost();
   }, [id]);
 
-  /* =========================
-     TRACKING (REDIS)
-  ========================= */
   useEffect(() => {
     if (!token || !licnost || hasTracked.current) return;
 
@@ -77,9 +69,6 @@ export default function LicnostPage() {
     })();
   }, [licnost, token]);
 
-  /* =========================
-     DELETE
-  ========================= */
   const handleDelete = async () => {
     if (!id || !token || isVladar === null) return;
     if (!confirm("Da li ste sigurni da želite da obrišete ovu ličnost?")) return;
@@ -101,17 +90,11 @@ export default function LicnostPage() {
     }
   };
 
-  /* =========================
-     UPDATE
-  ========================= */
   const handleUpdate = () => {
     if (!id || isVladar === null) return;
     navigate(`/licnost/edit/${id}`, { state: { isVladar } });
   };
 
-  /* =========================
-     UI
-  ========================= */
   if (!licnost) {
     return <div className="text-center mt-20">Učitavanje...</div>;
   }

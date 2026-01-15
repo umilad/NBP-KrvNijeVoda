@@ -62,7 +62,7 @@ export default function Licnosti() {
                 {filteredLicnosti.map((licnost) => (
                     <div
                         key={licnost.id}
-                        onClick={() => navigate(`/licnost/${licnost.id}`)} // više NE šaljemo state
+                        onClick={() => navigate(`/licnost/${licnost.id}`)}
                         className="cursor-pointer"
                     >
                         <LicnostPrikaz licnost={licnost} />

@@ -9,42 +9,43 @@ export default function AzurirajDinastiju() {
   const navigate = useNavigate();
   const { token } = useAuth();
 
-  const [dinastija, setDinastija] = useState<Dinastija | null>(null);
+ // const [dinastija, setDinastija] = useState<Dinastija | null>(null);
   const [naziv, setNaziv] = useState("");
   const [pocetakGod, setPocetakGod] = useState<number | "">("");
   const [pocetakPNE, setPocetakPNE] = useState(false);
   const [krajGod, setKrajGod] = useState<number | "">("");
   const [krajPNE, setKrajPNE] = useState(false);
   const [slikaFile, setSlikaFile] = useState<File | null>(null);
-  const [slikaURL, setSlikaURL] = useState("");
-
-  const placeholderSlika = "/images/placeholder_dinastija.png"; // promeni putanju ako treba
+  const [previewURL, setPreviewURL] = useState<string | null>(null);
 
   useEffect(() => {
-    async function loadDinastija() {
+    const loadDinastija = async () => {
       if (!id) return;
       try {
         const res = await axios.get<Dinastija>(
           `http://localhost:5210/api/GetDinastija/${id}`
         );
         const d = res.data;
-        setDinastija(d);
+        //setDinastija(d);
         setNaziv(d.naziv);
         setPocetakGod(d.pocetakVladavineGod || "");
         setPocetakPNE(Boolean(d.pocetakVladavinePNE));
         setKrajGod(d.krajVladavineGod || "");
         setKrajPNE(Boolean(d.krajVladavinePNE));
-        setSlikaURL(d.slika || "");
+       // setSlikaURL(d.slika || "");
+        setPreviewURL(d.slika ? `/images/dinastije/${d.slika}` : null);
       } catch (err) {
         console.error("Greška pri učitavanju dinastije", err);
       }
-    }
+    };
     loadDinastija();
   }, [id]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setSlikaFile(e.target.files[0]);
+      const file = e.target.files[0];
+      setSlikaFile(file);
+      setPreviewURL(URL.createObjectURL(file));
     }
   };
 
@@ -58,7 +59,9 @@ export default function AzurirajDinastiju() {
     formData.append("PocetakVladavinePNE", pocetakPNE.toString());
     formData.append("KrajVladavineGod", (krajGod || 0).toString());
     formData.append("KrajVladavinePNE", krajPNE.toString());
-    if (slikaFile) formData.append("slika", slikaFile);
+    if (slikaFile) {
+      formData.append("slika", slikaFile);
+    }
 
     try {
       await axios.put(
@@ -141,13 +144,11 @@ export default function AzurirajDinastiju() {
               onChange={handleFileChange}
               className="mt-1"
             />
-            {slikaFile ? (
-              <p className="mt-2 text-sm">Izabrana slika: {slikaFile.name}</p>
-            ) : (
+            {previewURL && (
               <img
-                src={slikaURL || placeholderSlika}
+                src={previewURL}
                 alt="Dinastija"
-                className="w-32 h-40 mt-2 border"
+                className="w-32 h-40 mt-2 border object-contain"
               />
             )}
           </label>

@@ -5,7 +5,7 @@ public class DinastijaMongo
     [BsonId]
     [BsonRepresentation(BsonType.String)]
     public Guid ID { get; set; }
-    public string? Slika { get; set; } //mongo
-    //public List<Licnost> Clanovi { get; set; } = new List<Licnost>();
+    public string? Slika { get; set; } 
+    
 
 }

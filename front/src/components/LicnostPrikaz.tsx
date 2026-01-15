@@ -5,11 +5,9 @@ import { useNavigate } from 'react-router-dom';
 
 interface LicnostPrikazProps {
   licnost: Licnost;
-  //variant?: "full" | "short";
 }
 
-export default function LicnostPrikaz({ licnost }: LicnostPrikazProps){
-    //const { token, role } = useAuth();  
+export default function LicnostPrikaz({ licnost }: LicnostPrikazProps){ 
     const navigate = useNavigate();
     const handleNavigate = (id: string) => navigate(`/licnost/${id}`);
 

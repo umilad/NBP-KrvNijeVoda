@@ -12,11 +12,11 @@ var config = builder.Configuration;
 
 
 
-// MongoDB client
+
 var mongoClient = new MongoClient("mongodb+srv://anitaal1711_db_user:DZptn5BLaswBcmDk@krvnijevodadb.4kkb5s5.mongodb.net/");
 var mongoDatabase = mongoClient.GetDatabase("KrvNijeVodaDB");
 
-// Register the collections for DI
+
 builder.Services.AddSingleton<IMongoCollection<VladarMongo>>(sp =>
     mongoDatabase.GetCollection<VladarMongo>("Vladari"));
 
@@ -24,16 +24,15 @@ builder.Services.AddSingleton<IMongoCollection<LicnostMongo>>(sp =>
     mongoDatabase.GetCollection<LicnostMongo>("Licnosti"));
 
 
-// Register Neo4jClient IGraphClient
+
 builder.Services.AddSingleton<IGraphClient>(sp =>
 {
     var client = new BoltGraphClient(
-        "neo4j+s://8bb87af4.databases.neo4j.io", // same as your Neo4jService URL
+        "neo4j+s://8bb87af4.databases.neo4j.io", 
         "neo4j",
         "LP_jKZYCWGDICIaCavzhEOfNlfcr6A1k9-TYO15eHb0"
     );
 
-    // Connect on startup (synchronously)
     client.ConnectAsync().Wait();
 
     return client;
@@ -62,7 +61,7 @@ builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<IVladarService, VladarService>();
 builder.Services.AddScoped<ILicnostService, LicnostService>();
 builder.Services.AddScoped<ITreeBuilder, TreeBuilder>();
-//builder.Services.AddScoped<LokacijaService>();
+
 
 builder.Services.AddCors(options =>
 {
@@ -75,7 +74,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend",
         policy =>
         {
-            policy.WithOrigins("http://localhost:5173") //frontend
+            policy.WithOrigins("http://localhost:5173")
                   .AllowAnyHeader()
                   .AllowAnyMethod();
         });
@@ -184,7 +183,7 @@ app.UseAuthorization();
 //app.UseMiddleware<RequestTrackingMiddleware>();
 
 
-app.UseStaticFiles(); // već kažeš da imaš
+app.UseStaticFiles();
 
 app.MapControllers();
 

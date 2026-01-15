@@ -20,7 +20,6 @@ export default function AzurirajDogadjaj() {
   const navigate = useNavigate();
   const { token } = useAuth();
 
-  // Opšta polja Dogadjaj
   const [ime, setIme] = useState("");
   const [tip, setTip] = useState<TipDogadjaja>("Bitka");
   const [lokacija, setLokacija] = useState("");
@@ -28,16 +27,13 @@ export default function AzurirajDogadjaj() {
   const [isPNE, setIsPNE] = useState(false);
   const [tekst, setTekst] = useState("");
 
-  // Polja za Bitku
   const [pobednik, setPobednik] = useState("");
   const [brojZrtava, setBrojZrtava] = useState("");
   const [rat, setRat] = useState("");
 
-  // Polja za Rat
   const [godinaDo, setGodinaDo] = useState("");
-  const [isPNEDo, setIsPNEDo] = useState(false); // Checkbox za GodinaDo
+  const [isPNEDo, setIsPNEDo] = useState(false); 
 
-  // Dropdown-i
   const [zemlje, setZemlje] = useState<Zemlja[]>([]);
   const [ratovi, setRatovi] = useState<RatDropdown[]>([]);
 
@@ -97,7 +93,7 @@ export default function AzurirajDogadjaj() {
           setTekst(ratData.tekst ?? "");
           setPobednik(ratData.pobednik);
           setGodinaDo(ratData.godinaDo?.god.toString() ?? "");
-          setIsPNEDo(ratData.godinaDo?.isPne ?? false); // automatski štiklirano ako je true
+          setIsPNEDo(ratData.godinaDo?.isPne ?? false); 
         } else {
           const resDog = await axios.get<Dogadjaj>(`http://localhost:5210/api/GetDogadjaj/${id}`);
           const dog = resDog.data;
@@ -139,7 +135,6 @@ export default function AzurirajDogadjaj() {
     if (tip === "Rat") {
       payload.Pobednik = pobednik || undefined;
       payload.GodinaDo = godinaDo ? { god: Number(godinaDo), isPne: isPNEDo } : undefined;
-      // polje Bitke uklonjeno
     }
 
     try {

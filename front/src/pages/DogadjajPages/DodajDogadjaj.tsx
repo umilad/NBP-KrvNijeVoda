@@ -23,16 +23,13 @@ export default function DodajDogadjaj() {
   const [isPNE, setIsPNE] = useState(false);
   const [tekst, setTekst] = useState("");
 
-  // Polja za Bitku
   const [pobednik, setPobednik] = useState("");
   const [brojZrtava, setBrojZrtava] = useState<number | "">("");
   const [rat, setRat] = useState("");
 
-  // Polja za Rat
   const [godinaDo, setGodinaDo] = useState<number | "">("");
   const [bitke, setBitke] = useState<string>("");
 
-  // Fetch za dropdown-e
   const [ratovi, setRatovi] = useState<Rat[]>([]);
 
   const navigate = useNavigate();

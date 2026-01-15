@@ -4,9 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "./AuthContext";
 
-/* =========================
-   VALIDACIJA
-========================= */
+
 function validateRegister(
   username: string,
   password: string,
@@ -33,9 +31,6 @@ function validateRegister(
   return errors;
 }
 
-/* =========================
-   KOMPONENTA
-========================= */
 export default function Registracija() {
   const [showPassword, setShowPassword] = useState(false);
   const [username, setUsername] = useState("");
@@ -51,9 +46,7 @@ export default function Registracija() {
   const errors = validateRegister(username, password, firstName, lastName);
   const isValid = Object.keys(errors).length === 0;
 
-  /* =========================
-     LOGIN NAKON REGISTRACIJE
-  ========================= */
+ 
   const handleLogin = async (username: string, password: string) => {
     const response = await axios.post(
       "http://localhost:5210/api/Auth/login",
@@ -71,20 +64,17 @@ export default function Registracija() {
     navigate("/");
   };
 
-  /* =========================
-     REGISTER
-  ========================= */
   const handleRegister = async () => {
     setSubmitted(true);
 
-    if (!isValid) return; // ne šalji ako greške postoje
+    if (!isValid) return; 
 
     const registerData = {
       Username: username.trim(),
       Password: password,
       FirstName: firstName.trim(),
       LastName: lastName.trim(),
-      CustomClaims: { Role: "admin" }, // backend bi realno trebao dodeliti
+      CustomClaims: { Role: "admin" }, 
     };
 
     try {
@@ -96,7 +86,6 @@ export default function Registracija() {
         { headers: { "Content-Type": "application/json" } }
       );
 
-      // auto-login nakon uspešne registracije
       await handleLogin(username, password);
     } catch (err: any) {
       alert(err.response?.data || "Registracija nije uspela");
@@ -105,9 +94,6 @@ export default function Registracija() {
     }
   };
 
-  /* =========================
-     UI
-  ========================= */
   return (
     <div className="login my-[180px] w-full flex justify-center">
       <div className="pozadinaForme flex flex-col items-center justify-center relative w-1/3 border-2 border-[#3f2b0a] bg-[#e6cda5] p-[20px] rounded-lg text-center text-[#3f2b0a]">
@@ -121,7 +107,7 @@ export default function Registracija() {
             handleRegister();
           }}
         >
-          {/* Ime */}
+        
           <input
             type="text"
             placeholder="Ime"
@@ -133,7 +119,7 @@ export default function Registracija() {
             <p className="text-red-600 text-xs mt-1">{errors.firstName}</p>
           )}
 
-          {/* Prezime */}
+         
           <input
             type="text"
             placeholder="Prezime"
@@ -145,7 +131,7 @@ export default function Registracija() {
             <p className="text-red-600 text-xs mt-1">{errors.lastName}</p>
           )}
 
-          {/* Username */}
+          
           <input
             type="text"
             placeholder="Korisničko ime ili email"
@@ -157,7 +143,7 @@ export default function Registracija() {
             <p className="text-red-600 text-xs mt-1">{errors.username}</p>
           )}
 
-          {/* Lozinka */}
+          
           <div className="relative">
             <input
               type={showPassword ? "text" : "password"}

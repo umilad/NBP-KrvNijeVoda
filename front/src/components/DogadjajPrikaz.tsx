@@ -80,17 +80,6 @@ export default function DogadjajPrikaz({ dogadjaj, variant = "short" }: Dogadjaj
                 }
             </span>
 
-            {isBitka(dogadjaj) && variant === "full" && (
-                <div>
-                    {/** poseban prikaz bitke */}
-                </div>
-            )}
-
-            {isRat(dogadjaj) && variant === "full" && (
-                <div>
-                    {/** poseban prikaz rata */}
-                </div>
-            )}
 
             {variant === "full" && (
                 <>

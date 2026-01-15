@@ -3,17 +3,15 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Dogadjaj, Rat, Bitka } from "../types";
 import { useSearch } from "../components/SearchContext";
-import { useAuth } from "../pages/AuthContext"; // ✅ import auth konteksta
-//import { isRat } from "../utils/typeChecks";
+import { useAuth } from "../pages/AuthContext"; 
 import DogadjajPrikaz from '../components/DogadjajPrikaz';
 
 export default function Dogadjaji() {
     const [dogadjaji, setDogadjaji] = useState<Dogadjaj[]>([]);
     const navigate = useNavigate();
     const { query } = useSearch();
-    const { role } = useAuth(); // ✅ dohvat role korisnika
+    const { role } = useAuth(); 
 
-    // API poziv
     
     useEffect(() => {
         async function GetAllDogadjaji() {
@@ -66,17 +64,15 @@ export default function Dogadjaji() {
         loadAllDogadjaji();
     }, []);
 
-    //const handleNavigate = (tip: string, id: string) => navigate(`/dogadjaj/${tip}/${id}`);
-    const handleAddDogadjaj = () => navigate("/dodaj-dogadjaj"); // ✅ navigacija na stranicu za dodavanje
+    const handleAddDogadjaj = () => navigate("/dodaj-dogadjaj");
 
-    // Filtriranje po search query
     const filteredDogadjaji = dogadjaji.filter(d =>
         d.ime.toLowerCase().includes(query.toLowerCase())
     );
 
     return (
         <div className="dogadjaji my-[100px]">
-            {/* Dugme Dodaj događaj, vidi ga samo admin */}
+            
             {role === "admin" && (
                 <div className="flex justify-center mb-[12px]">
                     <button

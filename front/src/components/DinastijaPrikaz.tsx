@@ -5,16 +5,20 @@ import axios from 'axios';
 
 interface DinastijaPrikazProps {
   dinastija: Dinastija;
+  showAdminButtons?: boolean; 
 }
 
-export default function DinastijaPrikaz({ dinastija }: DinastijaPrikazProps){
+export default function DinastijaPrikaz({
+  dinastija,
+  showAdminButtons = true, 
+}: DinastijaPrikazProps){
     const { token, role } = useAuth();
     const navigate = useNavigate();
 
     const handleNavigate = (id: string) => navigate(`/dinastija/${id}`);
 
     const handleDelete = async (e: React.MouseEvent) => {
-        e.stopPropagation(); // da klik na dugme ne pokrene navigate
+        e.stopPropagation();
 
         if (!dinastija.id || !token) return;
         if (!confirm("Da li ste sigurni da želite da obrišete ovu dinastiju?")) return;
@@ -43,7 +47,10 @@ export default function DinastijaPrikaz({ dinastija }: DinastijaPrikazProps){
         <div 
             key={dinastija.id} 
             onClick={() => handleNavigate(dinastija.id)}
-            className="dinastija-div w-[350px] h-[400px] flex flex-col items-center justify-center relative border-2 border-[#3f2b0a] bg-[#e6cda5]/50 p-[20px] m-[20px] rounded-lg text-center text-[#3f2b0a] shadow-md overflow-hidden transition-transform hover:scale-110 cursor-pointer"
+            className="dinastija-div w-[350px] h-[400px] flex flex-col items-center justify-center relative 
+                       border-2 border-[#3f2b0a] bg-[#e6cda5]/50 p-[20px] m-[20px] rounded-lg 
+                       text-center text-[#3f2b0a] shadow-md overflow-visible box-border
+                       transition-transform duration-300 hover:scale-105 cursor-pointer will-change-transform"
         >
             <span className='dogadjaj-header text-xl font-bold mt-2'>{dinastija.naziv}</span>
             <span className='dogadjaj-godina text-l font-bold mt-2 mb-[5px]'>
@@ -61,18 +68,23 @@ export default function DinastijaPrikaz({ dinastija }: DinastijaPrikazProps){
                 </div>
             </div>
 
-            {role === "admin" && (
+            {}
+            {showAdminButtons && role === "admin" && (
                 <div className="flex gap-4 justify-center mt-[5px]">
                     <button
                         onClick={handleDelete}
-                        className="px-[12px] py-[6px] m-[5px] border border-[#e6cda5] bg-[#3f2b0a] text-[#e6cda5] hover:bg-[#e6cda5] hover:text-[#3f2b0a] transition-all duration-300 transform hover:scale-110 cursor-pointer"
+                        className="px-[12px] py-[6px] m-[5px] border border-[#e6cda5] 
+                                   bg-[#3f2b0a] text-[#e6cda5] hover:bg-[#e6cda5] hover:text-[#3f2b0a] 
+                                   transition-all duration-300 transform hover:scale-105 cursor-pointer"
                     >
                         Obriši
                     </button>
 
                     <button
                         onClick={handleUpdate}
-                        className="px-[12px] py-[6px] m-[5px] border border-[#e6cda5] bg-[#3f2b0a] text-[#e6cda5] hover:bg-[#e6cda5] hover:text-[#3f2b0a] transition-all duration-300 transform hover:scale-110 cursor-pointer"
+                        className="px-[12px] py-[6px] m-[5px] border border-[#e6cda5] 
+                                   bg-[#3f2b0a] text-[#e6cda5] hover:bg-[#e6cda5] hover:text-[#3f2b0a] 
+                                   transition-all duration-300 transform hover:scale-105 cursor-pointer"
                     >
                         Ažuriraj
                     </button>

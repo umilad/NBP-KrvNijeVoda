@@ -2,7 +2,7 @@ import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSearch } from "../components/SearchContext";
-import { useAuth } from "../pages/AuthContext"; // ✅ import AuthContext
+import { useAuth } from "../pages/AuthContext";
 import type { Dinastija } from "../types";
 import DinastijaPrikaz from "../components/DinastijaPrikaz"
 
@@ -10,9 +10,8 @@ export default function Dinastije() {
     const [dinastije, setDinastije] = useState<Dinastija[]>([]);
     const navigate = useNavigate();
     const { query } = useSearch();
-    const { role } = useAuth(); // ✅ uzimamo ulogu korisnika
+    const { role } = useAuth(); 
 
-    // --- API poziv ---
     useEffect(() => {
         async function GetAllDinastije() {
             try {
@@ -32,8 +31,7 @@ export default function Dinastije() {
         loadAllDinastije();
     }, []);
 
-    //const handleNavigate = (id: string) => navigate(`/dinastija/${id}`);
-    const handleDodaj = () => navigate("/dodaj-dinastiju"); // ruta za dodavanje
+    const handleDodaj = () => navigate("/dodaj-dinastiju"); 
 
     const filteredDinastije = dinastije.filter(d =>
         d.naziv.toLowerCase().includes(query.toLowerCase())
@@ -41,7 +39,6 @@ export default function Dinastije() {
 
     return (
         <div className="dinastije my-[100px]">
-            {/* --- Dugme Dodaj Dinastiju samo za admin --- */}
            {role === "admin" && (
             <div className="flex justify-center mb-6">
                 <button

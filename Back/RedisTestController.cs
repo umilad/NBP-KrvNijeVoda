@@ -16,6 +16,6 @@ public class RedisTestController : ControllerBase
     {
         await _redis.RunTestAsync();
         var value = await _redis.GetAsync("foo");
-        return Ok(new { value }); // returns { "value": "bar" }
+        return Ok(new { value });
     }
 }

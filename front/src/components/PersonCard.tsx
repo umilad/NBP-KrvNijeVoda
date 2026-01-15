@@ -6,7 +6,7 @@ export default function PersonCard({ licnost }: { licnost: LicnostTree }) {
     <div className="relative group text-center text-[#3f2b0a] mb-[30px]">
       <div className="px-[4px] hover:scale-110 transition-transform duration-300 w-[150px] h-[170px]">
         <img
-          src={`/src/images/${licnost.slika}`}
+         src={`/images/licnosti/${licnost?.slika}`}
           className="w-[80px] h-[100px] object-cover mx-auto border-2 border-[#3f2b0a] rounded-lg"
         />
         <p className="font-bold">

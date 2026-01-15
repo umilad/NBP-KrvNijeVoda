@@ -8,20 +8,20 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [usernameInput, setUsernameInput] = useState("");
   const [passwordInput, setPasswordInput] = useState("");
-  const [loading, setLoading] = useState(false); // ✅ dodali loading
-  const { login } = useAuth(); // globalni login iz AuthContext
+  const [loading, setLoading] = useState(false); 
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleLogin = async () => {
     try {
-      setLoading(true); // ✅ setujemo loading na true kad kliknemo dugme
+      setLoading(true); 
 
       const response = await axios.post(
         "http://localhost:5210/api/Auth/login",
         {
           Username: usernameInput,
           Password: passwordInput,
-          CustomClaims: { Role: "admin" } // isto kao u registraciji
+          CustomClaims: { Role: "admin" }
         },
         {
           headers: { "Content-Type": "application/json" }
@@ -31,10 +31,8 @@ export default function Login() {
       const token = response.data.token;
       const role = response.data.role || "user";
 
-      // Poziv globalnog login iz AuthContext
       login(usernameInput, token, role);
 
-      // Preusmeravanje na Home
       navigate("/");
 
     } catch (err: unknown) {
@@ -47,7 +45,7 @@ export default function Login() {
         alert("Login failed: " + error.message);
       }
     } finally {
-      setLoading(false); // ✅ isključujemo loading kad je završeno
+      setLoading(false); 
     }
   };
 
@@ -87,10 +85,10 @@ export default function Login() {
 
           <button
             type="submit"
-            disabled={loading} // ✅ dugme disable dok traje login
+            disabled={loading}
             className="bg-[#3f2b0a] text-[#e6cda5] p-[6px] mb-[15px] rounded-[3px] hover:bg-[#2b1d07] transition disabled:opacity-50"
           >
-            {loading ? "Prijavljivanje..." : "Prijavi se"} {/* ✅ tekst dugmeta */}
+            {loading ? "Prijavljivanje..." : "Prijavi se"} 
           </button>
         </form>
 

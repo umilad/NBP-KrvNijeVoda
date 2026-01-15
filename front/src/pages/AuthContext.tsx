@@ -13,7 +13,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// ✅ Helper funkcija: proverava da li JWT još važi
 function isTokenValid(token: string | null): boolean {
   if (!token) return false;
   try {
@@ -25,12 +24,11 @@ function isTokenValid(token: string | null): boolean {
   }
 }
 
-// ✅ Helper: koliko milisekundi do isteka tokena
 function getTokenExpirationDelay(token: string): number {
   try {
     const payload = JSON.parse(atob(token.split(".")[1]));
     const now = Math.floor(Date.now() / 1000);
-    return (payload.exp - now) * 1000; // u ms
+    return (payload.exp - now) * 1000; 
   } catch {
     return 0;
   }
@@ -43,9 +41,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [role, setRole] = useState<string | null>(null);
   const [logoutTimeout, setLogoutTimeout] = useState<number | null>(null);
 
-  // ----------------------
-  // Logout funkcija
-  // ----------------------
   const logout = async (sessionExpired: boolean = false) => {
     if (token) {
       try {
@@ -78,9 +73,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     navigate("/prijava");
   };
 
-  // ----------------------
-  // Login funkcija
-  // ----------------------
   const login = (username: string, token: string, role: string) => {
     setUsername(username);
     setToken(token);
@@ -90,7 +82,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem("username", username);
     localStorage.setItem("role", role);
 
-    // 🕒 automatski logout kad token istekne
     const delay = getTokenExpirationDelay(token);
     if (delay > 0) {
       const timeout = setTimeout(() => logout(true), delay);
@@ -98,9 +89,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // ----------------------
-  // Auto-login pri mount-u
-  // ----------------------
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
     const storedUsername = localStorage.getItem("username");
@@ -111,7 +99,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUsername(storedUsername);
       setRole(storedRole);
 
-      // 🕒 automatski logout kad token istekne
       const delay = getTokenExpirationDelay(storedToken);
       if (delay > 0) {
         const timeout = setTimeout(() => logout(true), delay);
@@ -120,16 +107,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  // ----------------------
-  // Axios interceptor za 401
-  // ----------------------
   useEffect(() => {
     const interceptor = axios.interceptors.response.use(
       response => response,
       error => {
         const reqUrl = error.config?.url || "";
 
-        // Ignoriši 401 za login request
         if (error.response?.status === 401 && !reqUrl.endsWith("/Auth/login")) {
           logout(true);
         }
@@ -150,9 +133,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-// ----------------------
-// Hook za lakše korišćenje
-// ----------------------
+
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) throw new Error("useAuth must be used within AuthProvider");

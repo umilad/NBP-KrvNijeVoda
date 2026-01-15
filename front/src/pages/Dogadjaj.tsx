@@ -32,7 +32,6 @@ export default function Dogadjaj() {
                 if (token && !hasTracked.current) {
                     hasTracked.current = true;
 
-                    // track za history list
                     const path = `/dogadjaj/${tip}/${id}`;
 
                     await axios.post(

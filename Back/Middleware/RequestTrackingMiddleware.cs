@@ -27,7 +27,6 @@ public class RequestTrackingMiddleware
 
             var path = context.Request.Path.Value ?? "";
 
-            // Preskoči tehničke rute
             if (!string.IsNullOrWhiteSpace(path) &&
                 !path.Contains("login") &&
                 !path.Contains("logout") &&

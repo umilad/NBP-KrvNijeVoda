@@ -3,7 +3,6 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-// Tipovi za trackovane stranice i top posete
 type PageDto = {
     path: string;
     label: string;
@@ -21,7 +20,6 @@ export default function Profil() {
     const [topVisits, setTopVisits] = useState<TopVisit[]>([]);
     const navigate = useNavigate();
 
-    // Dohvatanje istorije
     useEffect(() => {
         if (!token) return;
 
@@ -41,13 +39,12 @@ export default function Profil() {
         fetchHistory();
     }, [token]);
 
-    // Dohvatanje najposećenijih stranica
    useEffect(() => {
     if (!token) return;
 
     async function fetchTopVisits() {
         try {
-            // res.data je niz objekata: [{ path, label, count }, ...]
+            
             const res = await axios.get<TopVisit[]>(
                 "http://localhost:5210/api/Auth/top-visits",
                 { headers: { Authorization: `Bearer ${token}` } }
@@ -55,7 +52,6 @@ export default function Profil() {
 
             console.log("Raw top visits from backend:", res.data);
 
-            // mapiramo direktno na TopVisit tip
             const visits: TopVisit[] = res.data.map(item => ({
                 path: item.path,
                 label: item.label,
@@ -73,7 +69,7 @@ export default function Profil() {
 
     const handleLogout = () => {
         logout();
-        navigate("/"); // preusmeri na početnu stranu
+        navigate("/"); 
     };
 
     return (
@@ -88,7 +84,7 @@ export default function Profil() {
                 </button>
             </div>
 
-            {/* Istorija poseta */}
+           
             <div className="w-4/5 md:w-2/3 lg:w-1/2 mb-[50px]">
                 <h2 className="text-[30px] font-bold mb-4">Istorija poseta:</h2>
 
@@ -109,7 +105,7 @@ export default function Profil() {
                 </div>
             </div>
 
-            {/* Najposećenije stranice */}
+            
             <div className="w-4/5 md:w-2/3 lg:w-1/2 mt-10">
                 <h2 className="text-[30px] font-bold mb-4">Najposećenije stranice:</h2>
 

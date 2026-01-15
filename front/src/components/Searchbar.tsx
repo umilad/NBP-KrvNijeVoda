@@ -3,7 +3,7 @@ import { useMemo, useEffect, useState } from "react";
 import { useSearch } from "./SearchContext";
 
 interface SearchBarProps {
-  onSearch?: () => void; // optional prop
+  onSearch?: () => void;
 }
 
 export default function SearchBar({ onSearch }: SearchBarProps) {

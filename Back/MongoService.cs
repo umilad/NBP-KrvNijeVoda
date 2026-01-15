@@ -1,6 +1,6 @@
 using MongoDB.Driver;
 
-public class MongoService//extenduje IService kod njih 
+public class MongoService
 {
     private readonly IMongoDatabase _db;
 

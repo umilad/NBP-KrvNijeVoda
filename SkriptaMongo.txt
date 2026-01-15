@@ -124,32 +124,32 @@ db.Dinastije.insertMany([
   { _id: "d2d2d2d2-2222-4d2d-8d2d-222222222222", Slika: "vojisavljevici.png" },
   { _id: "d3d3d3d3-3333-4d3d-8d3d-333333333333", Slika: "balsici.png" },
   { _id: "d4d4d4d4-4444-4d4d-8d4d-444444444444", Slika: "kotromanici.png" },
-  { _id: "d6d6d6d6-6666-4d6d-8d6d-666666666666", Slika: "hohenstauf.png" },
-  { _id: "d7d7d7d7-7777-4d7d-8d7d-777777777777", Slika: "https://upload.wikimedia.org/wikipedia/commons/7/7f/Asenovci_CoA.png" },
-  { _id: "d8d8d8d8-8888-4d8d-8d8d-888888888888", Slika: "https://upload.wikimedia.org/wikipedia/commons/8/8a/Komnini_CoA.png" },
+  { _id: "d6d6d6d6-6666-4d6d-8d6d-666666666666", Slika: "hohenstauf.jpg" },
+  { _id: "d7d7d7d7-7777-4d7d-8d7d-777777777777", Slika: "asenovci.jpg" },
+  { _id: "d8d8d8d8-8888-4d8d-8d8d-888888888888", Slika: "komnini.png" },
   {
     _id: "d0d0d0d0-0000-4d0d-8d0d-000000000000",
-    Slika: "dinastije/arpadovci.png"
+    Slika: "arpadovci.png"
   },
   {
     _id: "d1d2d1d2-1111-4d1d-8d1d-121212121212",
-    Slika: "https://upload.wikimedia.org/wikipedia/commons/b/b9/Anjou_CoA.svg"
+    Slika: "anzujska.png"
   },
   {
     _id: "d2d3d2d3-2222-4d2d-8d2d-232323232323",
-    Slika: "https://upload.wikimedia.org/wikipedia/commons/8/8c/Dandolo_CoA.svg"
+    Slika: "dandolo.png"
   },
   {
     _id: "d3d4d3d4-3333-4d3d-8d3d-343434343434",
-    Slika: "https://upload.wikimedia.org/wikipedia/commons/1/1a/Smilac_family_arms.png"
+    Slika: "smilac.png"
   },
   {
     _id: "d4d5d4d5-4444-4d4d-8d4d-454545454545",
-    Slika: "https://upload.wikimedia.org/wikipedia/commons/5/57/Orsini_CoA.svg"
+    Slika: "orsini.png"
   },
   {
     _id: "d5d6d5d6-5555-4d5d-8d5d-565656565656",
-    Slika: "https://upload.wikimedia.org/wikipedia/commons/f/f1/Doukas_dynasty_CoA.svg"
+    Slika: "duka.png"
   }
 ]);
 
@@ -158,25 +158,25 @@ db.Licnosti.insertMany([
 
 { _id: "c4c4c4c4-4444-4c4c-8c4c-444444444444", Slika: "placeholder_muski.png", Tekst: "Vukašin Nemanja je bio diplomata iz dinastije Nemanjić, poznat po svojoj veštini u pregovorima i političkoj mudrosti. Zastupao je interese dinastije u diplomatskim misijama prema susednim državama. Njegov rad je uključivao organizovanje saveza i sklapanje sporazuma. Bio je uključen u rešavanje unutrašnjih i spoljnopolitičkih konflikata. Vukašin Nemanja je učestvovao u savetovanju vladara i planiranju strategija. Njegova sposobnost kompromisa i pregovaranja bila je ključna za jačanje dinastije. Doprineo je stabilnosti i očuvanju teritorijalne celovitosti Srbije. Njegovo znanje i iskustvo uticali su na buduće političke odluke. Ostao je upamćen kao primer mudrog i pravednog diplomate. Njegovo nasleđe oblikovalo je diplomatske tradicije u Nemanjićkoj državi." },
 
-{ _id: "c8c8c8c8-8888-4c8c-8c8c-888888888888", Slika: "placeholder_muski.png", Tekst: "Miloš Kotromanić je bio sveštenik iz dinastije Kotromanić, poznat po svojoj pobožnosti i učenosti. Učestvovao je u crkvenim i kulturnim aktivnostima. Posvetio je život obrazovanju, prepisivanju spisa i vođenju manastira. Bio je savetnik vladara i član porodice koji je imao uticaj na crkvena pitanja. Miloš je bio uključen u diplomatske misije i pregovore sa susednim državama. Njegova dela doprinela su jačanju crkvene organizacije i kulture. Stanovništvo i monasi poštovali su njegov autoritet i mudrost. Ostao je upamćen kao učen i pobožan sveštenik. Njegovo nasleđe oblikovalo je crkvenu i kulturnu tradiciju. Miloš Kotromanić simbolizuje duhovni uticaj svoje dinastije." },
+{ _id: "c8c8c8c8-8888-4c8c-8c8c-888888888888", Slika: "svestenik-milos-kotromanic.jpg", Tekst: "Miloš Kotromanić je bio sveštenik iz dinastije Kotromanić, poznat po svojoj pobožnosti i učenosti. Učestvovao je u crkvenim i kulturnim aktivnostima. Posvetio je život obrazovanju, prepisivanju spisa i vođenju manastira. Bio je savetnik vladara i član porodice koji je imao uticaj na crkvena pitanja. Miloš je bio uključen u diplomatske misije i pregovore sa susednim državama. Njegova dela doprinela su jačanju crkvene organizacije i kulture. Stanovništvo i monasi poštovali su njegov autoritet i mudrost. Ostao je upamćen kao učen i pobožan sveštenik. Njegovo nasleđe oblikovalo je crkvenu i kulturnu tradiciju. Miloš Kotromanić simbolizuje duhovni uticaj svoje dinastije." },
 
-{ _id: "c9c9c9c9-9999-4c9c-8c9c-999999999999", Slika: "placeholder_zenski.png", Tekst: "Katarina Kotromanić je bila vojvotkinja iz dinastije Kotromanić, poznata po svom društvenom i političkom uticaju. Aktivno je učestvovala u diplomatskim pregovorima i sklapanju saveza. Promovisala je obrazovanje, kulturu i religijske vrednosti. Katarina je savetovala vladare i članove porodice u vođenju države. Njena uloga doprinela je stabilnosti i jačanju moći dinastije. Bila je poznata po mudrosti, pravednosti i sposobnosti upravljanja posedom. Njena dela ostavila su dugotrajan trag u istoriji i crkvi. Ostala je simbol ženske moći i uticaja u srednjovekovnoj Bosni. Njeno nasleđe inspirisalo je buduće generacije plemkinja i vladarki. Katarina Kotromanić ostala je upamćena po sposobnosti vođenja i diplomatskoj veštini." },
+{ _id: "c9c9c9c9-9999-4c9c-8c9c-999999999999", Slika: "vojvotkinja-katarina-kotromanic.jpg", Tekst: "Katarina Kotromanić je bila vojvotkinja iz dinastije Kotromanić, poznata po svom društvenom i političkom uticaju. Aktivno je učestvovala u diplomatskim pregovorima i sklapanju saveza. Promovisala je obrazovanje, kulturu i religijske vrednosti. Katarina je savetovala vladare i članove porodice u vođenju države. Njena uloga doprinela je stabilnosti i jačanju moći dinastije. Bila je poznata po mudrosti, pravednosti i sposobnosti upravljanja posedom. Njena dela ostavila su dugotrajan trag u istoriji i crkvi. Ostala je simbol ženske moći i uticaja u srednjovekovnoj Bosni. Njeno nasleđe inspirisalo je buduće generacije plemkinja i vladarki. Katarina Kotromanić ostala je upamćena po sposobnosti vođenja i diplomatskoj veštini." },
 
 { _id: "c4d4c4d4-4444-4d4d-8d4d-444444444444", Slika: "placeholder_muski.png", Tekst: "Miloš Nemanja je bio vojvoda iz dinastije Nemanjić, poznat po vojničkim sposobnostima i hrabrosti. Vodio je bitke za očuvanje teritorija i jačanje moći dinastije. Učestvovao je u strateškom planiranju sukoba i organizovanju vojske. Bio je savetnik vladara i učestvovao u diplomatskim misijama. Njegove akcije doprinele su stabilnosti države i autoritetu dinastije. Stanovništvo i saveznici poštovali su njegovu hrabrost i odlučnost. Ostao je upamćen kao sposoban vojvoda i strateški mislilac. Njegovo nasleđe oblikovalo je vojnu tradiciju i politiku Srbije. Miloš Nemanja simbolizuje odanost i hrabrost svoje porodice. Njegove vojne akcije imale su dugoročne posledice po teritorijalnu kontrolu i stabilnost države." },
 
 {
     _id: "c1c2c1c1-1111-4c1c-8c1c-111111111111",
-    Slika: "placeholder_muski.png",
+    Slika: "veliki-zupan-stefan-nemanja.jpg",
     Tekst: "Stefan Nemanja bio je veliki župan Raške i osnivač dinastije Nemanjić. Ujedinio je srpske zemlje, učvrstio centralnu vlast i oslobodio teritorije od vizantijske vlasti. Njegova vladavina obeležena je političkom stabilnošću, graditeljstvom manastira i jačanjem pravoslavlja. Odrekao se prestola u korist sina Stefana i zamonašio kao Simeon Mirotočivi, ostavivši dubok duhovni i politički trag."
   },
   {
     _id: "c2c3c2c2-2222-4c2c-8c2c-222222222222",
-    Slika: "placeholder_zenski.png",
+    Slika: "velika-kneginja-ana-anastasija.jpg",
     Tekst: "Ana Anastasija Nemanjić bila je supruga Stefana Nemanje i velika kneginja. Poznata po pobožnosti i brizi za narod, podržavala je osnivanje manastira i crkava. Nakon smrti muža zamonašila se pod imenom Anastasija. Njena duhovnost i blagost ostavile su snažan pečat u srpskoj istoriji i kulturi."
   },
   {
     _id: "c5c6c5c5-5555-4c5c-8c5c-555555555555",
-    Slika: "placeholder_muski.png",
+    Slika: "arhiepiskop-sava-nemanjic.jpg",
     Tekst: "Sveti Sava Nemanjić bio je prvi arhiepiskop srpski i najvažnija ličnost srpske srednjovekovne crkve. Osnivač Srpske pravoslavne crkve, diplomata, zakonodavac i prosvetitelj. Njegov rad postavio je temelje srpske državnosti i kulture. Bio je posrednik mira među braćom i tvorac Zakonopravila, prvog srpskog pravnog spisa."
   },
   {
@@ -201,7 +201,7 @@ db.Licnosti.insertMany([
   },
   {
     _id: "c0c1c0c0-0000-4c0c-8c0c-000000000000",
-    Slika: "placeholder_muski.png",
+    Slika: "knez-vratko-nemanjic.jpg",
     Tekst: "Knez Vratko Nemanjić, poznat i kao Jug Bogdan u narodnim pesmama, bio je unuk Stefana Nemanje. Istakao se kao ratnik i državnik, učestvovao u odbrani Srbije i simbolizuje viteštvo i čast u srpskoj tradiciji."
   },
   {
@@ -211,12 +211,12 @@ db.Licnosti.insertMany([
   },
   {
     _id: "c2c3c2c3-2222-4c2c-8c2c-333333333333",
-    Slika: "placeholder_zenski.png",
+    Slika: "kneginja-milica-nemanjic.jpg",
     Tekst: "Kneginja Milica Nemanjić, supruga kneza Lazara, poticala je iz loze Nemanjića. Bila je poznata po mudrosti, pobožnosti i političkom umeću. Nakon Kosovske bitke preuzela je vođenje Srbije i očuvala državnost u teškim vremenima. Kasnije se zamonašila kao monahinja Jevgenija."
   },
   {
     _id: "c7c8c7c8-7777-4c7c-8c7c-888888888888",
-    Slika: "placeholder_zenski.png",
+    Slika: "princeza-komnina-nemanjic.jpg",
     Tekst: "Princeza Komnina Nemanjić bila je potomak Stefana Nemanje i povezana sa vizantijskom dinastijom Komnina. Njeno ime svedoči o važnim dinastičkim vezama između Srbije i Vizantije. Kroz brakove je doprinosila diplomatskim odnosima i kulturnim razmenama između dve države."
   }
 
@@ -234,73 +234,73 @@ db.Vladari.insertMany([
 
 { _id: "77777777-7777-4777-8777-777777777777", Tekst: "Tvrtko Kotromanić je bio kralj Kotromanića, poznat po jačanju države i autoriteta svoje dinastije. Vodio je teritorije kroz diplomatske i vojne izazove. Bio je inicijator kulturnih i crkvenih projekata. Učestvovao je u sklapanju saveza i pregovorima sa susednim državama. Njegove akcije doprinele su stabilnosti i razvoju Bosne. Bio je poštovan od plemstva i naroda. Ostao je upamćen kao sposoban vladar i vizionar. Njegovo nasleđe oblikovalo je političke i kulturne tradicije. Tvrtko Kotromanić simbolizuje moć, mudrost i vođstvo. Njegove odluke imale su dugoročne posledice po teritorijalnu kontrolu i stabilnost države.", Slika: "kralj-tvrtko-kotromanic.jpg", Teritorija: "bosna_teritorija.png" },
 
-{ _id: "88888888-8888-4888-8888-888888888888", Tekst: "Louis Vizantijski je bio kralj Vizantije, poznat po vojničkim sposobnostima i diplomatskoj veštini. Vodio je vojsku u odbrani teritorija i učestvovao u strateškom planiranju sukoba. Bio je uključen u diplomatske pregovore i sklapanje saveza. Njegove akcije doprinele su jačanju moći i stabilnosti carstva. Bio je poštovan od strane plemstva i stanovništva. Ostao je upamćen kao sposoban vojvoda i vođa. Njegovo nasleđe oblikovalo je vizantijsku vojnu i političku tradiciju. Louis Vizantijski simbolizuje moć, strateško razmišljanje i autoritet. Njegove odluke imale su dugoročne posledice po teritorijalnu kontrolu i sigurnost carstva.", Slika: "placeholder_muski.png", Teritorija: "vizantija_teritorija.png" },
+{ _id: "88888888-8888-4888-8888-888888888888", Tekst: "Louis Vizantijski je bio kralj Vizantije, poznat po vojničkim sposobnostima i diplomatskoj veštini. Vodio je vojsku u odbrani teritorija i učestvovao u strateškom planiranju sukoba. Bio je uključen u diplomatske pregovore i sklapanje saveza. Njegove akcije doprinele su jačanju moći i stabilnosti carstva. Bio je poštovan od strane plemstva i stanovništva. Ostao je upamćen kao sposoban vojvoda i vođa. Njegovo nasleđe oblikovalo je vizantijsku vojnu i političku tradiciju. Louis Vizantijski simbolizuje moć, strateško razmišljanje i autoritet. Njegove odluke imale su dugoročne posledice po teritorijalnu kontrolu i sigurnost carstva.", Slika: "louis-vizantijski.jpg", Teritorija: "vizantija_teritorija.png" },
 
-{ _id: "99999999-9999-4999-8999-999999999999", Tekst: "Ferdinand Dalmacija je bio kralj Dalmacije, poznat po diplomatskoj veštini i upravljanju teritorijama. Vodio je teritorije kroz političke i vojne izazove. Učestvovao je u sklapanju saveza i pregovorima sa susednim državama. Njegove odluke doprinele su stabilnosti i razvoju Dalmacije. Bio je poštovan od plemstva i stanovništva. Ostao je upamćen kao sposoban vladar i vizionar. Njegovo nasleđe oblikovalo je regionalnu politiku i diplomatske tradicije. Ferdinand Dalmacija simbolizuje moć, mudrost i autoritet. Njegove odluke imale su dugoročne posledice po teritorijalnu kontrolu i stabilnost države.", Slika: "placeholder_muski.png", Teritorija: "dalmacija_teritorija.png" },
+{ _id: "99999999-9999-4999-8999-999999999999", Tekst: "Ferdinand Dalmacija je bio kralj Dalmacije, poznat po diplomatskoj veštini i upravljanju teritorijama. Vodio je teritorije kroz političke i vojne izazove. Učestvovao je u sklapanju saveza i pregovorima sa susednim državama. Njegove odluke doprinele su stabilnosti i razvoju Dalmacije. Bio je poštovan od plemstva i stanovništva. Ostao je upamćen kao sposoban vladar i vizionar. Njegovo nasleđe oblikovalo je regionalnu politiku i diplomatske tradicije. Ferdinand Dalmacija simbolizuje moć, mudrost i autoritet. Njegove odluke imale su dugoročne posledice po teritorijalnu kontrolu i stabilnost države.", Slika: "ferdinand-dalmacija.jpg", Teritorija: "dalmacija_teritorija.png" },
 
-{ _id: "10101010-1010-4a10-8a10-101010101010", Tekst: "Stefan Radoslav II je bio kralj Nemanjića, poznat po svojoj vojničkoj i političkoj sposobnosti. Vodio je borbe za očuvanje teritorija i jačanje moći dinastije. Učestvovao je u diplomatskim pregovorima i sklapanju saveza. Njegove odluke doprinele su stabilnosti i razvoju države. Bio je poštovan od plemstva i stanovništva. Ostao je upamćen kao sposoban i pravedan vladar. Njegovo nasleđe oblikovalo je vojnu i političku tradiciju. Stefan Radoslav II simbolizuje mudrost, hrabrost i odanost dinastiji. Njegove akcije imale su dugoročne posledice po teritorijalnu kontrolu i stabilnost države.", Slika: "placeholder_muski.png", Teritorija: "raskaska_teritorija.png" },
+{ _id: "10101010-1010-4a10-8a10-101010101010", Tekst: "Stefan Radoslav II je bio kralj Nemanjića, poznat po svojoj vojničkoj i političkoj sposobnosti. Vodio je borbe za očuvanje teritorija i jačanje moći dinastije. Učestvovao je u diplomatskim pregovorima i sklapanju saveza. Njegove odluke doprinele su stabilnosti i razvoju države. Bio je poštovan od plemstva i stanovništva. Ostao je upamćen kao sposoban i pravedan vladar. Njegovo nasleđe oblikovalo je vojnu i političku tradiciju. Stefan Radoslav II simbolizuje mudrost, hrabrost i odanost dinastiji. Njegove akcije imale su dugoročne posledice po teritorijalnu kontrolu i stabilnost države.", Slika: "kralj-stefan-radoslav-II.jpg", Teritorija: "raskaska_teritorija.png" },
 
 { _id: "11111111-1111-4a11-8a11-111111111111", Tekst: "Vuk Nemanja je bio kralj Nemanjića, poznat po svojoj hrabrosti, vojničkim sposobnostima i mudrosti. Vodio je teritorije kroz brojne sukobe i bitke. Učestvovao je u diplomatskim pregovorima i strateškom planiranju. Bio je poštovan od plemstva i naroda. Njegove akcije doprinele su stabilnosti i jačanju dinastije. Ostao je upamćen kao sposoban vojvoda i pravedan vladar. Njegovo nasleđe oblikovalo je vojnu, političku i kulturnu tradiciju. Vuk Nemanja simbolizuje hrabrost, mudrost i odanost svojoj porodici. Njegove odluke imale su dugoročne posledice po teritorijalnu kontrolu i sigurnost države.", Slika: "placeholder_muski.png", Teritorija: "raskaska_teritorija.png" },
 
-{ _id: "12121212-1212-4a12-8a12-121212121212", Tekst: "Sava Nemanja je bio kralj Nemanjića, poznat po svojoj pobožnosti, mudrosti i duhovnom uticaju. Vodio je teritorije kroz diplomatske pregovore i savete vladarima. Učestvovao je u crkvenim i kulturnim projektima. Njegove odluke doprinele su jačanju stabilnosti i autoriteta dinastije. Bio je poštovan od plemstva i naroda. Ostao je upamćen kao sposoban i pravedan vladar. Njegovo nasleđe oblikovalo je crkvenu, političku i kulturnu tradiciju. Sava Nemanja simbolizuje mudrost, pobožnost i odanost dinastiji. Njegove akcije imale su dugoročne posledice po stabilnost države i duhovni život.", Slika: "placeholder_muski.png", Teritorija: "raskaska_teritorija.png" },
+{ _id: "12121212-1212-4a12-8a12-121212121212", Tekst: "Sava Nemanja je bio kralj Nemanjića, poznat po svojoj pobožnosti, mudrosti i duhovnom uticaju. Vodio je teritorije kroz diplomatske pregovore i savete vladarima. Učestvovao je u crkvenim i kulturnim projektima. Njegove odluke doprinele su jačanju stabilnosti i autoriteta dinastije. Bio je poštovan od plemstva i naroda. Ostao je upamćen kao sposoban i pravedan vladar. Njegovo nasleđe oblikovalo je crkvenu, političku i kulturnu tradiciju. Sava Nemanja simbolizuje mudrost, pobožnost i odanost dinastiji. Njegove akcije imale su dugoročne posledice po stabilnost države i duhovni život.", Slika: "kralj-stefan-uros.jpg", Teritorija: "raskaska_teritorija.png" },
 
 { _id: "13131313-1313-4a13-8a13-131313131313", Tekst: "Stefan Radoslav je bio kralj Kotromanića, poznat po svojoj hrabrosti, diplomatskoj veštini i sposobnosti vođenja teritorija. Vodio je države kroz političke i vojne izazove. Učestvovao je u sklapanju saveza i pregovorima sa susednim državama. Njegove odluke doprinele su stabilnosti i jačanju autoriteta dinastije. Bio je poštovan od plemstva i stanovništva. Ostao je upamćen kao sposoban, pravedan i vizionarski vladar. Njegovo nasleđe oblikovalo je regionalnu politiku i upravljanje državom. Stefan Radoslav simbolizuje moć, mudrost i odanost svojoj porodici. Njegove akcije imale su dugoročne posledice po stabilnost i teritorijalnu kontrolu.", Slika: "placeholder_muski.png", Teritorija: "bosna_teritorija.png" },
 
-{ _id: "14141414-1414-4a14-8a14-141414141414", Tekst: "Vukan Nemanjić je bio kralj Kotromanića, poznat po svojoj mudrosti, vojničkim sposobnostima i diplomatskoj veštini. Vodio je teritorije kroz bitke i diplomatske pregovore. Učestvovao je u organizovanju vojske i strateškom planiranju sukoba. Bio je poštovan od plemstva i stanovništva. Njegove akcije doprinele su stabilnosti i jačanju autoriteta dinastije. Ostao je upamćen kao sposoban, pravedan i mudri vladar. Njegovo nasleđe oblikovalo je vojnu, političku i kulturnu tradiciju. Vukan Nemanjić simbolizuje hrabrost, mudrost i odanost svojoj porodici. Njegove odluke imale su dugoročne posledice po teritorijalnu kontrolu i sigurnost države.", Slika: "placeholder_muski.png", Teritorija: "bosna_teritorija.png" },
+{ _id: "14141414-1414-4a14-8a14-141414141414", Tekst: "Stefan Tvrtko II Kotromanić je bio kralj Srba, Bosne, Primorja i Humske zemlje u periodu 1404—1408. i 1421—1443. godine. Tvrtko II je bio sin kralja Tvrtka I i član dinastije Kotromanića. Godine 1404. bosansko plemstvo je uklonilo sa vlasti prougarski orijentisanog kralja Bosne Stjepana Ostoju. Radi izbora novog kralja sazvan je Veliki Sabor i na njemu je izabran Tvrtko II, vanbračni sin kralja Tvrtka I. Tvrtko II je dao Dubrovniku široku gradsku autonomiju 24. juna 1405. godine, koju je njegov prethodnik bio ukinuo. U nameri da povrati presto, svrgnuti kralj Ostoja je napravio savez sa ugarskim kraljem Žigmundom i zatražio njegovu pomoć. U tom cilju jedna ugarska vojska je upala u Usoru, a druga ugarska vojska je napadala preko reke Une 1405. godine. Vojvode kralja Tvrtka II su potukle obe ove vojske, a ban ugarske Hrvatske, Pavle, poginuo je kod Bihaća. Nakon ovih poraza, kralj Žigmund je pripremio novi napad 1406. godine, jer je Katolička crkva to od njega tražila. Prilikom novog napada Ugari su ponovo bili poraženi i izbačeni iz Bosne.", Slika: "tvrtko-ii-kotromanic.jpg", Teritorija: "bosna_teritorija.png" },
 
-{ _id: "15151515-1515-4a15-8a15-151515151515", Tekst: "Miloš Nemanja je bio kralj Nemanjića, poznat po hrabrosti, vojničkim sposobnostima i mudrosti. Vodio je teritorije kroz bitke i diplomatske izazove. Učestvovao je u organizovanju vojske i strateškom planiranju sukoba. Bio je poštovan od plemstva i stanovništva. Njegove akcije doprinele su jačanju stabilnosti i autoriteta dinastije. Ostao je upamćen kao sposoban vojvoda i pravedan vladar. Njegovo nasleđe oblikovalo je vojnu, političku i kulturnu tradiciju. Miloš Nemanja simbolizuje hrabrost, mudrost i odanost svojoj porodici. Njegove odluke imale su dugoročne posledice po teritorijalnu kontrolu i sigurnost države.", Slika: "placeholder_muski.png", Teritorija: "raskaska_teritorija.png" },
+{ _id: "15151515-1515-4a15-8a15-151515151515", Tekst: "Stefan I Kotromanić (1242 — 1314), ili Stefan III, je bio ban Bosne od 1290. do 1314. godine. Naziva se još i Stefan Kotroman, prema dubrovačkim piscima. Bio je gospodar župe Vrhbosne, a u jesen 1284. godine oženio se Jelisavetom, ćerkom srpskog kralja Dragutina. Kao svoje oblasti imao je još i župe Banjicu, Zemunik, Vrbanju, Donje Kraje, Plivu i Luku. Oko 1302, bana Stefana potisnuli su bribirski knezovi Šubići i on se sklonio u oblasti svoga tasta, srpskoga kralja Dragutina. Jedno vreme (1287—1290) vladao je zajedno sa svojim bratom Prijezdom II. Njihov otac bio je Prijezda I bosanski ban (1250—1287).", Slika: "stefan-kotromanic.jpg", Teritorija: "raskaska_teritorija.png" },
 
 {
     _id: "c3c4c3c3-3333-4c3c-8c3c-333333333333",
-    Slika: "placeholder_muski.png",
+    Slika: "kralj-vukan-nemanjic.png",
     Teritorija: "raskaska_teritorija.png",
     Tekst: "Vukan Nemanjić bio je najstariji sin Stefana Nemanje i vladar Duklje. Učestvovao je u sukobima za presto sa bratom Stefanom Prvovenčanim, uz podršku Ugarske. Njegova vladavina bila je kratka, ali značajna za formiranje srpske državnosti. Iako je izgubio presto, sačuvao je status kneza i uticaj u političkom životu."
   },
   {
     _id: "c4c5c4c4-4444-4c4c-8c4c-444444444444",
-    Slika: "placeholder_muski.png",
+    Slika: "kralj-stefan-prvovencani.jpg",
     Teritorija: "raskaska_teritorija.png",
     Tekst: "Stefan Prvovenčani bio je prvi kralj Srbije i sin Stefana Nemanje. Krunisan 1217. godine, obezbedio je međunarodno priznanje srpske države. Njegova vladavina donela je političku stabilnost, razvoj kulture i jačanje crkve. Bio je diplomata, književnik i osnivač državne tradicije krunisanja. Nakon smrti proglašen je za sveca."
   },
   {
     _id: "c4c5c4c5-4444-4c4c-8c4c-555555555555",
-    Slika: "placeholder_muski.png",
+    Slika: "kralj-vladislav-nemanjic.jpg",
     Teritorija: "raskaska_teritorija.png",
     Tekst: "Kralj Vladislav Nemanjić bio je sin Stefana Prvovenčanog i treći kralj Srbije. Tokom njegove vladavine ojačane su veze sa Bugarskom i Vizantijom. Premestio je mošti Svetog Save u Mileševu, čime je učvrstio kult svetitelja i nacionalno jedinstvo. Bio je poznat po pobožnosti i podršci crkvi."
   },
   {
     _id: "c6c7c6c7-6666-4c6c-8c6c-777777777777",
-    Slika: "placeholder_muski.png",
+    Slika: "kralj-uros-nemanjic.jpg",
     Teritorija: "raskaska_teritorija.png",
     Tekst: "Uroš I Nemanjić bio je sin Stefana Prvovenčanog i kralj Srbije od 1243. do 1277. godine. Učvrstio je centralnu vlast, reformisao administraciju i podsticao razvoj rudnika i trgovine. Njegova vladavina označila je ekonomski uspon države. Otac kraljeva Dragutina i Milutina, koji su nastavili dinastičku liniju."
   },
   {
     _id: "c8c9c8c9-8888-4c8c-8c8c-999999999999",
-    Slika: "placeholder_muski.png",
+    Slika: "kralj-dragutin-nemanjic.jpg",
     Teritorija: "raskaska_teritorija.png",
     Tekst: "Dragutin Nemanjić bio je sin kralja Uroša I i kralj Srbije od 1277. do 1282. godine. Nakon sukoba s ocem preuzeo je presto, ali ga je kasnije predao bratu Milutinu. Zadržao je vlast u severnim oblastima i Mačvi kao vazal ugarskog kralja. Njegova vladavina bila je period političke podele, ali i kulturnog razvoja."
   },
   {
     _id: "c9c0c9c0-9999-4c9c-8c9c-000000000000",
-    Slika: "placeholder_muski.png",
+    Slika: "kralj-milutin-nemanjic.jpg",
     Teritorija: "raskaska_teritorija.png",
     Tekst: "Kralj Milutin Nemanjić bio je jedan od najmoćnijih srpskih vladara. Vladao od 1282. do 1321. godine, šireći državu prema Makedoniji i Kosovu. Poznat po velikom broju zadužbina, među kojima su Gračanica i Bogorodica Ljeviška. Njegova politika obeležena je dinastičnim brakovima i diplomatskom veštinom."
   },
   {
     _id: "c1c3c1c3-1111-4c1c-8c1c-333333333333",
-    Slika: "placeholder_muski.png",
+    Slika: "kralj-stefan-decanski.jpg",
     Teritorija: "raskaska_teritorija.png",
     Tekst: "Stefan Dečanski bio je kralj Srbije od 1321. do 1331. godine i sin kralja Milutina. Poznat po hrabrosti i mudrosti, pobedio je bugarsku vojsku u bici kod Velbužda. Podigao je manastir Visoki Dečani, jedno od najlepših dela srpske srednjovekovne umetnosti. Njegova vladavina bila je kratka, ali značajna za jačanje države."
   },
   {
     _id: "c2c4c2c4-2222-4c2c-8c2c-444444444444",
-    Slika: "placeholder_muski.png",
+    Slika: "car-dusan-nemanjic.jpg",
     Teritorija: "raskaska_teritorija.png",
     Tekst: "Car Dušan Nemanjić bio je najmoćniji srpski vladar, krunisan za cara 1346. godine. Proširio Srbiju do Egejskog mora, uveo Zakonik cara Dušana i reformisao državu po vizantijskom uzoru. Njegova vladavina označila je vrhunac moći srednjovekovne Srbije i kulturni procvat. Umro je tokom pohoda na Carigrad."
   },
   {
     _id: "c3c5c3c5-3333-4c3c-8c3c-555555555555",
-    Slika: "placeholder_muski.png",
+    Slika: "car-uros-nemanjic.jpg",
     Teritorija: "raskaska_teritorija.png",
     Tekst: "Uroš V Nemanjić, poznat kao Uroš Ne jaki, bio je poslednji car iz dinastije Nemanjić. Vladao od 1355. do 1371. godine. Nasledio je moćno carstvo, ali nije uspeo da zadrži jedinstvo države. Tokom njegove vladavine moć velikaša je porasla, a carstvo se raspalo. Umro je bez naslednika, čime je ugašena dinastija Nemanjića."
   }

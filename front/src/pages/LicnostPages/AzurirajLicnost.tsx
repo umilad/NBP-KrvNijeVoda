@@ -15,9 +15,6 @@ export default function AzurirajLicnost() {
   const location = useLocation();
   const state = location.state as LocationState;
 
-  // ===========================
-  // Osnovni podaci
-  // ===========================
   const [titula, setTitula] = useState("");
   const [ime, setIme] = useState("");
   const [prezime, setPrezime] = useState("");
@@ -32,9 +29,6 @@ export default function AzurirajLicnost() {
   const [slika, setSlika] = useState<File | null>(null);
   const [slikaPreview, setSlikaPreview] = useState<string | null>(null);
 
-  // ===========================
-  // Vladar
-  // ===========================
   const [dodajVladara, setDodajVladara] = useState(location.state?.isVladar ?? false);
   const [pocetakVladavineGod, setPocetakVladavineGod] = useState<number | "">("");
   const [pocetakVladavinePNE, setPocetakVladavinePNE] = useState(false);
@@ -44,9 +38,6 @@ export default function AzurirajLicnost() {
   const [dinastija, setDinastija] = useState<Dinastija | null>(null);
   const [teritorija, setTeritorija] = useState("");
 
-  // ===========================
-  // Fetch podataka
-  // ===========================
   useEffect(() => {
     const fetchLicnost = async () => {
       try {
@@ -68,7 +59,7 @@ export default function AzurirajLicnost() {
         setTekst(data.tekst || "");
        setSlikaPreview(
   data.slika
-    ? `/images/licnosti/${data.slika}` // putanja ka front/public/images/licnosti
+    ? `/images/licnosti/${data.slika}`
     : data.pol === "M"
       ? "/images/licnosti/placeholder_muski.png"
       : "/images/licnosti/placeholder_zenski.png"
@@ -111,18 +102,12 @@ export default function AzurirajLicnost() {
     fetchDinastije();
   }, [id, token, location.state, dodajVladara]);
 
-  // ===========================
-  // Upload fajla
-  // ===========================
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     setSlika(file);
     if (file) setSlikaPreview(URL.createObjectURL(file));
   };
 
-  // ===========================
-  // Submit FormData
-  // ===========================
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -139,10 +124,10 @@ export default function AzurirajLicnost() {
     formData.append("Tekst", tekst || "");
 
     if (slika) {
-  formData.append("Slika", slika); // novi fajl
+  formData.append("Slika", slika); 
 } else if (slikaPreview) {
-  // ne menja se slika, pošalji samo ime fajla
-  const imeFajla = slikaPreview.split("/").pop(); // npr. "neka_slika.png"
+  
+  const imeFajla = slikaPreview.split("/").pop(); 
   formData.append("Slika", imeFajla || "");
 }
 
@@ -175,9 +160,6 @@ export default function AzurirajLicnost() {
     }
   };
 
-  // ===========================
-  // Render
-  // ===========================
   return (
     <div className="dodaj-dogadjaj my-[180px] w-full flex justify-center">
       <div className="pozadinaForme flex flex-col items-center justify-center relative w-1/3 border-2 border-[#3f2b0a] bg-[#e6cda5] p-[20px] rounded-lg text-center text-[#3f2b0a] shadow-md">
@@ -229,7 +211,7 @@ export default function AzurirajLicnost() {
                 <option value="">-- Odaberi dinastiju --</option>
                 {dinastije.map(d => <option key={d.naziv} value={d.naziv}>{d.naziv}</option>)}
               </select>
-              <input type="text" placeholder="Teritorija" value={teritorija} onChange={e => setTeritorija(e.target.value)} className="p-[6px] rounded-[3px] border border-[#3f2b0a]" />
+              
             </>
           )}
 

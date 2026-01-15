@@ -49,7 +49,6 @@ public class TokenService
 
     var jwtToken = handler.ReadJwtToken(token);
 
-    // tvoj token sadrži i "sub" i "name", koristi bilo koji koji postoji
     var usernameClaim = jwtToken.Claims.FirstOrDefault(c =>
         c.Type == JwtRegisteredClaimNames.Sub ||
         c.Type == JwtRegisteredClaimNames.Name ||
