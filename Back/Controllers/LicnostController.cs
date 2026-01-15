@@ -481,6 +481,74 @@ public async Task<IActionResult> UpdateLicnost([FromForm] LicnostDto licnost, Gu
         }
     }
 
+    [HttpPost("DodajLicnostUDinastiju")]
+public async Task<IActionResult> DodajLicnostUDinastiju([FromQuery] Guid sinId, [FromQuery] Guid roditeljId)
+{
+    try
+    {
+        if (sinId == roditeljId)
+            return BadRequest("Sin i roditelj ne mogu biti ista osoba.");
+
+        // 1. Dohvati sina
+        var sin = (await _client.Cypher
+            .Match("(s:Licnost)")
+            .Where((LicnostNeo s) => s.ID == sinId)
+            .Return(s => s.As<LicnostNeo>())
+            .ResultsAsync)
+            .FirstOrDefault();
+
+        if (sin == null)
+            return BadRequest($"Licnost (sin) sa ID: {sinId} nije pronađena.");
+
+        // 2. Dohvati roditelja
+        var roditelj = (await _client.Cypher
+            .Match("(r:Licnost)")
+            .Where((LicnostNeo r) => r.ID == roditeljId)
+            .Return(r => r.As<LicnostNeo>())
+            .ResultsAsync)
+            .FirstOrDefault();
+
+        if (roditelj == null)
+            return BadRequest($"Licnost (roditelj) sa ID: {roditeljId} nije pronađena.");
+
+        // 3. Proveri da li veza već postoji
+        var postojiVeza = (await _client.Cypher
+            .Match("(r:Licnost)-[rel:JE_RODITELJ]->(s:Licnost)")
+            .Where((LicnostNeo r) => r.ID == roditeljId)
+            .AndWhere((LicnostNeo s) => s.ID == sinId)
+            .Return(rel => rel.As<object>())
+            .ResultsAsync)
+            .Any();
+
+        if (postojiVeza)
+            return BadRequest("Veza JE_RODITELJ već postoji između ove dve ličnosti.");
+
+        var brojRoditelja = (await _client.Cypher
+            .Match("(r:Licnost)-[:JE_RODITELJ]->(s:Licnost)")
+            .Where((LicnostNeo s) => s.ID == sinId)
+            .Return(r => r.As<LicnostNeo>())
+            .ResultsAsync)
+            .Count();
+
+        if (brojRoditelja >= 2)
+            return BadRequest("Sin već ima dva roditelja. Nije moguće dodati trećeg.");
+            
+        // 4. Kreiraj vezu
+        await _client.Cypher
+            .Match("(r:Licnost)", "(s:Licnost)")
+            .Where((LicnostNeo r) => r.ID == roditeljId)
+            .AndWhere((LicnostNeo s) => s.ID == sinId)
+            .Create("(r)-[:JE_RODITELJ]->(s)")
+            .ExecuteWithoutResultsAsync();
+
+        return Ok($"Veza JE_RODITELJ kreirana između roditelja (ID: {roditeljId}) i sina (ID: {sinId}).");
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(500, $"Došlo je do greške: {ex.Message}");
+    }
+}
+
     // [HttpGet("GetLicnostByDinastija")]
     // public async Task<IActionResult> GetLicnostByDinastija(Guid id)
     // {

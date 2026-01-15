@@ -309,9 +309,6 @@ public async Task<IActionResult> UpdateDinastija([FromForm] DinastijaDto dinasti
 
         await query.ExecuteWithoutResultsAsync();
 
-        // =========================
-        // 3. Update Mongo-a za sliku
-        // =========================
         if (!string.IsNullOrWhiteSpace(dinastija.Slika))
         {
             var filter = Builders<DinastijaMongo>.Filter.Eq(d => d.ID, id);
@@ -399,7 +396,6 @@ public async Task<IActionResult> UpdateDinastija([FromForm] DinastijaDto dinasti
         var vladari = await _vladarService.GetVladariFlat(id);
         var licnosti = await _licnostService.GetLicnostiFlat(id);
 
-        //groupby i select za svaki slucaj ako ima duplikata
         var flatList = vladari
             .Concat(licnosti)
             .GroupBy(p => p.ID)
@@ -408,6 +404,21 @@ public async Task<IActionResult> UpdateDinastija([FromForm] DinastijaDto dinasti
 
         var trees = _treeBuilder.BuildTrees(flatList);
         return Ok(trees);
+    }
+
+    [HttpGet("GetDinastijaClanovi/{id}")]
+    public async Task<IActionResult> GetDinastijaClanovi(Guid id)
+    {
+        var vladari = await _vladarService.GetVladariFlat(id);
+        var licnosti = await _licnostService.GetLicnostiFlat(id);
+
+        var flatList = vladari
+            .Concat(licnosti)
+            .GroupBy(p => p.ID)
+            .Select(g => g.First())
+            .ToList();
+
+        return Ok(flatList);
     }
 
 }

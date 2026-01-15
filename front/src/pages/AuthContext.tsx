@@ -8,7 +8,7 @@ interface AuthContextType {
   token: string | null;
   role: string | null;
   login: (username: string, token: string, role: string) => void;
-  logout: (sessionExpired?: boolean) => void;
+  logout: (sessionExpired?: boolean, tokenToDelete?: string | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -41,13 +41,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [role, setRole] = useState<string | null>(null);
   const [logoutTimeout, setLogoutTimeout] = useState<number | null>(null);
 
-  const logout = async (sessionExpired: boolean = false) => {
-    if (token) {
+  const logout = async (sessionExpired: boolean = false, tokenToDelete?: string | null) => {
+    const tokenValue: string | undefined = tokenToDelete ?? token ?? undefined;
+
+    if (tokenValue) {
       try {
         await axios.post(
           "http://localhost:5210/api/Auth/logout",
           {},
-          { headers: { Authorization: `Bearer ${token}` } }
+          { headers: { Authorization: `Bearer ${tokenValue}` } }
         );
       } catch (err) {
         console.error("Logout error", err);
@@ -84,7 +86,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const delay = getTokenExpirationDelay(token);
     if (delay > 0) {
-      const timeout = setTimeout(() => logout(true), delay);
+      const timeout = setTimeout(() => logout(true, token), delay);
       setLogoutTimeout(timeout);
     }
   };
@@ -101,7 +103,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       const delay = getTokenExpirationDelay(storedToken);
       if (delay > 0) {
-        const timeout = setTimeout(() => logout(true), delay);
+        const timeout = setTimeout(() => logout(true, storedToken), delay);
         setLogoutTimeout(timeout);
       }
     }
@@ -124,7 +126,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => {
       axios.interceptors.response.eject(interceptor);
     };
-  }, [token]);
+  });
 
   return (
     <AuthContext.Provider value={{ username, token, role, login, logout }}>
@@ -132,7 +134,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     </AuthContext.Provider>
   );
 };
-
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
