@@ -13,7 +13,7 @@ public class DogadjajController : ControllerBase
     private readonly IMongoCollection<DogadjajMongo> _mongo;
     private readonly GodinaService _godinaService;
 
-    public DogadjajController(Neo4jService neo4jService, GodinaService godinaService,  MongoService mongoService)
+    public DogadjajController(Neo4jService neo4jService, GodinaService godinaService, MongoService mongoService)
     {
         _client = neo4jService.GetClient();
         _godinaService = godinaService;

@@ -74,11 +74,18 @@ export default function DogadjajPrikaz({ dogadjaj, variant = "short" }: Dogadjaj
             </span>
 
             <span className='dogadjaj-godina text-l font-bold mt-2'>
-                {isRat(dogadjaj)
-                    ? `${dogadjaj.godina?.god ?? ""}${dogadjaj.godina?.isPne ? " p. n. e." : ""} - ${dogadjaj.godinaDo?.god ?? ""}. ${dogadjaj.godinaDo?.isPne ? " p. n. e." : ""}`
-                    : `${dogadjaj.godina?.god ?? ""}. ${dogadjaj.godina?.isPne ? " p. n. e." : ""}`
+                {isRat(dogadjaj) 
+                    ? (dogadjaj.godina?.god != null && dogadjaj.godinaDo?.god != null
+                        ? `${dogadjaj.godina?.god}${dogadjaj.godina?.isPne ? " p. n. e." : ""} - ${dogadjaj.godinaDo?.god}.${dogadjaj.godinaDo?.isPne ? " p. n. e." : ""}`
+                        : null
+                    )
+                    : (dogadjaj.godina?.god != null
+                        ? `${dogadjaj.godina?.god}${dogadjaj.godina?.isPne ? " p. n. e." : ""}.`
+                        : null
+                    )
                 }
             </span>
+
 
 
             {variant === "full" && (

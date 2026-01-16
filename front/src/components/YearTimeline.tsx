@@ -149,7 +149,7 @@ const YearTimeline = forwardRef<YearTimelineHandle, YearTimelineProps>(
                 <div className={`mt-[29px] h-6 w-[3px] bg-[#3f2b0a] z-10 ${showTick ? "" : "hidden"}`} />
                 {showLabel && (
                   <div className={`mt-4 transition-all duration-300 font-semibold ${yearSize} ${isActive ? "text-[#3f2b0a]" : "text-gray-600"}`}>
-                    {year}
+                    {year}.
                   </div>
                 )}
               </div>

@@ -31,6 +31,7 @@ export default function LicnostPrikaz({ licnost }: LicnostPrikazProps){
 
             {/* Podaci */}
             <p className="text-2xl font-bold mt-2">{licnost?.titula} {licnost?.ime} {licnost?.prezime}</p>
+            
             <p className="text-xl font-bold mt-2">
                 {licnost.godinaRodjenja ? `${licnost.godinaRodjenja}${licnost.godinaRodjenjaPNE ? " p.n.e." : ""}` : ""}
                 {licnost.godinaSmrti ? ` - ${licnost.godinaSmrti}. ${licnost.godinaSmrtiPNE ? " p.n.e." : ""}` : ""}

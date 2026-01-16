@@ -5,16 +5,23 @@ using System.Threading.Tasks;
 using System.Reflection.Metadata;
 using KrvNijeVoda.Back;
 using Microsoft.AspNetCore.Authorization;
+using MongoDB.Driver;
 
 [Route("api")]
 [ApiController]
 public class GodinaController : ControllerBase
 {
     private readonly IGraphClient _client;
+    private readonly IMongoCollection<LicnostMongo> _licnostCollection;
+    private readonly IMongoCollection<VladarMongo> _vladarCollection;
+    private readonly IMongoCollection<DinastijaMongo> _dinastijaCollection;
 
-    public GodinaController(Neo4jService neo4jService)
+    public GodinaController(Neo4jService neo4jService,  MongoService mongoService)
     {
         _client = neo4jService.GetClient();
+        _licnostCollection = mongoService.GetCollection<LicnostMongo>("Licnosti");
+        _vladarCollection = mongoService.GetCollection<VladarMongo>("Vladari");
+        _dinastijaCollection = mongoService.GetCollection<DinastijaMongo>("Dinastije");
     }
 
     
@@ -218,7 +225,26 @@ public class GodinaController : ControllerBase
                     .ToList();
 
                 if (vladariFiltered.Count != 0)
-                    results["vladari"] = vladariFiltered;
+                {
+                    var vladarIds = vladariFiltered.Select(v => v.ID).ToList();
+                    var mongoVladari = await _vladarCollection
+                        .Find(m => vladarIds.Contains(m.ID))
+                        .ToListAsync();
+
+                    var vladariDtos = vladariFiltered.Select(v =>
+                    {
+                        var mongo = mongoVladari.FirstOrDefault(m => m.ID == v.ID);
+                        return new LicnostTimelineDto
+                        {
+                            ID = v.ID,
+                            Ime = v.Ime,
+                            Prezime = v.Prezime,
+                            Titula = v.Titula,
+                            Slika = mongo?.Slika
+                        };
+                    }).ToList();
+                    results["vladari"] = vladariDtos;
+                }
                 else 
                     results["vladari"] = Enumerable.Empty<VladarNeo>();
 
@@ -233,7 +259,26 @@ public class GodinaController : ControllerBase
                     .ToList();
 
                 if (licnostiFiltered.Count != 0)
-                    results["licnosti"] = licnostiFiltered;
+                {
+                    var licnostIds = licnostiFiltered.Select(l => l.ID).ToList();
+                    var mongoLicnosti = await _licnostCollection
+                        .Find(m => licnostIds.Contains(m.ID))
+                        .ToListAsync();
+
+                    var licnostiDtos = licnostiFiltered.Select(l =>
+                    {
+                        var mongo = mongoLicnosti.FirstOrDefault(m => m.ID == l.ID);
+                        return new LicnostTimelineDto
+                        {
+                            ID = l.ID,
+                            Ime = l.Ime,
+                            Prezime = l.Prezime,
+                            Titula = l.Titula,
+                            Slika = mongo?.Slika
+                        };
+                    }).ToList();
+                    results["licnosti"] = licnostiDtos;
+                }
                 else 
                     results["licnosti"] = Enumerable.Empty<LicnostNeo>();
 
@@ -247,7 +292,24 @@ public class GodinaController : ControllerBase
                     .ToList();
 
                 if (dinastijeFiltered.Count != 0)
-                    results["dinastije"] = dinastijeFiltered;
+                {
+                    var dinastijaIds = dinastijeFiltered.Select(d => d.ID).ToList();
+                    var mongoDinastije = await _dinastijaCollection
+                        .Find(m => dinastijaIds.Contains(m.ID))
+                        .ToListAsync();
+
+                    var dinastijeDtos = dinastijeFiltered.Select(d =>
+                    {
+                        var mongo = mongoDinastije.FirstOrDefault(m => m.ID == d.ID);
+                        return new DinastijaTimelineDto
+                        {
+                            ID = d.ID,
+                            Naziv = d.Naziv,
+                            Slika = mongo?.Slika
+                        };
+                    }).ToList();
+                    results["dinastije"] = dinastijeDtos;
+                }
                 else 
                     results["dinastije"] = Enumerable.Empty<DinastijaNeo>();
 

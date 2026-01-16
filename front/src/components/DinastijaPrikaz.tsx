@@ -53,10 +53,13 @@ export default function DinastijaPrikaz({
                        transition-transform duration-300 hover:scale-105 cursor-pointer will-change-transform"
         >
             <span className='dogadjaj-header text-xl font-bold mt-2'>{dinastija.naziv}</span>
+            {dinastija.pocetakVladavineGod && dinastija.krajVladavineGod && (
             <span className='dogadjaj-godina text-l font-bold mt-2 mb-[5px]'>
                 {dinastija.pocetakVladavineGod} - {dinastija.krajVladavineGod}.
                 {dinastija.krajVladavinePNE ? " p. n. e." : ""}
             </span>
+            )}
+
 
             <div className="relative w-[300px] h-[355px] m-auto">
                 <div className="absolute inset-0 top-0 flex items-center justify-center z-0">
